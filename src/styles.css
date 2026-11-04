@@ -1,1 +1,18 @@
 @import 'tailwindcss';
+@theme inline {
+  --color-canvas: var(--surface-canvas);
+  --color-surface: var(--surface-panel);
+  --color-raised: var(--surface-raised);
+  --color-hover: var(--surface-hover);
+  --color-legend: var(--keycap-legend);
+  --color-sublegend: var(--keycap-sublegend);
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--border-subtle);
+  --color-keycap: var(--keycap-face);
+  --color-accent-layer-1: var(--layer-1);
+  --color-accent-layer-2: var(--layer-2);
+  --color-accent-layer-3: var(--layer-3);
+  --color-accent-layer-4: var(--layer-4);
+}
