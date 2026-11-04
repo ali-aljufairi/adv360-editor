@@ -1,0 +1,315 @@
+/* Binding picker. Tokens follow docs/theme.md; fallbacks keep it readable without the theme. */
+
+.bp {
+  --bp-panel: var(--surface-panel, Canvas);
+  --bp-text: var(--text-primary, CanvasText);
+  --bp-muted: var(--text-muted, GrayText);
+  --bp-border: var(--border-subtle, rgb(127 127 127 / 0.2));
+  --bp-hover: var(--surface-hover, rgb(127 127 127 / 0.1));
+  --bp-accent: var(--accent-primary, #5b8cff);
+  --bp-ring: var(--focus-ring, var(--bp-accent));
+  --bp-shadow: var(--shadow-dialog, 0 16px 48px rgb(0 0 0 / 0.22));
+
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: min(420px, 100%);
+  max-height: min(580px, 80vh);
+  padding: 14px;
+  gap: 12px;
+  border-radius: 14px;
+  background: var(--bp-panel);
+  color: var(--bp-text);
+  box-shadow: var(--bp-shadow);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.bp *,
+.bp *::before,
+.bp *::after {
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+}
+
+.bp button,
+.bp input {
+  font: inherit;
+  color: inherit;
+}
+
+.bp :focus-visible {
+  outline: 2px solid var(--bp-ring);
+  outline-offset: 2px;
+}
+
+.bp-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Header: keycap preview and raw ZMK text */
+
+.bp-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bp-keycap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 40px;
+}
+
+.bp-keycap kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 1px solid var(--bp-border);
+  background: var(--bp-hover);
+  font: 500 15px/1 ui-sans-serif, system-ui, sans-serif;
+  box-shadow: 0 2px 0 var(--bp-border);
+}
+
+.bp-keycap-mod {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--bp-hover);
+  color: var(--bp-muted);
+  font-size: 14px;
+}
+
+.bp-keycap-detail {
+  margin-left: 8px;
+  color: var(--bp-muted);
+  font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.bp-raw-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--bp-hover);
+  font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.bp-raw-input[aria-invalid='true'] {
+  box-shadow: inset 0 0 0 1px var(--status-error, #d64545);
+}
+
+.bp-raw-error {
+  margin: 4px 2px 0;
+  color: var(--status-error, #d64545);
+  font-size: 12px;
+}
+
+/* Modifier chips */
+
+.bp-mods {
+  display: flex;
+  gap: 6px;
+}
+
+.bp-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--bp-muted);
+  font-size: 15px;
+  cursor: pointer;
+  transition-property: background-color, color;
+}
+
+.bp-chip:hover:not(:disabled) {
+  background: var(--bp-hover);
+}
+
+.bp-chip[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--bp-accent) 16%, transparent);
+  color: var(--bp-accent);
+}
+
+.bp-chip:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.bp-chip sup {
+  margin-left: 2px;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+/* Tap / Hold slots */
+
+.bp-slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.bp-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--bp-hover);
+  text-align: left;
+  cursor: pointer;
+  transition-property: background-color, box-shadow;
+}
+
+.bp-slot[aria-pressed='true'] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bp-accent) 60%, transparent);
+}
+
+.bp-slot-name {
+  color: var(--bp-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bp-slot-value {
+  font-weight: 500;
+}
+
+/* Search */
+
+.bp-search-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--bp-hover);
+  font-size: 15px;
+  outline: none;
+}
+
+.bp-search-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--bp-ring);
+}
+
+/* Results */
+
+.bp-list {
+  flex: 1 1 auto;
+  min-height: 120px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0 -6px;
+  padding: 0 6px;
+}
+
+.bp-section + .bp-section {
+  margin-top: 6px;
+}
+
+.bp-section-label {
+  padding: 8px 10px 4px;
+  color: var(--bp-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.bp-row {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition-property: background-color;
+}
+
+.bp-row[data-active='true'] {
+  background: color-mix(in srgb, var(--bp-accent) 12%, transparent);
+}
+
+.bp-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--bp-hover);
+  color: var(--bp-muted);
+  font-size: 13px;
+}
+
+.bp-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bp-code {
+  color: var(--bp-muted);
+  font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: nowrap;
+}
+
+.bp-empty {
+  margin: 0;
+  padding: 16px 10px;
+  color: var(--bp-muted);
+  text-align: center;
+}
+
+.bp-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: var(--bp-muted);
+  font-size: 11px;
+}
+
+/* Under 640px the picker becomes a bottom sheet. */
+@media (max-width: 639px) {
+  .bp {
+    position: fixed;
+    inset: auto 0 0 0;
+    width: 100%;
+    max-height: 80vh;
+    border-radius: 16px 16px 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bp *,
+  .bp *::before,
+  .bp *::after {
+    transition: none !important;
+  }
+}
