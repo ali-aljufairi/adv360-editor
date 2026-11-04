@@ -10,33 +10,63 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DevKeycapsRouteImport } from './routes/dev.keycaps'
+import { Route as DevNavigationRouteImport } from './routes/dev.navigation'
+import { Route as DevPickerRouteImport } from './routes/dev.picker'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevKeycapsRoute = DevKeycapsRouteImport.update({
+  id: '/dev/keycaps',
+  path: '/dev/keycaps',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevNavigationRoute = DevNavigationRouteImport.update({
+  id: '/dev/navigation',
+  path: '/dev/navigation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevPickerRoute = DevPickerRouteImport.update({
+  id: '/dev/picker',
+  path: '/dev/picker',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dev/keycaps': typeof DevKeycapsRoute
+  '/dev/navigation': typeof DevNavigationRoute
+  '/dev/picker': typeof DevPickerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dev/keycaps': typeof DevKeycapsRoute
+  '/dev/navigation': typeof DevNavigationRoute
+  '/dev/picker': typeof DevPickerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dev/keycaps': typeof DevKeycapsRoute
+  '/dev/navigation': typeof DevNavigationRoute
+  '/dev/picker': typeof DevPickerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/dev/keycaps' | '/dev/navigation' | '/dev/picker'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/dev/keycaps' | '/dev/navigation' | '/dev/picker'
+  id: '__root__' | '/' | '/dev/keycaps' | '/dev/navigation' | '/dev/picker'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DevKeycapsRoute: typeof DevKeycapsRoute
+  DevNavigationRoute: typeof DevNavigationRoute
+  DevPickerRoute: typeof DevPickerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +78,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/keycaps': {
+      id: '/dev/keycaps'
+      path: '/dev/keycaps'
+      fullPath: '/dev/keycaps'
+      preLoaderRoute: typeof DevKeycapsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/navigation': {
+      id: '/dev/navigation'
+      path: '/dev/navigation'
+      fullPath: '/dev/navigation'
+      preLoaderRoute: typeof DevNavigationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/picker': {
+      id: '/dev/picker'
+      path: '/dev/picker'
+      fullPath: '/dev/picker'
+      preLoaderRoute: typeof DevPickerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DevKeycapsRoute: DevKeycapsRoute,
+  DevNavigationRoute: DevNavigationRoute,
+  DevPickerRoute: DevPickerRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
