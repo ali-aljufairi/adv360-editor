@@ -188,6 +188,7 @@ export function resolve(files: FileMap, entry: string): Model {
             name: nextNode.name,
             displayName: unquote(get('display-name')) ?? unquote(get('label')),
             bindings: bs,
+            sensorBindings: prop(nextNode, 'sensor-bindings')?.value,
             node: nextNode,
           })
         if (

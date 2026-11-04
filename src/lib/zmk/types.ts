@@ -50,6 +50,8 @@ export interface Layer extends Span {
   name: string
   displayName?: string
   bindings: Binding[]
+  /** Raw sensor-bindings property value, retained verbatim when present. */
+  sensorBindings?: string
   node: Node
 }
 /** A resolved behavior or macro. */
@@ -91,7 +93,7 @@ export interface Model {
   boardBehaviors: string[]
 }
 
-/** Physical key from info.json layout metadata. */
+/** Physical key from board layout metadata. */
 export interface PhysicalKey {
   index: number
   x: number

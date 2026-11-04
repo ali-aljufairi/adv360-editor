@@ -7,11 +7,13 @@ applies patches to the original text and reparses after each edit. `diff` produc
 Unknown syntax remains in the source rather than being regenerated.
 
 ```ts
-import { createEditor, resolve, validate } from '../src/lib/zmk'
+import { createEditorForProfile, validate } from '../src/lib/zmk'
+import { ADV360_PROFILE } from '../src/lib/profile'
 
-const model = resolve(files, 'adv360.keymap')
-const issues = validate(model)
-const editor = createEditor(files, 'adv360.keymap')
+const editor = createEditorForProfile(ADV360_PROFILE, files)
+const issues = validate(editor.model, {
+  physicalLayout: editor.layout?.keys,
+})
 editor.setBinding(0, 0, { behavior: 'kp', params: ['A'] })
 editor.addCombo({ name: 'example', bindings: ['&kp ESC'], keyPositions: [0, 1] })
 const changes = editor.diff()
@@ -19,7 +21,11 @@ const updatedFiles = editor.serialize()
 ```
 
 `parse`, `tokenize`, `resolve`, `validate`, `loadPhysicalLayout`, `serialize`, and `diff` are
-also available independently. The editor exposes structured `addCombo`, `updateCombo`,
+also available independently. `loadPhysicalLayout()` remains a backward-compatible helper that
+returns QMK-style info.json keys. The layout-source adapters return a `PhysicalLayout` with keys,
+layout name, source kind, and verification state. See [profiles](profiles.md) for the registry,
+Advantage360 profile, DTS parser, and the `createEditorForProfile()` entry point. The editor
+exposes structured `addCombo`, `updateCombo`,
 `addMacro`, `updateMacro`, and `updateHoldTap` methods. Raw node operations are available as
 `addComboRaw`, `updateComboRaw`, `addMacroRaw`, `updateMacroRaw`, and `addLayer`.
 `removeLayer` and `moveLayer` return source spans, before and after text, and reasons for rewritten
@@ -69,8 +75,9 @@ copyable source excerpt say so in the fixture header.
 | — | `crlf-line-endings.keymap` | Preserve CRLF bytes through parsing and edits. |
 | — | `utf8-comments-unicode-behaviors.keymap` | Preserve UTF-8 comments and unicode behavior labels without offset corruption. |
 
-The validator can receive `physicalLayout` from `loadPhysicalLayout(infoJson)`. It reports binding
-count mismatches against that layout and emits an informational `info-label-mismatch` when a
-simple layer-0 keycode disagrees with the corresponding `info.json` label. The Adv360 metadata
-contains a known stale label at index 35 (`LCtrl` while layer 0 binds `LEFT_ALT`); this is a note,
-not a validation error.
+The validator can receive `physicalLayout` from a layout source, or explicit
+`expectedKeyCount`/`expectedKeyPositions`. Without a layout it checks only that all layers have a
+consistent binding count. With an info.json layout it emits an informational
+`info-label-mismatch` when a simple layer-0 keycode disagrees with the corresponding label. The
+Adv360 metadata contains a known stale label at index 35 (`LCtrl` while layer 0 binds `LEFT_ALT`);
+this is a note, not a validation error.

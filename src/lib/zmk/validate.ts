@@ -2,6 +2,8 @@ import type { Binding, Issue, Model, PhysicalKey, Span } from './types'
 function collectIssues(
   model: Model,
   generated: Set<string>,
+  expectedKeyCount?: number,
+  expectedKeyPositions?: number[],
 ): { code: string; message: string; span?: Span }[] {
   const issues: { code: string; message: string; span?: Span }[] = []
   const count = model.layers.length
@@ -15,11 +17,13 @@ function collectIssues(
     if (['tog', 'to'].includes(currentBinding.behavior))
       persistent.push([from, target, currentBinding])
   }
+  const consistentCount = model.layers[0]?.bindings.length
   model.layers.forEach((currentLayer, i) => {
-    if (currentLayer.bindings.length !== 76)
+    const expected = expectedKeyCount ?? consistentCount
+    if (expected !== undefined && currentLayer.bindings.length !== expected)
       issues.push({
         code: 'binding-count',
-        message: `Layer ${i} has ${currentLayer.bindings.length} bindings, expected 76`,
+        message: `Layer ${i} has ${currentLayer.bindings.length} bindings, expected ${expected}`,
         span: currentLayer,
       })
     currentLayer.bindings.forEach((nextBinding) => add(i, nextBinding))
@@ -27,10 +31,10 @@ function collectIssues(
   for (const entry of model.combos) {
     const active = entry.layers ?? model.layers.map((_, i) => i)
     for (const pos of entry.keyPositions)
-      if (pos < 0 || pos >= 76)
+      if (expectedKeyPositions && !expectedKeyPositions.includes(pos))
         issues.push({
           code: 'combo-position',
-          message: `Combo ${entry.name} position ${pos} is out of range`,
+          message: `Combo ${entry.name} position ${pos} is not present in the selected layout`,
           span: entry,
         })
     for (const i of active)
@@ -177,11 +181,25 @@ const normalizeKeyLabel = (value: string) =>
 /** Validate layer reachability, bindings and combos with source locations. */
 export function validate(
   model: Model,
-  options: { generatedBehaviors?: string[]; physicalLayout?: PhysicalKey[] } = {},
+  options: {
+    generatedBehaviors?: string[]
+    physicalLayout?: PhysicalKey[]
+    expectedKeyCount?: number
+    expectedKeyPositions?: number[]
+  } = {},
 ): Issue[] {
+  const expectedKeyCount = options.expectedKeyCount ?? options.physicalLayout?.length
+  const expectedKeyPositions =
+    options.expectedKeyPositions ??
+    options.physicalLayout?.map((key) => key.index) ??
+    (expectedKeyCount === undefined
+      ? undefined
+      : Array.from({ length: expectedKeyCount }, (_, index) => index))
   const issues: Issue[] = collectIssues(
     model,
     new Set(options.generatedBehaviors ?? ['macro_ver']),
+    expectedKeyCount,
+    expectedKeyPositions,
   ).map((issue) => {
     const span = issue.span ?? { file: '', start: 0, end: 0 }
     const layer = model.layers.findIndex(
@@ -223,7 +241,7 @@ export function validate(
         issues.push({
           code: 'info-key-count',
           severity: 'warning',
-          message: `Layer ${layer} has ${currentLayer.bindings.length} bindings but info.json layout has ${layout.length} keys`,
+          message: `Layer ${layer} has ${currentLayer.bindings.length} bindings but selected layout has ${layout.length} keys`,
           file: currentLayer.file,
           start: currentLayer.start,
           end: currentLayer.end,
