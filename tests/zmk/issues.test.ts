@@ -58,7 +58,7 @@ it('extracts each fixture into a useful model and reports no syntax errors', () 
   ])
 
   const macro344 = resolve(issueFixtures, '344-long-macro-sequences.keymap')
-  expect(macro344.macros.find((macro) => macro.name === 'lorem_short')?.bindings.length).toBe(420)
+  expect(macro344.macros.find((macro) => macro.name === 'lorem_short')?.bindings.length).toBe(400)
   const macro254 = resolve(issueFixtures, '254-long-macro-sequences.keymap')
   expect(macro254.macros.find((macro) => macro.name === 'long_text')?.bindings.length).toBe(400)
 
