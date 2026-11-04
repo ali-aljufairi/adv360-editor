@@ -1,0 +1,47 @@
+# Theme notices
+
+Terminal palettes originate from Ghostty / iTerm2-Color-Schemes. Individual licenses and upstream authors are identified by the source links below; consult each linked project for its full license and copyright notice.
+
+- **Catppuccin Mocha** — MIT; author/source: https://github.com/catppuccin/palette.
+- **Catppuccin Latte** — MIT; author/source: https://github.com/catppuccin/palette.
+- **Catppuccin Frappe** — MIT; author/source: https://github.com/catppuccin/palette.
+- **Catppuccin Macchiato** — MIT; author/source: https://github.com/catppuccin/palette.
+- **TokyoNight** — Apache-2.0; author/source: https://github.com/folke/tokyonight.nvim.
+- **TokyoNight Day** — Apache-2.0; author/source: https://github.com/folke/tokyonight.nvim.
+- **TokyoNight Moon** — Apache-2.0; author/source: https://github.com/folke/tokyonight.nvim.
+- **TokyoNight Storm** — Apache-2.0; author/source: https://github.com/folke/tokyonight.nvim.
+- **Nord** — MIT; author/source: https://github.com/nordtheme/iterm2.
+- **Nord Light** — MIT; author/source: https://github.com/nordtheme/iterm2.
+- **Gruvbox Dark** — MIT; author/source: https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6.
+- **Gruvbox Dark Hard** — MIT; author/source: https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6.
+- **Gruvbox Light** — MIT; author/source: https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6.
+- **Gruvbox Light Hard** — MIT; author/source: https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6.
+- **Rose Pine** — MIT; author/source: https://github.com/rose-pine/build.
+- **Rose Pine Dawn** — MIT; author/source: https://github.com/rose-pine/build.
+- **Rose Pine Moon** — MIT; author/source: https://github.com/rose-pine/build.
+- **Kanagawa Wave** — MIT; author/source: https://github.com/rebelot/kanagawa.nvim.
+- **Kanagawa Dragon** — MIT; author/source: https://github.com/rebelot/kanagawa.nvim.
+- **Everforest Dark Hard** — MIT; author/source: https://github.com/icewind/everforest.iterm2.
+- **Everforest Light Med** — MIT; author/source: https://github.com/icewind/everforest.iterm2.
+- **Atom One Dark** — MIT; author/source: https://github.com/atom/atom/tree/master/packages/one-dark-ui.
+- **Atom One Light** — MIT; author/source: https://github.com/atom/atom/tree/master/packages/one-light-ui.
+- **GitHub Dark** — MIT; author/source: https://github.com/primer/github-vscode-theme.
+- **GitHub Light Default** — MIT; author/source: https://github.com/primer/github-vscode-theme.
+- **GitHub Dark Dimmed** — MIT; author/source: https://github.com/primer/github-vscode-theme.
+- **GitHub Dark High Contrast** — MIT; author/source: https://github.com/primer/github-vscode-theme.
+- **Andromeda** — MIT; author/source: https://github.com/mbadolato/iTerm2-Color-Schemes.
+- **Cobalt Next** — MIT; author/source: https://github.com/davidleininger/cobaltnext-vscode.
+- **Ayu Mirage** — MIT; author/source: https://github.com/ayu-theme/vscode-ayu.
+- **Night Owlish Light** — MIT; author/source: https://github.com/praveenpuglia/night-owlish-theme.
+- **Flexoki Dark** — MIT; author/source: https://github.com/kepano/flexoki.
+- **Flexoki Light** — MIT; author/source: https://github.com/kepano/flexoki.
+- **Dawnfox** — MIT; author/source: https://github.com/EdenEast/nightfox.nvim/tree/main/extra.
+- **Dayfox** — MIT; author/source: https://github.com/edeneast/nightfox.nvim.
+- **Everblush** — MIT; author/source: https://github.com/Everblush/everblush.
+- **Horizon** — MIT; author/source: https://github.com/jolaleye/horizon-theme-vscode.
+- **Snazzy** — MIT; author/source: https://github.com/sindresorhus/iterm2-snazzy.
+- **Carbonfox** — MIT; author/source: https://github.com/EdenEast/nightfox.nvim/tree/main/extra.
+- **Material Ocean** — MIT; author/source: https://github.com/kaicataldo/material.vim.
+- **Harbor Signal** — original prototype, project authors; source: design/approved/board-first-themes.html.
+- **Signal Amber** — original prototype, project authors; source: design/approved/board-first-themes.html.
+- **Studio Slate** — original prototype, project authors; source: design/approved/board-first-themes.html.
