@@ -1,0 +1,8 @@
+node_modules
+pnpm-lock.yaml
+fixtures
+src/routeTree.gen.ts
+.output
+docs/PRODUCT.md
+src/routes/__root.tsx
+src/routes/index.tsx

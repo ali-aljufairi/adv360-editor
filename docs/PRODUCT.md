@@ -30,6 +30,15 @@ Ideas may be borrowed from <https://github.com/nickcoutsos/keymap-editor> (MIT) 
 - Auth + repo access: a private GitHub App installed only on `Adv360-Pro-ZMK`, with GitHub login
   restricted to `ali-aljufairi`. All GitHub calls happen server-side (TanStack server functions).
 
+## Decisions log
+
+- 2026-11-05 — **No Effect.** Evaluated Effect 4.1.2 vs plain TS (Octokit + retry/throttling
+  plugins + Zod). Effect doubled the server bundle (64 KB vs 32 KB gzip), has no first-party
+  TanStack Start adapter, and its ecosystem is mid v3→v4 migration. Use plain TypeScript. GitHub
+  access goes through a small `GitHubGateway` interface with a fake for tests.
+- 2026-11-05 — **UI direction: Board-first** concept, with a user-selectable theme system
+  (many presets, inspired by Ghostty and OpenCode).
+
 ## The config (see `fixtures/adv360/`)
 
 - `adv360.keymap` — shared keymap: 4 layers × 76 keys (`default_layer`, `keypad`, `mod`, `macro`),
