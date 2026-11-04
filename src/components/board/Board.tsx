@@ -4,14 +4,7 @@ import { describeBinding, type DescribeContext } from '../../lib/legend/describe
 import type { PhysicalLayout } from '../../lib/layout'
 import type { Binding, Combo, PhysicalKey } from '../../lib/zmk/types'
 import { comboTag, layerAccentOf, layerTargetOf, legendText } from './bindings'
-import {
-  arcPath,
-  boardBounds,
-  comboSegments,
-  keyBox,
-  keyCenter,
-  type Point,
-} from './geometry'
+import { arcPath, boardBounds, comboSegments, keyBox, keyCenter, type Point } from './geometry'
 
 /** Props for the physical keyboard board. */
 export interface BoardProps {
@@ -29,6 +22,8 @@ export interface BoardProps {
   layerAccent: 1 | 2 | 3 | 4
   /** Layer number on screen. Defaults to `layerAccent - 1`; pass it when layers exceed four. */
   layerIndex?: number
+  /** Draw combo arcs and their labels. Defaults to true. */
+  showCombos?: boolean
   onSelectKey(index: number): void
   /** Double-click or Enter on a key: open the binding picker. */
   onActivateKey(index: number): void
@@ -53,11 +48,40 @@ interface ComboDrawing {
   active: boolean
 }
 
+/** How far above the arc peak a label may move, in key units, tried from nearest to farthest. */
+const LABEL_LIFTS = [0, -0.35, -0.7, -1.05, -1.4]
+
+/**
+ * Picks a label position on the arc's vertical axis that does not sit on a keycap. Labels
+ * lift above the arc in steps; if every step covers a key, the arc peak is kept.
+ * @param anchor - The arc peak, in key units.
+ * @param keys - Every physical key on the board.
+ * @returns The first clear position, or the peak when none is clear.
+ */
+function clearLabelPoint(anchor: Point, keys: PhysicalKey[]): Point {
+  const covered = (point: Point) =>
+    keys.some((key) => {
+      const box = keyBox(key)
+      return (
+        point.x > box.left &&
+        point.x < box.left + box.width &&
+        point.y > box.top &&
+        point.y < box.top + box.height
+      )
+    })
+  for (const lift of LABEL_LIFTS) {
+    const point = { x: anchor.x, y: anchor.y + lift }
+    if (!covered(point)) return point
+  }
+  return anchor
+}
+
 function drawCombos(
   combos: Combo[],
   keys: Map<number, PhysicalKey>,
   ctx: DescribeContext,
   layerIndex: number,
+  boardKeys: PhysicalKey[],
 ): ComboDrawing[] {
   const drawings: ComboDrawing[] = []
   combos.forEach((combo, position) => {
@@ -68,9 +92,10 @@ function drawCombos(
     if (centers.length === 0) return
     const { label, note, studio } = comboTag(combo, ctx)
     const arcs = comboSegments(centers).map(([from, to]) => arcPath(from, to))
-    const anchor = arcs.length
+    const peak = arcs.length
       ? arcs[Math.floor((arcs.length - 1) / 2)].peak
       : { x: centers[0].x, y: centers[0].y - 0.8 }
+    const anchor = clearLabelPoint(peak, boardKeys)
     drawings.push({
       key: `${combo.name}-${position}`,
       paths: arcs.map((arc) => arc.d),
@@ -97,6 +122,7 @@ export function Board({
   combos,
   layerAccent,
   layerIndex: layerIndexProp,
+  showCombos = true,
   onSelectKey,
   onActivateKey,
 }: BoardProps) {
@@ -130,8 +156,9 @@ export function Board({
     [layout.keys],
   )
   const drawings = useMemo(
-    () => drawCombos(combos, keysByIndex, legendContext, layerIndex),
-    [combos, keysByIndex, legendContext, layerIndex],
+    () =>
+      showCombos ? drawCombos(combos, keysByIndex, legendContext, layerIndex, layout.keys) : [],
+    [showCombos, combos, keysByIndex, legendContext, layerIndex, layout.keys],
   )
 
   const boardStyle = {
@@ -162,7 +189,8 @@ export function Board({
               key={key.index}
               role="group"
               aria-label={`${layerName}, key ${key.index}: ${legendText(legend)}`}
-              className="absolute [&>button]:!size-full"
+              className="absolute z-[1] [&>button]:!size-full"
+              data-key-index={key.index}
               style={{
                 left: (box.left - bounds.minX) * unit,
                 top: (box.top - bounds.minY) * unit,
@@ -214,7 +242,7 @@ export function Board({
 
         <svg
           aria-hidden="true"
-          className="pointer-events-none absolute top-0 left-0 z-[2] overflow-visible"
+          className="pointer-events-none absolute top-0 left-0 z-0 overflow-visible"
           width={bounds.width * unit}
           height={bounds.height * unit}
           viewBox={`${bounds.minX} ${bounds.minY} ${bounds.width} ${bounds.height}`}
@@ -229,7 +257,7 @@ export function Board({
                 strokeWidth={ARC_STROKE}
                 strokeLinecap="round"
                 strokeDasharray={drawing.studio ? ARC_DASH : undefined}
-                opacity={drawing.active ? 0.92 : 0.16}
+                opacity={drawing.active ? 0.6 : 0.12}
               />
             )),
           )}
