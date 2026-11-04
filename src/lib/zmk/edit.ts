@@ -26,7 +26,9 @@ export class LayerReferencedError extends Error {
 /** A symbolic layer reference has no numeric definition in the edited files. */
 export class UnresolvedLayerSymbolError extends Error {
   constructor(public readonly locations: Span[]) {
-    super(`Unresolved layer symbol at ${locations.map((p) => `${p.file}:${p.start}`).join(', ')}`)
+    super(
+      `Unresolved layer symbol at ${locations.map((currentProperty) => `${currentProperty.file}:${currentProperty.start}`).join(', ')}`,
+    )
     this.name = 'UnresolvedLayerSymbolError'
   }
 }
@@ -34,7 +36,7 @@ export class UnresolvedLayerSymbolError extends Error {
 export class UnsupportedLayerExpressionError extends Error {
   constructor(public readonly locations: Span[]) {
     super(
-      `Unsupported layer expression at ${locations.map((p) => `${p.file}:${p.start}`).join(', ')}`,
+      `Unsupported layer expression at ${locations.map((nextProperty) => `${nextProperty.file}:${nextProperty.start}`).join(', ')}`,
     )
     this.name = 'UnsupportedLayerExpressionError'
   }
@@ -62,52 +64,75 @@ export class ZmkEditor {
     return resolve(this.current, this.entry)
   }
   private patch(span: Span, text: string) {
-    const s = this.current[span.file]
-    if (s === undefined) throw new Error(`Missing file ${span.file}`)
-    this.current[span.file] = s.slice(0, span.start) + text + s.slice(span.end)
+    const currentSource = this.current[span.file]
+    if (currentSource === undefined) throw new Error(`Missing file ${span.file}`)
+    this.current[span.file] =
+      currentSource.slice(0, span.start) + text + currentSource.slice(span.end)
+  }
+  private removalSpan(span: Span): Span {
+    const source = this.current[span.file]
+    const lineStart = source.lastIndexOf('\n', span.start - 1) + 1
+    const prefix = source.slice(lineStart, span.start)
+    const suffix = source.slice(span.end).match(/^[ \t]*(?:\r?\n|$)/)
+    if (!/^[ \t]*$/.test(prefix) || !suffix) return span
+    let end = span.end + suffix[0].length
+    const before = source.slice(0, lineStart)
+    if (/(?:^|\n)[ \t]*\r?\n$/.test(before)) {
+      const blank = source.slice(end).match(/^[ \t]*\r?\n/)
+      if (blank) end += blank[0].length
+    }
+    return { ...span, start: lineStart, end }
   }
   setBinding(layerIndex: number, keyIndex: number, bindingInput: BindingInput) {
     const binding = formatBinding(bindingInput)
-    const b = this.model.layers[layerIndex]?.bindings[keyIndex]
-    if (!b) throw new RangeError('Binding not found')
+    const currentBinding = this.model.layers[layerIndex]?.bindings[keyIndex]
+    if (!currentBinding) throw new RangeError('Binding not found')
     if (!/^&[^\s<>;,{}]+(?:\s+[^<>;,{}]+)*$/.test(binding.trim()) || /[\r\n]/.test(binding))
       throw new Error('Expected a single binding')
-    const s = this.current[b.file]
-    const whitespace = s.slice(b.end).match(/^[ \t]+/)?.[0] ?? ''
+    const nextSource = this.current[currentBinding.file]
+    const whitespace = nextSource.slice(currentBinding.end).match(/^[ \t]+/)?.[0] ?? ''
     const previous = this.bindingHistory.at(-1)
     if (
       previous &&
       previous.layer === layerIndex &&
       previous.key === keyIndex &&
       previous.before === binding &&
-      previous.after === b.text
+      previous.after === currentBinding.text
     ) {
-      this.patch({ ...b, end: b.end + whitespace.length }, previous.before + previous.padding)
+      this.patch(
+        { ...currentBinding, end: currentBinding.end + whitespace.length },
+        previous.before + previous.padding,
+      )
       this.bindingHistory.pop()
       return
     }
     this.bindingHistory.push({
       layer: layerIndex,
       key: keyIndex,
-      before: b.text,
+      before: currentBinding.text,
       after: binding,
       padding: whitespace,
     })
-    const delta = binding.trim().length - (b.end - b.start)
+    const delta = binding.trim().length - (currentBinding.end - currentBinding.start)
     const padding =
       delta === 0
         ? whitespace
         : whitespace
           ? ' '.repeat(Math.max(1, whitespace.length - delta))
           : ''
-    this.patch({ ...b, end: b.end + whitespace.length }, binding.trim() + padding)
+    this.patch(
+      { ...currentBinding, end: currentBinding.end + whitespace.length },
+      binding.trim() + padding,
+    )
   }
   updateHoldTapProperty(name: string, property: string, value: string) {
-    const b = this.model.behaviors.find(
-      (x) => (x.label === name || x.name === name) && x.compatible === 'zmk,behavior-hold-tap',
+    const nextBinding = this.model.behaviors.find(
+      (currentItem) =>
+        (currentItem.label === name || currentItem.name === name) &&
+        currentItem.compatible === 'zmk,behavior-hold-tap',
     )
-    if (!b) throw new Error(`Hold-tap ${name} not found`)
-    this.updateProperty(b.node, property, value)
+    if (!nextBinding) throw new Error(`Hold-tap ${name} not found`)
+    this.updateProperty(nextBinding.node, property, value)
   }
   private updateProperty(node: Node, name: string, value: string) {
     if (!/^[#\w,.-]+$/.test(name) || /[;{}]/.test(value)) throw new Error('Invalid property')
@@ -132,23 +157,23 @@ export class ZmkEditor {
   private findContainer(name: string): Node {
     const cst = this.model.files[this.entry]
     const find = (items: (Node | Property)[]): Node | undefined => {
-      for (const n of nodes(items)) {
-        if (n.name === name) return n
-        const child = find(n.children)
+      for (const currentNode of nodes(items)) {
+        if (currentNode.name === name) return currentNode
+        const child = find(currentNode.children)
         if (child) return child
       }
     }
-    const n = find(cst.children)
-    if (!n) throw new Error(`Container ${name} not found`)
-    return n
+    const nextNode = find(cst.children)
+    if (!nextNode) throw new Error(`Container ${name} not found`)
+    return nextNode
   }
   private insert(container: Node, raw: string) {
     if (!raw.trim()) throw new Error('Empty node')
-    const s = this.current[container.file]
-    const lineStart = s.lastIndexOf('\n', container.bodyEnd - 1) + 1
-    const indent = s.slice(lineStart, container.bodyEnd)
+    const otherSource = this.current[container.file]
+    const lineStart = otherSource.lastIndexOf('\n', container.bodyEnd - 1) + 1
+    const indent = otherSource.slice(lineStart, container.bodyEnd)
     const at = /^[ \t]*$/.test(indent) ? lineStart : container.bodyEnd
-    const eol = s.includes('\r\n') ? '\r\n' : '\n'
+    const eol = otherSource.includes('\r\n') ? '\r\n' : '\n'
     this.patch({ file: container.file, start: at, end: at }, `${raw.replace(/\r?\n/g, eol)}${eol}`)
   }
   addMacro(input: MacroInput) {
@@ -232,36 +257,40 @@ export class ZmkEditor {
       this.insert(this.findContainer(container), rawNode)
       return
     }
-    const s = this.current[file]
-    if (s === undefined) throw new Error(`Missing file ${file}`)
-    const eol = s.includes('\r\n') ? '\r\n' : '\n'
+    const candidateSource = this.current[file]
+    if (candidateSource === undefined) throw new Error(`Missing file ${file}`)
+    const eol = candidateSource.includes('\r\n') ? '\r\n' : '\n'
     this.patch(
-      { file, start: s.length, end: s.length },
-      `${s && !s.endsWith('\n') ? eol : ''}${rawNode.replace(/\r?\n/g, eol)}${eol}`,
+      { file, start: candidateSource.length, end: candidateSource.length },
+      `${candidateSource && !candidateSource.endsWith('\n') ? eol : ''}${rawNode.replace(/\r?\n/g, eol)}${eol}`,
     )
   }
   updateMacroRaw(name: string, rawNode: string) {
-    const m = this.model.macros.find((x) => x.label === name || x.name === name)
-    if (!m) throw new Error(`Macro ${name} not found`)
-    this.patch(m, rawNode)
+    const currentMatch = this.model.macros.find(
+      (nextItem) => nextItem.label === name || nextItem.name === name,
+    )
+    if (!currentMatch) throw new Error(`Macro ${name} not found`)
+    this.patch(currentMatch, rawNode)
   }
   removeMacro(name: string) {
-    const m = this.model.macros.find((x) => x.label === name || x.name === name)
-    if (!m) throw new Error(`Macro ${name} not found`)
-    this.patch(m, '')
+    const nextMatch = this.model.macros.find(
+      (otherItem) => otherItem.label === name || otherItem.name === name,
+    )
+    if (!nextMatch) throw new Error(`Macro ${name} not found`)
+    this.patch(this.removalSpan(nextMatch), '')
   }
   addComboRaw(rawNode: string) {
     this.insert(this.findContainer('combos'), rawNode)
   }
   updateComboRaw(name: string, rawNode: string) {
-    const c = this.model.combos.find((x) => x.name === name)
-    if (!c) throw new Error(`Combo ${name} not found`)
-    this.patch(c, rawNode)
+    const currentEntry = this.model.combos.find((candidateItem) => candidateItem.name === name)
+    if (!currentEntry) throw new Error(`Combo ${name} not found`)
+    this.patch(currentEntry, rawNode)
   }
   removeCombo(name: string) {
-    const c = this.model.combos.find((x) => x.name === name)
-    if (!c) throw new Error(`Combo ${name} not found`)
-    this.patch(c, '')
+    const nextEntry = this.model.combos.find((selectedItem) => selectedItem.name === name)
+    if (!nextEntry) throw new Error(`Combo ${name} not found`)
+    this.patch(this.removalSpan(nextEntry), '')
   }
   addLayer(rawNode: string) {
     this.insert(this.findContainer('keymap'), rawNode)
@@ -304,18 +333,23 @@ export class ZmkEditor {
             const isConditional =
               prop(item, 'compatible')?.value.includes('zmk,conditional-layers') ?? false
             const combo =
-              inCombos || model.combos.some((c) => c.file === file && c.start === item.start)
+              inCombos ||
+              model.combos.some(
+                (otherEntry) => otherEntry.file === file && otherEntry.start === item.start,
+              )
             const relevant = item.children.filter(
-              (p): p is Property =>
-                p.kind === 'property' &&
+              (otherProperty): otherProperty is Property =>
+                otherProperty.kind === 'property' &&
                 (conditional
-                  ? ['if-layers', 'then-layer'].includes(p.name)
-                  : combo && p.name === 'layers'),
+                  ? ['if-layers', 'then-layer'].includes(otherProperty.name)
+                  : combo && otherProperty.name === 'layers'),
             )
-            const values = relevant.flatMap((p) =>
+            const values = relevant.flatMap((candidateProperty) =>
               Array.from(
-                clean.slice(p.valueSpan?.start, p.valueSpan?.end).matchAll(/\b\d+\b/g),
-                (m) => Number(m[0]),
+                clean
+                  .slice(candidateProperty.valueSpan?.start, candidateProperty.valueSpan?.end)
+                  .matchAll(/\b\d+\b/g),
+                (otherMatch) => Number(otherMatch[0]),
               ),
             )
             if (
@@ -409,7 +443,9 @@ export class ZmkEditor {
                 if (
                   next !== old &&
                   !rewrites.some(
-                    (r) => r.file === defs[0].span.file && r.start === defs[0].span.start,
+                    (currentReference) =>
+                      currentReference.file === defs[0].span.file &&
+                      currentReference.start === defs[0].span.start,
                   )
                 ) {
                   const span = defs[0].span
@@ -474,7 +510,10 @@ export class ZmkEditor {
     )
     const references = rewrites.filter((rewrite) => !rewrite.reason.startsWith('Renumber layer'))
     if (references.length && !options.force) throw new LayerReferencedError(references)
-    this.applyRewrites([...rewrites, { ...layer, before: '', after: '', reason: 'Remove layer' }])
+    this.applyRewrites([
+      ...rewrites,
+      { ...this.removalSpan(layer), before: '', after: '', reason: 'Remove layer' },
+    ])
     return rewrites
   }
   moveLayer(from: number, to: number): LayerRewrite[] {
@@ -526,6 +565,7 @@ export class ZmkEditor {
     return result
   }
 }
+/** Create an editor for the supplied keymap files. */
 export function createEditor(files: FileMap, entry: string): ZmkEditor {
   return new ZmkEditor(files, entry)
 }

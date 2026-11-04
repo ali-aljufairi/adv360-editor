@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { readFileSync, readdirSync } from 'node:fs'
+import { files } from './fixtures'
 import {
   createEditor,
   LayerReferencedError,
@@ -10,12 +10,6 @@ import {
   serialize,
   validate,
 } from '../../src/lib/zmk'
-
-const files = Object.fromEntries(
-  readdirSync('fixtures/adv360', { recursive: true, encoding: 'utf8' })
-    .filter((path) => /\.(keymap|dtsi)$/.test(path))
-    .map((path) => [path, readFileSync(`fixtures/adv360/${path}`, 'utf8')]),
-)
 
 it('resolves version and reports no missing includes', () => {
   const model = resolve(files, 'adv360.keymap')
@@ -87,31 +81,31 @@ const synthetic = (extra: string, binding = '&none') =>
   `/ { keymap { a { bindings = <${binding}>; }; b { bindings = <&none>; }; c { bindings = <&none>; }; }; ${extra} };`
 
 it('replaces forced momentary and toggle layer bindings', () => {
-  const e = createEditor({ x: synthetic('', '&mo 1 &tog 1 &to 1 &sl 1 &mo 2') }, 'x')
-  const changes = e.removeLayer(1, { force: true })
-  expect(e.serialize().x).toContain('<&none &none &none &none &mo 1>')
+  const currentEditor = createEditor({ x: synthetic('', '&mo 1 &tog 1 &to 1 &sl 1 &mo 2') }, 'x')
+  const changes = currentEditor.removeLayer(1, { force: true })
+  expect(currentEditor.serialize().x).toContain('<&none &none &none &none &mo 1>')
   expect(changes.every((change) => change.reason && change.before)).toBe(true)
 })
 
 it('preserves the tap key when removing a layer-tap reference', () => {
-  const e = createEditor({ x: synthetic('', '&lt 1 SPACE') }, 'x')
-  e.removeLayer(1, { force: true })
-  expect(e.serialize().x).toContain('&kp SPACE')
+  const nextEditor = createEditor({ x: synthetic('', '&lt 1 SPACE') }, 'x')
+  nextEditor.removeLayer(1, { force: true })
+  expect(nextEditor.serialize().x).toContain('&kp SPACE')
 })
 
 it('removes combo layer numbers and empty combos', () => {
-  const e = createEditor(
+  const otherEditor = createEditor(
     { x: synthetic('combos { one { layers = <1 2>; }; two { layers = <1>; }; };') },
     'x',
   )
-  expect(() => e.removeLayer(1)).toThrow(LayerReferencedError)
-  e.removeLayer(1, { force: true })
-  expect(e.serialize().x).toMatch(/layers = <\s*1>/)
-  expect(e.serialize().x).not.toContain('two {')
+  expect(() => otherEditor.removeLayer(1)).toThrow(LayerReferencedError)
+  otherEditor.removeLayer(1, { force: true })
+  expect(otherEditor.serialize().x).toMatch(/layers = <\s*1>/)
+  expect(otherEditor.serialize().x).not.toContain('two {')
 })
 
 it('removes conditional entries referring to the removed layer', () => {
-  const e = createEditor(
+  const candidateEditor = createEditor(
     {
       x: synthetic(
         'conditional { compatible = "zmk,conditional-layers"; one { if-layers = <0 1>; then-layer = <2>; }; two { if-layers = <0>; then-layer = <1>; }; three { if-layers = <0>; then-layer = <2>; }; };',
@@ -119,69 +113,80 @@ it('removes conditional entries referring to the removed layer', () => {
     },
     'x',
   )
-  e.removeLayer(1, { force: true })
-  expect(e.serialize().x).not.toContain('one {')
-  expect(e.serialize().x).not.toContain('two {')
-  expect(e.serialize().x).toContain('then-layer = <1>')
+  candidateEditor.removeLayer(1, { force: true })
+  expect(candidateEditor.serialize().x).not.toContain('one {')
+  expect(candidateEditor.serialize().x).not.toContain('two {')
+  expect(candidateEditor.serialize().x).toContain('then-layer = <1>')
 })
 
 it('force removes the fixture keypad and round trips the result', () => {
-  const e = createEditor(files, 'adv360.keymap')
-  const changes = e.removeLayer(1, { force: true })
-  expect(changes.some((c) => c.before === '&mo 1' && c.after === '&none')).toBe(true)
-  expect(changes.some((c) => c.before === '&tog 1' && c.after === '&none')).toBe(true)
-  expect(changes.some((c) => c.before === '3' && c.after === '2')).toBe(true)
-  expect(e.model.layers).toHaveLength(3)
-  for (const [file, source] of Object.entries(e.serialize()))
+  const selectedEditor = createEditor(files, 'adv360.keymap')
+  const changes = selectedEditor.removeLayer(1, { force: true })
+  expect(changes.some((entry) => entry.before === '&mo 1' && entry.after === '&none')).toBe(true)
+  expect(
+    changes.some(
+      (currentEntry) => currentEntry.before === '&tog 1' && currentEntry.after === '&none',
+    ),
+  ).toBe(true)
+  expect(changes.some((nextEntry) => nextEntry.before === '3' && nextEntry.after === '2')).toBe(
+    true,
+  )
+  expect(selectedEditor.model.layers).toHaveLength(3)
+  for (const [file, source] of Object.entries(selectedEditor.serialize()))
     expect(serialize(parse(source, file))).toBe(source)
 })
 
 it('ignores comments and string literals during layer rewriting', () => {
   const source = synthetic('other { text = "&mo 2"; };', '&mo 2 /* &mo 2 */ // &tog 2\n &to 2')
-  const e = createEditor({ x: source }, 'x')
-  e.removeLayer(1)
-  expect(e.serialize().x).toContain('&mo 1 /* &mo 2 */ // &tog 2\n &to 1')
-  expect(e.serialize().x).toContain('"&mo 2"')
+  const existingEditor = createEditor({ x: source }, 'x')
+  existingEditor.removeLayer(1)
+  expect(existingEditor.serialize().x).toContain('&mo 1 /* &mo 2 */ // &tog 2\n &to 1')
+  expect(existingEditor.serialize().x).toContain('"&mo 2"')
 })
 
 it('rewrites multiple references on one line', () => {
-  const e = createEditor({ x: synthetic('', '&mo 2 &tog 2 &to 2') }, 'x')
-  e.removeLayer(1)
-  expect(e.serialize().x).toContain('&mo 1 &tog 1 &to 1')
+  const resolvedEditor = createEditor({ x: synthetic('', '&mo 2 &tog 2 &to 2') }, 'x')
+  resolvedEditor.removeLayer(1)
+  expect(resolvedEditor.serialize().x).toContain('&mo 1 &tog 1 &to 1')
 })
 
 it('rewrites a binding split across lines', () => {
-  const e = createEditor({ x: synthetic('', '&mo\n 2') }, 'x')
-  e.removeLayer(1)
-  expect(e.serialize().x).toContain('&mo\n 1')
+  const parsedEditor = createEditor({ x: synthetic('', '&mo\n 2') }, 'x')
+  parsedEditor.removeLayer(1)
+  expect(parsedEditor.serialize().x).toContain('&mo\n 1')
 })
 
 it('rewrites a numeric symbol definition instead of its binding', () => {
-  const e = createEditor({ x: '#define TARGET 2\n' + synthetic('', '&mo TARGET &tog TARGET') }, 'x')
-  const changes = e.removeLayer(1)
-  expect(e.serialize().x).toContain('#define TARGET 1')
-  expect(e.serialize().x).toContain('&mo TARGET &tog TARGET')
+  const updatedEditor = createEditor(
+    { x: '#define TARGET 2\n' + synthetic('', '&mo TARGET &tog TARGET') },
+    'x',
+  )
+  const changes = updatedEditor.removeLayer(1)
+  expect(updatedEditor.serialize().x).toContain('#define TARGET 1')
+  expect(updatedEditor.serialize().x).toContain('&mo TARGET &tog TARGET')
   expect(changes).toHaveLength(1)
 })
 
 it('reports locations of unresolved layer symbols without editing', () => {
   const source = synthetic('', '&mo MISSING &tog OTHER')
-  const e = createEditor({ x: source }, 'x')
+  const targetEditor = createEditor({ x: source }, 'x')
   try {
-    e.removeLayer(1)
+    targetEditor.removeLayer(1)
     throw new Error('expected error')
   } catch (error) {
     expect(error).toBeInstanceOf(UnresolvedLayerSymbolError)
     expect(
-      (error as UnresolvedLayerSymbolError).locations.map((p) => source.slice(p.start, p.end)),
+      (error as UnresolvedLayerSymbolError).locations.map((currentProperty) =>
+        source.slice(currentProperty.start, currentProperty.end),
+      ),
     ).toEqual(['MISSING', 'OTHER'])
   }
-  expect(e.serialize().x).toBe(source)
+  expect(targetEditor.serialize().x).toBe(source)
 })
 
 it('rejects arithmetic layer expressions without editing', () => {
   const source = synthetic('', '&mo (BASE+1)')
-  const e = createEditor({ x: source }, 'x')
-  expect(() => e.moveLayer(0, 1)).toThrow(UnsupportedLayerExpressionError)
-  expect(e.serialize().x).toBe(source)
+  const activeEditor = createEditor({ x: source }, 'x')
+  expect(() => activeEditor.moveLayer(0, 1)).toThrow(UnsupportedLayerExpressionError)
+  expect(activeEditor.serialize().x).toBe(source)
 })

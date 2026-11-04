@@ -1,14 +1,21 @@
 import type { Binding, CST, FileMap, Model, Node, Property, Layer, Behavior, Combo } from './types'
 import { tokenize } from './tokenize'
 import { parse } from './parse'
+/** Select node children from a mixed list. */
 export const nodes = (items: (Node | Property)[]): Node[] =>
-  items.filter((x): x is Node => x.kind === 'node')
+  items.filter((currentItem): currentItem is Node => currentItem.kind === 'node')
+/** Find a named property on a node. */
 export const prop = (node: Node, name: string): Property | undefined =>
-  node.children.find((x): x is Property => x.kind === 'property' && x.name === name)
-const unquote = (v?: string) => v?.match(/^"((?:\\.|[^"\\])*)"/)?.[1]
-function bindings(p: Property | undefined, source: string): Binding[] {
-  if (!p?.valueSpan) return []
-  const ts = tokenize(p.value, p.file).filter((t) => t.kind !== 'trivia' && t.kind !== 'directive')
+  node.children.find(
+    (nextItem): nextItem is Property => nextItem.kind === 'property' && nextItem.name === name,
+  )
+const unquote = (currentValue: string | undefined) =>
+  currentValue?.match(/^"((?:\\.|[^"\\])*)"/)?.[1]
+function bindings(currentProperty: Property | undefined, source: string): Binding[] {
+  if (!currentProperty?.valueSpan) return []
+  const ts = tokenize(currentProperty.value, currentProperty.file).filter(
+    (token) => token.kind !== 'trivia' && token.kind !== 'directive',
+  )
   const result: Binding[] = []
   for (let i = 0; i < ts.length; i++) {
     if (!ts[i].text.startsWith('&')) continue
@@ -19,24 +26,29 @@ function bindings(p: Property | undefined, source: string): Binding[] {
     let depth = 0
     let part = ''
     for (i++; i < ts.length; i++) {
-      const t = ts[i]
-      if (depth === 0 && (t.text.startsWith('&') || t.text === '>' || t.text === ',')) {
+      const currentToken = ts[i]
+      if (
+        depth === 0 &&
+        (currentToken.text.startsWith('&') ||
+          currentToken.text === '>' ||
+          currentToken.text === ',')
+      ) {
         i--
         break
       }
-      if (depth === 0 && part && t.start > end) {
+      if (depth === 0 && part && currentToken.start > end) {
         params.push(part)
         part = ''
       }
-      part += t.text
-      end = t.end
-      if (t.text === '(') depth++
-      if (t.text === ')') depth--
+      part += currentToken.text
+      end = currentToken.end
+      if (currentToken.text === '(') depth++
+      if (currentToken.text === ')') depth--
     }
     if (part) params.push(part)
-    const absolute = p.valueSpan.start
+    const absolute = currentProperty.valueSpan.start
     result.push({
-      file: p.file,
+      file: currentProperty.file,
       start: absolute + start,
       end: absolute + end,
       behavior,
@@ -49,45 +61,51 @@ function bindings(p: Property | undefined, source: string): Binding[] {
 function resolvePath(base: string, relative: string): string {
   const parts = base.split('/')
   parts.pop()
-  for (const p of relative.split('/')) {
-    if (p === '..') parts.pop()
-    else if (p !== '.') parts.push(p)
+  for (const nextProperty of relative.split('/')) {
+    if (nextProperty === '..') parts.pop()
+    else if (nextProperty !== '.') parts.push(nextProperty)
   }
   return parts.join('/')
 }
 function conditions(cst: CST, position: number): string | undefined {
   const stack: { previous: string[]; current: string }[] = []
-  for (const t of cst.tokens) {
-    if (t.start >= position) break
-    if (t.kind !== 'directive') continue
-    const m = t.text.trim().match(/^#(if|ifdef|ifndef|elif|else|endif)\b\s*(.*)/)
-    if (!m) continue
+  for (const nextToken of cst.tokens) {
+    if (nextToken.start >= position) break
+    if (nextToken.kind !== 'directive') continue
+    const currentMatch = nextToken.text.trim().match(/^#(if|ifdef|ifndef|elif|else|endif)\b\s*(.*)/)
+    if (!currentMatch) continue
     const frame = stack[stack.length - 1]
-    if (m[1] === 'endif') stack.pop()
-    else if (m[1] === 'elif' && frame) {
+    if (currentMatch[1] === 'endif') stack.pop()
+    else if (currentMatch[1] === 'elif' && frame) {
       frame.previous.push(frame.current)
-      frame.current = m[2]
-    } else if (m[1] === 'else' && frame) {
+      frame.current = currentMatch[2]
+    } else if (currentMatch[1] === 'else' && frame) {
       frame.previous.push(frame.current)
       frame.current = '1'
-    } else if (['if', 'ifdef', 'ifndef'].includes(m[1]))
+    } else if (['if', 'ifdef', 'ifndef'].includes(currentMatch[1]))
       stack.push({
         previous: [],
         current:
-          m[1] === 'ifdef' ? `defined(${m[2]})` : m[1] === 'ifndef' ? `!defined(${m[2]})` : m[2],
+          currentMatch[1] === 'ifdef'
+            ? `defined(${currentMatch[2]})`
+            : currentMatch[1] === 'ifndef'
+              ? `!defined(${currentMatch[2]})`
+              : currentMatch[2],
       })
   }
   return stack.length
     ? stack
         .map(
-          (f) =>
-            [...f.previous.map((p) => `!(${p})`), ...(f.current === '1' ? [] : [f.current])].join(
-              ' && ',
-            ) || '1',
+          (currentFile) =>
+            [
+              ...currentFile.previous.map((otherProperty) => `!(${otherProperty})`),
+              ...(currentFile.current === '1' ? [] : [currentFile.current]),
+            ].join(' && ') || '1',
         )
         .join(' && ')
     : undefined
 }
+/** Resolve keymap files into a semantic model. */
 export function resolve(files: FileMap, entry: string): Model {
   if (!(entry in files)) throw new Error(`Missing entry: ${entry}`)
   const parsed: Record<string, CST> = {}
@@ -103,46 +121,51 @@ export function resolve(files: FileMap, entry: string): Model {
       const entries: { start: number; node?: Node; include?: string }[] = nodes(items).map(
         (node) => ({ start: node.start, node }),
       )
-      for (const t of cst.tokens)
+      for (const otherToken of cst.tokens)
         if (
-          t.kind === 'directive' &&
-          t.start >= start &&
-          t.end <= end &&
-          !nodes(items).some((n) => t.start >= n.start && t.end <= n.end)
+          otherToken.kind === 'directive' &&
+          otherToken.start >= start &&
+          otherToken.end <= end &&
+          !nodes(items).some(
+            (currentNode) =>
+              otherToken.start >= currentNode.start && otherToken.end <= currentNode.end,
+          )
         ) {
-          const m = t.text.match(/^\s*#include\s+"([^"]+)"/)
-          if (m) entries.push({ start: t.start, include: m[1] })
+          const nextMatch = otherToken.text.match(/^\s*#include\s+"([^"]+)"/)
+          if (nextMatch) entries.push({ start: otherToken.start, include: nextMatch[1] })
         }
-      entries.sort((a, b) => a.start - b.start)
-      for (const e of entries) {
-        if (e.include) {
-          const path = resolvePath(file, e.include)
+      entries.sort((first, binding) => first.start - binding.start)
+      for (const editor of entries) {
+        if (editor.include) {
+          const path = resolvePath(file, editor.include)
           if (path in files) visit(path, parent, next)
           else if (!missingIncludes.includes(path)) missingIncludes.push(path)
           continue
         }
-        const n = e.node!
-        const get = (key: string) => prop(n, key)?.value
-        const bs = bindings(prop(n, 'bindings'), cst.source)
+        const nextNode = editor.node!
+        const get = (key: string) => prop(nextNode, key)?.value
+        const bs = bindings(prop(nextNode, 'bindings'), cst.source)
         const compatible = unquote(get('compatible'))
         if (parent === 'keymap')
           layers.push({
-            ...n,
-            name: n.name,
+            ...nextNode,
+            name: nextNode.name,
             displayName: unquote(get('display-name')) ?? unquote(get('label')),
             bindings: bs,
-            node: n,
+            node: nextNode,
           })
         if (
           compatible &&
           (compatible.startsWith('zmk,behavior-') || parent === 'behaviors' || parent === 'macros')
         ) {
           const properties: Record<string, string> = {}
-          for (const p of n.children) if (p.kind === 'property') properties[p.name] = p.value
+          for (const candidateProperty of nextNode.children)
+            if (candidateProperty.kind === 'property')
+              properties[candidateProperty.name] = candidateProperty.value
           behaviors.push({
-            ...n,
-            name: n.name,
-            label: n.label,
+            ...nextNode,
+            name: nextNode.name,
+            label: nextNode.label,
             compatible,
             properties,
             bindings: bs,
@@ -152,23 +175,24 @@ export function resolve(files: FileMap, entry: string): Model {
                 : Number(get('wait-ms')?.match(/-?\d+/)?.[0]),
             tapMs:
               get('tap-ms') === undefined ? undefined : Number(get('tap-ms')?.match(/-?\d+/)?.[0]),
-            node: n,
+            node: nextNode,
           })
         }
-        if (parent === 'combos' && prop(n, 'key-positions')) {
-          const nums = (v?: string) => (v?.match(/-?\d+/g) ?? []).map(Number)
+        if (parent === 'combos' && prop(nextNode, 'key-positions')) {
+          const nums = (nextValue: string | undefined) =>
+            (nextValue?.match(/-?\d+/g) ?? []).map(Number)
           combos.push({
-            ...n,
-            name: n.name,
+            ...nextNode,
+            name: nextNode.name,
             bindings: bs,
             keyPositions: nums(get('key-positions')),
             timeoutMs: nums(get('timeout-ms'))[0],
             layers: get('layers') === undefined ? undefined : nums(get('layers')),
-            condition: conditions(cst, n.start),
-            node: n,
+            condition: conditions(cst, nextNode.start),
+            node: nextNode,
           })
         }
-        walk(n.children, n.name, n.bodyStart, n.bodyEnd)
+        walk(nextNode.children, nextNode.name, nextNode.bodyStart, nextNode.bodyEnd)
       }
     }
     walk(cst.children, context, 0, cst.source.length)
@@ -189,7 +213,9 @@ export function resolve(files: FileMap, entry: string): Model {
   return {
     layers,
     behaviors,
-    macros: behaviors.filter((b) => b.compatible === 'zmk,behavior-macro'),
+    macros: behaviors.filter(
+      (currentBinding) => currentBinding.compatible === 'zmk,behavior-macro',
+    ),
     combos,
     files: parsed,
     missingIncludes,

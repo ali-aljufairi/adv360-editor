@@ -1,19 +1,24 @@
+/** File contents indexed by path. */
 export type FileMap = Record<string, string>
+/** A source range within a file. */
 export interface Span {
   file: string
   start: number
   end: number
 }
+/** A lossless lexical token. */
 export interface Token extends Span {
   kind: 'word' | 'string' | 'punct' | 'trivia' | 'directive'
   text: string
 }
+/** A parsed device tree property. */
 export interface Property extends Span {
   kind: 'property'
   name: string
   value: string
   valueSpan?: Span
 }
+/** A parsed device tree node. */
 export interface Node extends Span {
   kind: 'node'
   name: string
@@ -23,23 +28,27 @@ export interface Node extends Span {
   bodyEnd: number
   children: (Node | Property)[]
 }
+/** A concrete syntax tree and its source. */
 export interface CST {
   file: string
   source: string
   tokens: Token[]
   children: (Node | Property)[]
 }
+/** A behavior binding and its arguments. */
 export interface Binding extends Span {
   behavior: string
   params: string[]
   text: string
 }
+/** A keymap layer and its bindings. */
 export interface Layer extends Span {
   name: string
   displayName?: string
   bindings: Binding[]
   node: Node
 }
+/** A resolved behavior or macro. */
 export interface Behavior extends Span {
   name: string
   label?: string
@@ -50,6 +59,7 @@ export interface Behavior extends Span {
   tapMs?: number
   node: Node
 }
+/** A resolved key combination. */
 export interface Combo extends Span {
   name: string
   bindings: Binding[]
@@ -59,6 +69,7 @@ export interface Combo extends Span {
   condition?: string
   node: Node
 }
+/** The resolved keymap and its dependencies. */
 export interface Model {
   layers: Layer[]
   behaviors: Behavior[]
@@ -77,6 +88,7 @@ export interface Issue extends Span {
   layer?: number
   key?: number
 }
+/** A key position and dimensions in the physical layout. */
 export interface PhysicalKey {
   index: number
   x: number

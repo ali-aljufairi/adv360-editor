@@ -7,72 +7,76 @@ function collectIssues(
   const count = model.layers.length
   const edges: number[][] = model.layers.map(() => [])
   const persistent: [number, number, Binding][] = []
-  const add = (from: number, b: Binding) => {
-    if (!['mo', 'lt', 'tog', 'to', 'sl'].includes(b.behavior)) return
-    const target = Number(b.params[0])
+  const add = (from: number, currentBinding: Binding) => {
+    if (!['mo', 'lt', 'tog', 'to', 'sl'].includes(currentBinding.behavior)) return
+    const target = Number(currentBinding.params[0])
     if (!Number.isInteger(target) || target < 0 || target >= count) return
     edges[from].push(target)
-    if (['tog', 'to'].includes(b.behavior)) persistent.push([from, target, b])
+    if (['tog', 'to'].includes(currentBinding.behavior))
+      persistent.push([from, target, currentBinding])
   }
-  model.layers.forEach((l, i) => {
-    if (l.bindings.length !== 76)
+  model.layers.forEach((currentLayer, i) => {
+    if (currentLayer.bindings.length !== 76)
       issues.push({
         code: 'binding-count',
-        message: `Layer ${i} has ${l.bindings.length} bindings, expected 76`,
-        span: l,
+        message: `Layer ${i} has ${currentLayer.bindings.length} bindings, expected 76`,
+        span: currentLayer,
       })
-    l.bindings.forEach((b) => add(i, b))
+    currentLayer.bindings.forEach((nextBinding) => add(i, nextBinding))
   })
-  for (const c of model.combos) {
-    const active = c.layers ?? model.layers.map((_, i) => i)
-    for (const pos of c.keyPositions)
+  for (const entry of model.combos) {
+    const active = entry.layers ?? model.layers.map((_, i) => i)
+    for (const pos of entry.keyPositions)
       if (pos < 0 || pos >= 76)
         issues.push({
           code: 'combo-position',
-          message: `Combo ${c.name} position ${pos} is out of range`,
-          span: c,
+          message: `Combo ${entry.name} position ${pos} is out of range`,
+          span: entry,
         })
-    for (const i of active) if (edges[i]) c.bindings.forEach((b) => add(i, b))
+    for (const i of active)
+      if (edges[i]) entry.bindings.forEach((otherBinding) => add(i, otherBinding))
   }
   const reachable = (start: number) => {
     const seen = new Set<number>([start])
     const queue = [start]
-    for (const n of queue)
-      for (const v of edges[n] ?? [])
-        if (!seen.has(v)) {
-          seen.add(v)
-          queue.push(v)
+    for (const node of queue)
+      for (const value of edges[node] ?? [])
+        if (!seen.has(value)) {
+          seen.add(value)
+          queue.push(value)
         }
     return seen
   }
   const fromZero = reachable(0)
-  model.layers.forEach((l, i) => {
+  model.layers.forEach((nextLayer, i) => {
     if (!fromZero.has(i))
       issues.push({
         code: 'unreachable-layer',
-        message: `Layer ${i} (${l.name}) is unreachable`,
-        span: l,
+        message: `Layer ${i} (${nextLayer.name}) is unreachable`,
+        span: nextLayer,
       })
   })
-  for (const [from, to, b] of persistent)
+  for (const [from, to, candidateBinding] of persistent)
     if (to !== from && !reachable(to).has(from))
       issues.push({
         code: 'no-return',
         message: `Layer ${to} has no path back to layer ${from}`,
-        span: b,
+        span: candidateBinding,
       })
   for (let i = 0; i < model.combos.length; i++)
     for (let j = i + 1; j < model.combos.length; j++) {
-      const a = model.combos[i],
-        b = model.combos[j]
+      const first = model.combos[i],
+        selectedBinding = model.combos[j]
       if (
-        a.keyPositions.some((p) => b.keyPositions.includes(p)) &&
-        (!a.layers || !b.layers || a.layers.some((l) => b.layers!.includes(l)))
+        first.keyPositions.some((property) => selectedBinding.keyPositions.includes(property)) &&
+        (!first.layers ||
+          !selectedBinding.layers ||
+          first.layers.some((otherLayer) => selectedBinding.layers!.includes(otherLayer)))
       )
         issues.push({
           code: 'combo-overlap',
-          message: `Combos ${a.name} and ${b.name} overlap`,
-          span: b,
+          message: `Combos ${first.name} and ${selectedBinding.name} overlap`,
+          span: selectedBinding,
         })
     }
   const known = new Set([
@@ -107,25 +111,25 @@ function collectIssues(
     'key_repeat',
     'gresc',
     'kt',
-    ...model.behaviors.map((b) => b.label ?? b.name),
+    ...model.behaviors.map((existingBinding) => existingBinding.label ?? existingBinding.name),
     ...model.boardBehaviors,
   ])
-  for (const b of [
-    ...model.layers.flatMap((l) => l.bindings),
-    ...model.combos.flatMap((c) => c.bindings),
-    ...model.behaviors.flatMap((x) => x.bindings),
+  for (const resolvedBinding of [
+    ...model.layers.flatMap((candidateLayer) => candidateLayer.bindings),
+    ...model.combos.flatMap((currentEntry) => currentEntry.bindings),
+    ...model.behaviors.flatMap((currentItem) => currentItem.bindings),
   ])
-    if (!known.has(b.behavior) && generated.has(b.behavior))
+    if (!known.has(resolvedBinding.behavior) && generated.has(resolvedBinding.behavior))
       issues.push({
         code: 'generated-behavior',
-        message: `Behavior &${b.behavior} is generated at build time`,
-        span: b,
+        message: `Behavior &${resolvedBinding.behavior} is generated at build time`,
+        span: resolvedBinding,
       })
-    else if (!known.has(b.behavior))
+    else if (!known.has(resolvedBinding.behavior))
       issues.push({
         code: 'undefined-behavior',
-        message: `Undefined behavior &${b.behavior}`,
-        span: b,
+        message: `Undefined behavior &${resolvedBinding.behavior}`,
+        span: resolvedBinding,
       })
   return issues
 }

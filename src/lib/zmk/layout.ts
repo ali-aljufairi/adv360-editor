@@ -1,4 +1,5 @@
 import type { PhysicalKey } from './types'
+/** Load physical key geometry from board metadata. */
 export function loadPhysicalLayout(
   info: string | { layouts: Record<string, { layout: Record<string, unknown>[] }> },
   name = 'LAYOUT',

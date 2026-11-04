@@ -27,3 +27,17 @@ it('builds the expected keymap tree paths', () => {
     ]),
   )
 })
+
+import { files } from './fixtures'
+import { serialize } from '../../src/lib/zmk'
+
+it('round trips every fixture byte for byte', () => {
+  for (const [path, source] of Object.entries(files))
+    expect(serialize(parse(source, path))).toBe(source)
+})
+
+it('preserves exotic syntax', () => {
+  const currentSource =
+    '/ { exotic@0 { odd = /bits/ 64 <0x1234>; strange = [aa bb]; /* untouched */ }; };\n'
+  expect(serialize(parse(currentSource))).toBe(currentSource)
+})
