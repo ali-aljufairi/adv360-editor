@@ -76,6 +76,17 @@ upstream issues (see `docs/research/keymap-editor-issues.md`):
 
 - Macro editor, hold-tap editor, combo editor (arcs on the board).
 
+### M3b — OS layers and profile-linked layers (recommended; owner may veto)
+
+- One keyboard is used on both macOS and Windows; firmware cannot detect the host OS.
+- Base layer + thin "Windows" overlay layer holding only differing keys (Cmd↔Ctrl, shortcuts).
+- Picker: assigning a shortcut such as Copy writes ⌘C on the Mac side and Ctrl+C on the Windows
+  overlay in one step; the board preview switches OS view.
+- A Mac/Windows toggle key or combo; optional macros that select a Bluetooth profile and the
+  matching OS layer together (`&bt BT_SEL n` + `&to <layer>`). A firmware module that follows the
+  active profile automatically is a later, separate decision.
+- Prerequisite: give the unreachable Mod/Bluetooth layer (layer 2) an access key.
+
 ### M4 — GitHub
 
 - GitHub App auth (single user), load config from repo, commit to branch, dispatch workflow,
