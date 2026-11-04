@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import { ACTIONS, type Action } from '../../src/lib/navigation/actions'
-import { eventToToken, parseSequence, formatSequence, shouldHandleKeydown } from '../../src/lib/navigation/keys'
+import {
+  eventToToken,
+  parseSequence,
+  formatSequence,
+  shouldHandleKeydown,
+} from '../../src/lib/navigation/keys'
 import { createSequenceMatcher, type MatchResult } from '../../src/lib/navigation/matcher'
 import { PRESETS, resolveBindings, usesCounts } from '../../src/lib/navigation/schemes'
 
 /** Minimal KeyboardEvent stand-in for the normalisation helpers. */
-function ev(key: string, mods: Partial<Record<'ctrl' | 'alt' | 'meta' | 'shift', boolean>> = {}, code = '') {
+function ev(
+  key: string,
+  mods: Partial<Record<'ctrl' | 'alt' | 'meta' | 'shift', boolean>> = {},
+  code = '',
+) {
   return {
     key,
     code,
@@ -198,8 +207,18 @@ describe('resolving schemes', () => {
     expect(resolveBindings('arrows', {}, { arrowsAlwaysOn: true }).down).toEqual(['ArrowDown'])
   })
 
-  it('custom with no overrides matches the arrows preset', () => {
-    expect(resolveBindings('custom', {}, { arrowsAlwaysOn: false })).toEqual(PRESETS.arrows)
+  it('custom with no overrides matches the resolved arrows scheme', () => {
+    expect(resolveBindings('custom', {}, { arrowsAlwaysOn: false })).toEqual(
+      resolveBindings('arrows', {}, { arrowsAlwaysOn: false }),
+    )
+  })
+
+  it('keeps platform undo and redo shortcuts in every scheme', () => {
+    for (const scheme of ['arrows', 'vim', 'emacs', 'custom'] as const) {
+      const table = resolveBindings(scheme, {}, { arrowsAlwaysOn: false })
+      expect(table.undo).toEqual(expect.arrayContaining(['Meta-z', 'C-z']))
+      expect(table.redo).toEqual(expect.arrayContaining(['Meta-S-z', 'C-S-z', 'C-y']))
+    }
   })
 })
 
@@ -212,7 +231,9 @@ describe('keyboard guards', () => {
   it('ignores keys typed into inputs, textareas and contenteditable regions', () => {
     expect(shouldHandleKeydown(keydown({ tagName: 'INPUT' }), doc(null))).toBe(false)
     expect(shouldHandleKeydown(keydown({ tagName: 'TEXTAREA' }), doc(null))).toBe(false)
-    expect(shouldHandleKeydown(keydown({ tagName: 'DIV', isContentEditable: true }), doc(null))).toBe(false)
+    expect(
+      shouldHandleKeydown(keydown({ tagName: 'DIV', isContentEditable: true }), doc(null)),
+    ).toBe(false)
   })
 
   it('handles keys on the board and ignores them while a dialog holds focus', () => {

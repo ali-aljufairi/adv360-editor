@@ -14,6 +14,8 @@ export interface PickerPopoverProps {
 const POPOVER_WIDTH = 420
 /** Gap between the key and the popover, in pixels. */
 const GAP = 8
+/** Smallest height the popover may shrink to before it is allowed to overlap the key. */
+const MIN_POPOVER_HEIGHT = 280
 
 /**
  * Hosts the binding picker next to the key it edits on desktop, or as a bottom sheet on narrow
@@ -41,11 +43,18 @@ export function PickerPopover({ anchor, sheet, onClose, children }: PickerPopove
   const left = anchor
     ? Math.min(Math.max(anchor.left, GAP), viewportWidth - POPOVER_WIDTH - GAP)
     : (viewportWidth - POPOVER_WIDTH) / 2
-  // Keys in the lower half open upward, so the popover never runs off the bottom of the screen.
-  const vertical =
-    anchor && anchor.bottom < viewportHeight / 2
-      ? { top: anchor.bottom + GAP }
-      : { bottom: anchor ? viewportHeight - anchor.top + GAP : GAP }
+  // Open on the side of the key with more room, and cap the height to that room so the popover
+  // (and its search field) never runs off the top or bottom of the screen.
+  const spaceBelow = anchor ? viewportHeight - anchor.bottom - 2 * GAP : viewportHeight - 2 * GAP
+  const spaceAbove = anchor ? anchor.top - 2 * GAP : 0
+  const openBelow = !anchor || spaceBelow >= spaceAbove
+  const maxHeight = Math.max(
+    MIN_POPOVER_HEIGHT,
+    Math.min(openBelow ? spaceBelow : spaceAbove, viewportHeight * 0.7),
+  )
+  const vertical = openBelow
+    ? { top: anchor ? anchor.bottom + GAP : GAP, maxHeight }
+    : { bottom: viewportHeight - anchor.top + GAP, maxHeight }
   return (
     <div className="fixed inset-0 z-50" onMouseDown={onClose}>
       <div
@@ -53,7 +62,7 @@ export function PickerPopover({ anchor, sheet, onClose, children }: PickerPopove
         aria-modal="true"
         aria-label="Choose a binding"
         onMouseDown={(event) => event.stopPropagation()}
-        className="fixed max-h-[70dvh] overflow-y-auto rounded-xl border border-subtle bg-raised p-3 shadow-[var(--shadow-float)]"
+        className="fixed overflow-y-auto rounded-xl border border-subtle bg-raised p-3 shadow-[var(--shadow-float)]"
         style={{ left, width: POPOVER_WIDTH, ...vertical }}
       >
         {children}

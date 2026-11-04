@@ -104,6 +104,15 @@ export function usesCounts(scheme: SchemeName): boolean {
   return scheme === 'vim'
 }
 
+/** Undo/redo shortcuts that stay active whatever navigation scheme is selected. */
+const UNIVERSAL_KEYS: { action: Action; key: string }[] = [
+  { action: 'undo', key: 'Meta-z' },
+  { action: 'undo', key: 'C-z' },
+  { action: 'redo', key: 'Meta-S-z' },
+  { action: 'redo', key: 'C-S-z' },
+  { action: 'redo', key: 'C-y' },
+]
+
 /**
  * The effective table for a scheme. `custom` applies its overrides on top of the arrows preset;
  * other schemes ignore `custom`, so switching presets never discards a user's overrides.
@@ -125,6 +134,10 @@ export function resolveBindings(
     for (const { action, key } of ARROW_MOVES) {
       if (!table[action].includes(key)) table[action].push(key)
     }
+  }
+  // Undo and redo with the platform shortcuts work in every scheme; people expect them.
+  for (const { action, key } of UNIVERSAL_KEYS) {
+    if (!table[action].includes(key)) table[action].push(key)
   }
   return table
 }
