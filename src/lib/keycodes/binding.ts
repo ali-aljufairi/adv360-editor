@@ -1,4 +1,4 @@
-import { resolveKeyCode } from './catalog'
+import { resolveKeyCode, spellKey, usageOf, type PreferredNames } from './catalog'
 
 /** A ZMK modifier wrapper: left or right Ctrl, Shift, Alt or GUI. */
 export type ModId = 'LC' | 'LS' | 'LA' | 'LG' | 'RC' | 'RS' | 'RA' | 'RG'
@@ -25,6 +25,14 @@ export type Choice =
   | { kind: 'key'; code: string }
   | { kind: 'action'; behavior: string; params: readonly string[] }
   | { kind: 'layer'; layer: number }
+  /** A platform shortcut: a key wrapped in fixed modifiers, e.g. `LG(C)` on mac. */
+  | { kind: 'shortcut'; code: string; mods: readonly ModId[] }
+
+/** A binding as a keymap holds it. Only the behavior and parameters matter here. */
+export interface BindingLike {
+  behavior: string
+  params: readonly string[]
+}
 
 /** The editor's binding shape: a behavior and its parameters. */
 export interface BindingValue {
@@ -87,14 +95,23 @@ export function isValidKeyParam(param: string): boolean {
 }
 
 /**
- * Builds the binding for a single choice. Modifiers only apply to key choices.
+ * Builds the binding for a single choice. Modifiers apply to key choices; a shortcut keeps its
+ * own fixed modifiers and ignores the chips.
  * @param choice - What the user picked.
  * @param mods - Modifiers to wrap a key with.
+ * @param names - The user's spellings, so a key is written the way their keymap writes it.
  * @returns The behavior and parameters to write.
  */
-export function choiceToBinding(choice: Choice, mods: readonly ModId[] = []): BindingValue {
+export function choiceToBinding(
+  choice: Choice,
+  mods: readonly ModId[] = [],
+  names: PreferredNames = {},
+): BindingValue {
   if (choice.kind === 'key') {
-    return { behavior: '&kp', params: [wrapMods(choice.code, mods)] }
+    return { behavior: '&kp', params: [wrapMods(spellKey(choice.code, names), mods)] }
+  }
+  if (choice.kind === 'shortcut') {
+    return { behavior: '&kp', params: [wrapMods(spellKey(choice.code, names), choice.mods)] }
   }
   if (choice.kind === 'layer') {
     return { behavior: '&mo', params: [String(choice.layer)] }
@@ -105,31 +122,67 @@ export function choiceToBinding(choice: Choice, mods: readonly ModId[] = []): Bi
 /**
  * Builds a complete binding from a draft.
  * @param draft - The picker state.
+ * @param names - The user's spellings, from `collectPreferredNames`.
  * @returns The binding, or null while the draft is still incomplete or invalid.
  */
-export function buildBinding(draft: Draft): BindingValue | null {
+export function buildBinding(draft: Draft, names: PreferredNames = {}): BindingValue | null {
   if (draft.mode === 'single') {
-    return draft.choice ? choiceToBinding(draft.choice, draft.mods) : null
+    return draft.choice ? choiceToBinding(draft.choice, draft.mods, names) : null
   }
   if (!draft.tap || !draft.hold) return null
   if (draft.tap.kind !== 'key') return null
-  const holdParam = holdParamOf(draft.hold)
+  const holdParam = holdParamOf(draft.hold, names)
   if (holdParam === null) return null
   return {
     behavior: draft.behavior,
-    params: [holdParam, wrapMods(draft.tap.code, draft.mods)],
+    params: [holdParam, wrapMods(spellKey(draft.tap.code, names), draft.mods)],
   }
 }
 
 /**
  * The parameter a hold slot writes, or null when the choice cannot be held.
  * @param hold - The hold-slot choice.
+ * @param names - The user's spellings.
  * @returns The parameter string, or null.
  */
-function holdParamOf(hold: Choice): string | null {
-  if (hold.kind === 'key') return hold.code
+function holdParamOf(hold: Choice, names: PreferredNames): string | null {
+  if (hold.kind === 'key') return spellKey(hold.code, names)
   if (hold.kind === 'layer') return String(hold.layer)
   return null
+}
+
+/**
+ * Finds the spelling each key already has in a keymap. For every key the keymap uses, the most
+ * frequent spelling wins (the first one seen breaks ties), so `&kp LSHFT` in a keymap makes
+ * Left Shift be written as `LSHFT` by the picker.
+ * @param bindings - Every binding in the keymap.
+ * @returns Usage id to spelling, ready to pass as `preferredNames`.
+ */
+export function collectPreferredNames(bindings: readonly BindingLike[]): PreferredNames {
+  const counts = new Map<number, Map<string, number>>()
+  for (const binding of bindings) {
+    for (const param of binding.params) {
+      const spelling = unwrapMods(param).code.toUpperCase()
+      const usage = usageOf(spelling)
+      if (usage === undefined) continue
+      const spellings = counts.get(usage) ?? new Map<string, number>()
+      spellings.set(spelling, (spellings.get(spelling) ?? 0) + 1)
+      counts.set(usage, spellings)
+    }
+  }
+  const preferred: Record<string, string> = {}
+  for (const [usage, spellings] of counts) {
+    let best = ''
+    let bestCount = 0
+    for (const [spelling, count] of spellings) {
+      if (count > bestCount) {
+        best = spelling
+        bestCount = count
+      }
+    }
+    preferred[String(usage)] = best
+  }
+  return preferred
 }
 
 /**

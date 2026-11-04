@@ -11,8 +11,11 @@ import {
   unwrapMods,
   type BindingValue,
   type Choice,
+  type ModChip,
+  type ModId,
 } from '../../lib/keycodes/binding'
 import type { SearchFields } from '../../lib/keycodes/fuzzy'
+import { shortcutModId, type ResolvedPlatform } from '../../lib/keycodes/platform'
 
 /** A layer as the picker needs it. */
 export interface PickerLayer {
@@ -36,7 +39,7 @@ export interface PickerItem extends SearchFields {
   id: string
   group: GroupId
   label: string
-  /** Mono text shown on the right: a key code, or a full binding for actions. */
+  /** Mono text shown on the right: a key code, a shortcut glyph, or a full binding. */
   code: string
   glyph?: string
   aliases: readonly string[]
@@ -47,17 +50,61 @@ export interface PickerItem extends SearchFields {
   dual?: { behavior: string; hold: 'key' | 'layer' }
 }
 
+/** Keys shown first when the query is empty, in display order. Layer keys follow them. */
+const COMMON_KEY_CODES: readonly string[] = [
+  'BACKSPACE',
+  'ENTER',
+  'ESCAPE',
+  'TAB',
+  'SPACE',
+  'UP',
+  'DOWN',
+  'LEFT',
+  'RIGHT',
+  'LCTRL',
+  'LSHIFT',
+  'LALT',
+  'LGUI',
+]
+
+/**
+ * Row ids shown under "Common" when the query is empty: the everyday keys, then the momentary
+ * layer behavior for each layer.
+ * @param layers - Layers in the keymap.
+ * @returns Row ids in display order.
+ */
+export function commonIds(layers: readonly PickerLayer[]): string[] {
+  return [
+    ...COMMON_KEY_CODES.map((code) => `key:${code}`),
+    ...layers.map((layer) => `layer:mo:${layer.index}`),
+  ]
+}
+
+/**
+ * The keycap text a shortcut shows: `⇧⌘Z` on mac, `Ctrl+Shift+Z` elsewhere.
+ * @param key - The key, e.g. `C`.
+ * @param shift - Whether the shortcut includes Shift.
+ * @param platform - The resolved platform.
+ * @returns The shortcut text for the row.
+ */
+export function shortcutText(key: string, shift: boolean, platform: ResolvedPlatform): string {
+  if (platform === 'mac') return `${shift ? '⇧' : ''}⌘${key}`
+  return `Ctrl+${shift ? 'Shift+' : ''}${key}`
+}
+
 /**
  * Builds every row the picker can show for a keymap.
  * @param layers - Layers in the keymap.
  * @param macros - Macros defined by the model.
  * @param holdTaps - Hold-tap behaviors defined by the model.
+ * @param platform - Platform whose command modifier shortcuts use.
  * @returns Items in catalog order, with layers, macros and hold-taps after the static rows.
  */
 export function buildItems(
   layers: readonly PickerLayer[],
   macros: readonly PickerMacro[],
   holdTaps: readonly PickerHoldTap[],
+  platform: ResolvedPlatform,
 ): PickerItem[] {
   const items: PickerItem[] = []
   for (const entry of KEYS) {
@@ -73,6 +120,21 @@ export function buildItems(
     })
   }
   for (const entry of ACTIONS) {
+    if (entry.shortcut) {
+      const { key, shift } = entry.shortcut
+      const command = shortcutModId(platform)
+      const mods: ModId[] = shift ? [command, 'LS'] : [command]
+      items.push({
+        id: `action:${entry.id}`,
+        group: entry.group,
+        label: entry.label,
+        code: shortcutText(key, shift, platform),
+        aliases: [],
+        keywords: entry.keywords,
+        choice: { kind: 'shortcut', code: key, mods },
+      })
+      continue
+    }
     const binding = formatBinding({ behavior: entry.behavior, params: [...entry.params] })
     items.push({
       id: `action:${entry.id}`,
@@ -181,6 +243,40 @@ export function keycapParts(value: BindingValue): KeycapParts {
     return { ...tap, detail: `hold ${hold}` }
   }
   return { mods: [], main: value.behavior, detail: value.params.join(' ') || undefined }
+}
+
+/** Spoken modifier names per family and platform, e.g. `Control` or `Ctrl`. */
+const MOD_NAMES: Record<ResolvedPlatform, Record<ModChip['family'], string>> = {
+  mac: { C: 'Control', A: 'Option', S: 'Shift', G: 'Command' },
+  windows: { C: 'Ctrl', A: 'Alt', S: 'Shift', G: 'Win' },
+  linux: { C: 'Ctrl', A: 'Alt', S: 'Shift', G: 'Super' },
+}
+
+/**
+ * A plain-language label for a binding, e.g. `Control + Left Shift` or `Copy` for a key press.
+ * @param value - The binding to describe.
+ * @param platform - Platform, for modifier names.
+ * @returns The label shown beside the keycap.
+ */
+export function describeBinding(value: BindingValue, platform: ResolvedPlatform): string {
+  const keyText = (param: string): string => {
+    const unwrapped = unwrapMods(param)
+    const names = unwrapped.mods.map((mod) => {
+      const chip = MOD_CHIPS.find((candidate) => candidate.left === mod || candidate.right === mod)
+      return chip ? MOD_NAMES[platform][chip.family] : mod
+    })
+    const label = resolveKeyCode(unwrapped.code)?.label ?? unwrapped.code
+    return [...names, label].join(' + ')
+  }
+  const [first, second] = value.params
+  if (value.behavior === '&kp' && value.params.length === 1) return keyText(first)
+  if (value.behavior === '&mt' && value.params.length === 2) {
+    return `${keyText(second)} (hold ${keyText(first)})`
+  }
+  if (value.behavior === '&lt' && value.params.length === 2) {
+    return `${keyText(second)} (hold layer ${first})`
+  }
+  return formatBinding(value)
 }
 
 const RECENT_KEY = 'adv360.picker.recent'

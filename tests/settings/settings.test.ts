@@ -65,6 +65,24 @@ describe('loading settings', () => {
     })
   })
 
+  it('migrates a v1 envelope to v2 by adding the platform setting as auto', () => {
+    expect(SETTINGS_VERSION).toBe(2)
+    const v1 = JSON.stringify({
+      version: 1,
+      settings: { navigation: { scheme: 'emacs', wrap: true } },
+    })
+    const loaded = loadSettings(withStored(v1))
+    expect(loaded.platform).toBe('auto')
+    expect(loaded.navigation).toMatchObject({ scheme: 'emacs', wrap: true })
+  })
+
+  it('keeps a stored platform through the v2 envelope and replaces unknown values', () => {
+    const v2 = JSON.stringify({ version: 2, settings: { platform: 'windows' } })
+    expect(loadSettings(withStored(v2)).platform).toBe('windows')
+    const bogus = JSON.stringify({ version: 2, settings: { platform: 'amiga' } })
+    expect(loadSettings(withStored(bogus)).platform).toBe('auto')
+  })
+
   it('migrates the unversioned v0 layout into the current envelope', () => {
     const v0 = JSON.stringify({ navigation: { scheme: 'vim', wrap: true } })
     expect(loadSettings(withStored(v0)).navigation.scheme).toBe('vim')
@@ -91,6 +109,7 @@ describe('saving settings', () => {
         wrap: true,
         custom: { edit: ['e'] },
       },
+      platform: 'mac' as const,
     }
     expect(saveSettings(settings, storage)).toBe(true)
     const stored = JSON.parse(storage.values.get(STORAGE_KEY)!)

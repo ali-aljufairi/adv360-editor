@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ACTIONS, KEYS } from '../../src/lib/keycodes/catalog'
+import { ACTIONS, KEYS, resolveKeyCode } from '../../src/lib/keycodes/catalog'
 import { rankEntries, scoreEntry } from '../../src/lib/keycodes/fuzzy'
 
 const keyFields = (entry: (typeof KEYS)[number]) => ({
@@ -9,15 +9,20 @@ const keyFields = (entry: (typeof KEYS)[number]) => ({
   keywords: entry.keywords,
 })
 
+/** Asserts two spellings name the same key, whichever spelling is canonical. */
+function expectSameKey(actual: string, expected: string): void {
+  expect(resolveKeyCode(actual)).toBe(resolveKeyCode(expected))
+}
+
 describe('fuzzy ranking over the key catalog', () => {
-  it('ranks BACKSPACE first for "bksp" (alias match)', () => {
+  it('ranks the Backspace key first for "bksp" (alias match)', () => {
     const ranked = rankEntries('bksp', KEYS, keyFields)
-    expect(ranked[0].code).toBe('BACKSPACE')
+    expectSameKey(ranked[0].code, 'BSPC')
   })
 
-  it('ranks LSHIFT first for "shift"', () => {
+  it('ranks the left Shift key first for "shift"', () => {
     const ranked = rankEntries('shift', KEYS, keyFields)
-    expect(ranked[0].code).toBe('LSHIFT')
+    expectSameKey(ranked[0].code, 'LSHFT')
   })
 
   it('ranks F1 above F10 for "f1", and never puts F10 first', () => {
@@ -36,7 +41,7 @@ describe('fuzzy ranking over the key catalog', () => {
 
   it('matches on aliases', () => {
     const ranked = rankEntries('lshft', KEYS, keyFields)
-    expect(ranked[0].code).toBe('LSHIFT')
+    expectSameKey(ranked[0].code, 'LSHFT')
   })
 
   it('matches multi-word keyword recipes such as "ctrl c" to copy', () => {

@@ -69,7 +69,15 @@ export interface ActionDef {
   glyph?: string
   /** Set on dual-role behaviors that need a second slot; the slot kind to ask for. */
   hold?: 'key' | 'layer'
+  /**
+   * Set on platform shortcuts. The binding wraps `key` in the platform's command modifier (LG on
+   * mac, LC elsewhere), plus LS when `shift` is set. `params` is unused for these entries.
+   */
+  shortcut?: { readonly key: string; readonly shift: boolean }
 }
+
+/** Maps a key's HID usage id (as a string) to the spelling the user's keymap already uses. */
+export type PreferredNames = Readonly<Record<string, string>>
 
 /** A layer behavior template; the layer index is appended per layer. */
 export interface LayerActionDef {
@@ -296,13 +304,35 @@ export const ACTIONS: readonly ActionDef[] = [
   action('sys-reset', 'Reset', '&sys_reset', [], 'system', ['restart', 'reboot']),
   action('transparent', 'Transparent', '&trans', [], 'behaviors', ['pass through', 'fallthrough']),
   action('none', 'None', '&none', [], 'behaviors', ['disable', 'nothing', 'blank']),
-  action('copy', 'Copy', '&kp', ['LC(C)'], 'recipes', ['copy', 'clipboard', 'ctrl c']),
-  action('paste', 'Paste', '&kp', ['LC(V)'], 'recipes', ['paste', 'clipboard', 'ctrl v']),
-  action('cut', 'Cut', '&kp', ['LC(X)'], 'recipes', ['cut', 'clipboard', 'ctrl x']),
-  action('undo', 'Undo', '&kp', ['LC(Z)'], 'recipes', ['undo', 'ctrl z']),
-  action('redo', 'Redo', '&kp', ['LC(LS(Z))'], 'recipes', ['redo', 'ctrl shift z']),
-  action('select-all', 'Select all', '&kp', ['LC(A)'], 'recipes', ['select all', 'ctrl a']),
+  shortcut('copy', 'Copy', 'C', ['copy', 'clipboard', 'ctrl c']),
+  shortcut('paste', 'Paste', 'V', ['paste', 'clipboard', 'ctrl v']),
+  shortcut('cut', 'Cut', 'X', ['cut', 'clipboard', 'ctrl x']),
+  shortcut('undo', 'Undo', 'Z', ['undo', 'ctrl z']),
+  shortcut('redo', 'Redo', 'Z', ['redo', 'ctrl shift z'], true),
+  shortcut('select-all', 'Select all', 'A', ['select all', 'ctrl a']),
+  shortcut('save', 'Save', 'S', ['save', 'ctrl s']),
+  shortcut('find', 'Find', 'F', ['find', 'search', 'ctrl f']),
 ]
+
+/** Platform shortcut: `&kp` with the platform's command modifier, plus Shift when asked. */
+function shortcut(
+  id: string,
+  label: string,
+  key: string,
+  keywords: readonly string[],
+  shift = false,
+): ActionDef {
+  return {
+    kind: 'action',
+    id,
+    label,
+    behavior: '&kp',
+    params: [],
+    keywords,
+    group: 'recipes',
+    shortcut: { key, shift },
+  }
+}
 
 /** Layer behaviors offered for every layer in the keymap. */
 export const LAYER_ACTIONS: readonly LayerActionDef[] = [
@@ -327,4 +357,29 @@ for (const entry of KEYS) {
  */
 export function resolveKeyCode(name: string): KeyDef | undefined {
   return KEY_BY_NAME.get(name.trim().toUpperCase())
+}
+
+/**
+ * The HID usage id a key name resolves to. Every accepted spelling shares one usage id, so this
+ * is how two spellings are recognised as the same key.
+ * @param name - Any accepted key spelling, e.g. `LSHFT` or `LSHIFT`.
+ * @returns The usage id, or undefined when the firmware does not define the name.
+ */
+export function usageOf(name: string): number | undefined {
+  const upper = name.trim().toUpperCase()
+  return Object.prototype.hasOwnProperty.call(values, upper) ? values[upper] : undefined
+}
+
+/**
+ * The spelling to write for a key: the user's own spelling of the same key when their keymap
+ * already uses one, otherwise the catalog's canonical code.
+ * @param code - A canonical key code, e.g. `LSHIFT`.
+ * @param preferred - Usage id to spelling, as built by `collectPreferredNames`.
+ * @returns The spelling to write into `&kp`.
+ */
+export function spellKey(code: string, preferred: PreferredNames = {}): string {
+  const usage = usageOf(code)
+  if (usage === undefined) return code
+  const key = String(usage)
+  return Object.prototype.hasOwnProperty.call(preferred, key) ? preferred[key] : code
 }

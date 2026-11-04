@@ -1,6 +1,7 @@
 import { ACTIONS, type Action } from '../navigation/actions'
 import { parseSequence } from '../navigation/keys'
 import { SCHEME_NAMES, type CustomBindings, type SchemeName } from '../navigation/schemes'
+import { isPlatformSetting, type PlatformSetting } from '../keycodes/platform'
 
 /** Keyboard navigation preferences. */
 export interface NavigationSettings {
@@ -19,10 +20,12 @@ export interface NavigationSettings {
  */
 export interface Settings {
   navigation: NavigationSettings
+  /** Which platform's shortcuts to show: `auto` detects it from the browser. */
+  platform: PlatformSetting
 }
 
 /** Version of the stored envelope. Bump it and add a {@link MIGRATIONS} step when it changes. */
-export const SETTINGS_VERSION = 1
+export const SETTINGS_VERSION = 2
 
 /** Factory defaults. Returned whenever stored data is missing or cannot be used. */
 export const DEFAULT_SETTINGS: Settings = {
@@ -32,6 +35,7 @@ export const DEFAULT_SETTINGS: Settings = {
     wrap: false,
     custom: {},
   },
+  platform: 'auto',
 }
 
 type Raw = Record<string, unknown>
@@ -40,6 +44,8 @@ type Raw = Record<string, unknown>
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   // v0 stored the navigation object at the top level, without an envelope or a section key.
   0: (raw) => (isRecord(raw.navigation) ? raw : { navigation: raw }),
+  // v1 had no platform setting; shortcuts follow the browser until the user chooses otherwise.
+  1: (raw) => ({ platform: DEFAULT_SETTINGS.platform, ...raw }),
 }
 
 function isRecord(value: unknown): value is Raw {
@@ -76,6 +82,7 @@ export function validateSettings(body: Raw): Settings {
       wrap: pickBoolean(navigation.wrap, DEFAULT_SETTINGS.navigation.wrap),
       custom: pickCustom(navigation.custom),
     },
+    platform: isPlatformSetting(body.platform) ? body.platform : DEFAULT_SETTINGS.platform,
   }
 }
 
