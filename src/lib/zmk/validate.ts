@@ -10,7 +10,11 @@ function collectIssues(
   const edges: number[][] = model.layers.map(() => [])
   const persistent: [number, number, Binding][] = []
   const add = (from: number, currentBinding: Binding) => {
-    if (!currentBinding.editable || !['mo', 'lt', 'tog', 'to', 'sl'].includes(currentBinding.behavior)) return
+    if (
+      !currentBinding.editable ||
+      !['mo', 'lt', 'tog', 'to', 'sl'].includes(currentBinding.behavior)
+    )
+      return
     const target = Number(currentBinding.params[0])
     if (!Number.isInteger(target) || target < 0 || target >= count) return
     edges[from].push(target)
@@ -59,11 +63,34 @@ function collectIssues(
       } else edges[from].push(rule.thenLayer)
     }
   }
-  const reachable = (start: number) => {
+  // A transparent key on an upper layer invokes the binding at the same position in a lower
+  // active layer. Include those fall-throughs in reachability so persistent overlays can have a
+  // real route back through an underlying toggle (for example layer 4 -> layer 3 via `&tog 4`).
+  const fallthroughEdges: number[][] = model.layers.map(() => [])
+  model.layers.forEach((upperLayer, upperIndex) => {
+    upperLayer.bindings.forEach((currentBinding, position) => {
+      if (currentBinding.behavior !== 'trans') return
+      for (let lowerIndex = 0; lowerIndex < upperIndex; lowerIndex += 1) {
+        const lowerBinding = model.layers[lowerIndex]?.bindings[position]
+        if (!lowerBinding || !['mo', 'lt', 'tog', 'to', 'sl'].includes(lowerBinding.behavior))
+          continue
+        const target = Number(lowerBinding.params[0])
+        if (Number.isInteger(target) && target >= 0 && target < count)
+          fallthroughEdges[upperIndex].push(target)
+        // A transparent key can reach a lower toggle that switches off this overlay.
+        if (lowerBinding.behavior === 'tog' && target === upperIndex)
+          fallthroughEdges[upperIndex].push(lowerIndex)
+      }
+    })
+  })
+  const reachable = (start: number, includeFallthrough = false) => {
     const seen = new Set<number>([start])
     const queue = [start]
     for (const node of queue)
-      for (const value of edges[node] ?? [])
+      for (const value of [
+        ...(edges[node] ?? []),
+        ...(includeFallthrough ? (fallthroughEdges[node] ?? []) : []),
+      ])
         if (!seen.has(value)) {
           seen.add(value)
           queue.push(value)
@@ -80,7 +107,7 @@ function collectIssues(
       })
   })
   for (const [from, to, candidateBinding] of persistent)
-    if (to !== from && !reachable(to).has(from))
+    if (to !== from && !reachable(to, true).has(from))
       issues.push({
         code: 'no-return',
         message: `Layer ${to} has no path back to layer ${from}`,
@@ -132,8 +159,15 @@ function collectIssues(
     'macro_wait_time',
     'macro_tap_time',
     'key_repeat',
-    'gresc',
+    'soft_off',
+    'key_toggle',
     'kt',
+    'stp',
+    'gresc',
+    'macro_param_1to1',
+    'macro_param_1to2',
+    'macro_param_2to1',
+    'macro_param_2to2',
     ...model.behaviors.map((existingBinding) => existingBinding.label ?? existingBinding.name),
     ...model.boardBehaviors,
   ])
@@ -142,10 +176,7 @@ function collectIssues(
     ...model.combos.flatMap((currentEntry) => currentEntry.bindings),
     ...model.behaviors.flatMap((currentItem) => currentItem.bindings),
   ]) {
-    if (
-      !resolvedBinding.editable ||
-      /^macro_param_\d+to\d+$/.test(resolvedBinding.behavior)
-    )
+    if (!resolvedBinding.editable || /^macro_param_\d+to\d+$/.test(resolvedBinding.behavior))
       continue
     if (!known.has(resolvedBinding.behavior) && generated.has(resolvedBinding.behavior))
       issues.push({
@@ -252,9 +283,10 @@ export function validate(
     if (firstLayer) {
       for (const key of layout) {
         const binding = firstLayer.bindings[key.index]
-        const keycode = binding?.behavior === 'kp' && binding.params.length === 1
-          ? binding.params[0].trim()
-          : undefined
+        const keycode =
+          binding?.behavior === 'kp' && binding.params.length === 1
+            ? binding.params[0].trim()
+            : undefined
         if (!key.label || !keycode || /[()\s]/.test(keycode)) continue
         if (normalizeKeyLabel(key.label) !== normalizeKeyLabel(keycode))
           issues.push({

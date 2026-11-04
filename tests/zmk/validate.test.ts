@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { resolve, validate } from '../../src/lib/zmk'
 import { files } from './fixtures'
 const model = () => resolve(files, 'adv360.keymap')
@@ -34,8 +35,23 @@ it('reports conflicts, invalid positions, missing behaviors and trapped layers',
 it('checks layer consistency without assuming a board-specific key count', () => {
   const source = '/ { keymap { a { bindings = <&kp A &kp B>; }; b { bindings = <&kp A>; }; }; };'
   const issues = validate(resolve({ 'small.keymap': source }, 'small.keymap'))
-  expect(issues.filter((issue) => issue.code === 'binding-count').map((issue) => issue.message)).toEqual([
-    'Layer 1 has 1 bindings, expected 2',
-  ])
+  expect(
+    issues.filter((issue) => issue.code === 'binding-count').map((issue) => issue.message),
+  ).toEqual(['Layer 1 has 1 bindings, expected 2'])
   expect(issues.some((issue) => issue.code === 'combo-position')).toBe(false)
+})
+
+it('uses transparent fall-through as a return path through the lower active layer', () => {
+  const file = 'fixtures/issues/transparent-fallthrough-toggle.keymap'
+  const source = readFileSync(file, 'utf8')
+  const model = resolve({ [file]: source }, file)
+  expect(model.layers[0].bindings[75]).toMatchObject({ behavior: 'mo', params: ['3'] })
+  expect(model.layers[3].bindings[16]).toMatchObject({ behavior: 'tog', params: ['4'] })
+  expect(model.layers[4].bindings[16]).toMatchObject({ behavior: 'trans' })
+  expect(model.layers[4].bindings[75]).toMatchObject({ behavior: 'trans' })
+  expect(
+    validate(model).some(
+      (issue) => issue.code === 'no-return' && issue.message.includes('Layer 4'),
+    ),
+  ).toBe(false)
 })
