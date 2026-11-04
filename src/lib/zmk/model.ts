@@ -9,6 +9,7 @@ import type {
   Behavior,
   Combo,
   ConditionalLayer,
+  UserKeycodeDefinition,
 } from './types'
 import { tokenize } from './tokenize'
 import { parse } from './parse'
@@ -76,7 +77,9 @@ function bindings(currentProperty: Property | undefined, source: string): Bindin
       params: structured ? params : [],
       text: opaqueText,
       editable: structured,
-      ...(structured ? {} : { reason: 'Preprocessor or raw binding expressions are preserved as-is' }),
+      ...(structured
+        ? {}
+        : { reason: 'Preprocessor or raw binding expressions are preserved as-is' }),
     })
   }
   return result
@@ -89,6 +92,51 @@ function resolvePath(base: string, relative: string): string {
     else if (nextProperty !== '.') parts.push(nextProperty)
   }
   return parts.join('/')
+}
+
+function labelFromIdentifier(name: string): string {
+  return name
+    .replace(/^(?:C_AC_|C_AL_|C_|K_|KP_|INT_|LANG_|M_)/, '')
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/\b[a-z]/g, (letter) => letter.toUpperCase())
+}
+
+function readUserKeycodes(file: string, source: string): UserKeycodeDefinition[] {
+  if (!/\.h$/i.test(file)) return []
+  const result: UserKeycodeDefinition[] = []
+  let pendingComment = ''
+  let blockComment = false
+  for (const line of source.split(/\r?\n/)) {
+    const trimmed = line.trim()
+    if (blockComment) {
+      pendingComment += ` ${trimmed.replace(/^\*\s?/, '').replace(/\*\/$/, '')}`
+      if (trimmed.includes('*/')) blockComment = false
+      continue
+    }
+    if (trimmed.startsWith('/*')) {
+      pendingComment = trimmed.slice(2).replace(/\*\/$/, '')
+      blockComment = !trimmed.includes('*/')
+      continue
+    }
+    if (trimmed.startsWith('//')) {
+      pendingComment = trimmed.slice(2).trim()
+      continue
+    }
+    const match = /^#define\s+([A-Za-z_]\w*)\s+(.+?)\s*$/.exec(trimmed)
+    if (match) {
+      const comment = pendingComment.replace(/\s+/g, ' ').trim()
+      const usefulComment = comment && !/copyright|spdx|deprecated|warning/i.test(comment)
+      result.push({
+        name: match[1],
+        label: usefulComment ? comment : labelFromIdentifier(match[1]),
+        value: match[2],
+        source: file,
+      })
+    }
+    pendingComment = ''
+  }
+  return result
 }
 function conditions(cst: CST, position: number): string | undefined {
   const stack: { previous: string[]; current: string }[] = []
@@ -142,9 +190,8 @@ export function resolve(files: FileMap, entry: string): Model {
     const next = new Set(active).add(file)
     const cst = (parsed[file] ??= parse(files[file], file))
     const walk = (items: (Node | Property)[], parent: string, start: number, end: number) => {
-      const entries: { start: number; node?: Node; include?: string }[] = nodes(items).map(
-        (node) => ({ start: node.start, node }),
-      )
+      const entries: { start: number; node?: Node; include?: string; localInclude?: boolean }[] =
+        nodes(items).map((node) => ({ start: node.start, node }))
       for (const otherToken of cst.tokens)
         if (
           otherToken.kind === 'directive' &&
@@ -155,15 +202,21 @@ export function resolve(files: FileMap, entry: string): Model {
               otherToken.start >= currentNode.start && otherToken.end <= currentNode.end,
           )
         ) {
-          const nextMatch = otherToken.text.match(/^\s*#include\s+"([^"]+)"/)
-          if (nextMatch) entries.push({ start: otherToken.start, include: nextMatch[1] })
+          const nextMatch = otherToken.text.match(/^\s*#include\s+(["<])([^">]+)[">]/)
+          if (nextMatch)
+            entries.push({
+              start: otherToken.start,
+              include: nextMatch[2],
+              localInclude: nextMatch[1] === '"',
+            })
         }
       entries.sort((first, binding) => first.start - binding.start)
       for (const editor of entries) {
         if (editor.include) {
-          const path = resolvePath(file, editor.include)
+          const path = editor.include in files ? editor.include : resolvePath(file, editor.include)
           if (path in files) visit(path, parent, next)
-          else if (!missingIncludes.includes(path)) missingIncludes.push(path)
+          else if (editor.localInclude && !missingIncludes.includes(path))
+            missingIncludes.push(path)
           continue
         }
         const nextNode = editor.node!
@@ -172,8 +225,7 @@ export function resolve(files: FileMap, entry: string): Model {
         const compatible = unquote(get('compatible'))
         if (compatible === 'zmk,conditional-layers') {
           for (const rule of nodes(nextNode.children)) {
-            const values = (value: string | undefined) =>
-              (value?.match(/-?\d+/g) ?? []).map(Number)
+            const values = (value: string | undefined) => (value?.match(/-?\d+/g) ?? []).map(Number)
             conditionalLayers.push({
               ...rule,
               name: rule.name,
@@ -225,7 +277,9 @@ export function resolve(files: FileMap, entry: string): Model {
             keyPositions: nums(get('key-positions')),
             timeoutMs: nums(get('timeout-ms'))[0],
             layers:
-              get('layers') === undefined || nums(get('layers')).length === 0 || nums(get('layers')).includes(-1)
+              get('layers') === undefined ||
+              nums(get('layers')).length === 0 ||
+              nums(get('layers')).includes(-1)
                 ? undefined
                 : nums(get('layers')),
             condition: conditions(cst, nextNode.start),
@@ -250,6 +304,11 @@ export function resolve(files: FileMap, entry: string): Model {
     }
     collect(parse(source, file).children)
   }
+  const userKeycodes = Object.entries(parsed)
+    .flatMap(([file, cst]) => readUserKeycodes(file, cst.source))
+    .filter(
+      (entry, index, all) => all.findIndex((candidate) => candidate.name === entry.name) === index,
+    )
   return {
     layers,
     behaviors,
@@ -261,5 +320,6 @@ export function resolve(files: FileMap, entry: string): Model {
     files: parsed,
     missingIncludes,
     boardBehaviors,
+    userKeycodes,
   }
 }

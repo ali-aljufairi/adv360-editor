@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { ACTIONS, KEYS, resolveKeyCode } from '../../src/lib/keycodes/catalog'
+import { ACTIONS, KEYS, LAYER_ACTIONS, resolveKeyCode } from '../../src/lib/keycodes/catalog'
 import { rankEntries, scoreEntry } from '../../src/lib/keycodes/fuzzy'
+import { buildItems, describeBinding } from '../../src/components/picker/items'
+import behaviorCatalog from '../../vendor/zmk/adv360-z3.5-2/behavior-bindings.json'
 
 const keyFields = (entry: (typeof KEYS)[number]) => ({
   label: entry.label,
@@ -83,5 +85,50 @@ describe('fuzzy scoring tiers', () => {
 
   it('returns 0 when a query word matches no field', () => {
     expect(scoreEntry('copy paste', { label: 'Copy' })).toBe(0)
+  })
+})
+
+describe('natural-language picker ranking', () => {
+  const items = buildItems([], [], [], 'mac')
+  const top = (query: string) => rankEntries(query, items, (item) => item)[0]
+
+  it.each([
+    ['copy', 'action:copy'],
+    ['paste', 'action:paste'],
+    ['vol up', 'key:C_VOLUME_UP'],
+    ['play', 'key:C_PLAY_PAUSE'],
+    ['mute', 'key:C_MUTE'],
+    ['bright', 'key:C_BRIGHTNESS_INC'],
+    ['globe', 'key:GLOBE'],
+    ['kana', 'key:LANG1'],
+    ['fn', 'key:F1'],
+    ['prtsc', 'key:PRINTSCREEN'],
+    ['del', 'key:DELETE'],
+  ])('ranks %s to %s first', (query, expected) => {
+    expect(top(query)?.id).toBe(expected)
+  })
+
+  it('does not match copy to C_SHUFFLE and lowers raw HID copy usages', () => {
+    const ranked = rankEntries('copy', items, (item) => item)
+    expect(ranked.some((item) => item.code === 'C_SHUFFLE')).toBe(false)
+    expect(ranked.findIndex((item) => item.id === 'action:copy')).toBeLessThan(
+      ranked.findIndex((item) => item.code === 'COPY' || item.code === 'C_AC_COPY'),
+    )
+    expect(items.find((item) => item.code === 'COPY')?.note).toBe(
+      'HID key, may not work on macOS/Windows',
+    )
+  })
+
+  it('has a picker row and a human legend for every built-in binding in this firmware catalog', () => {
+    const pickerBehaviors = new Set([
+      ...ACTIONS.map((entry) => entry.behavior),
+      ...LAYER_ACTIONS.map((entry) => entry.behavior),
+    ])
+    for (const behavior of behaviorCatalog.behaviors) {
+      expect(pickerBehaviors.has(behavior.name), behavior.name).toBe(true)
+      const tokens = behavior.example.trim().split(/\s+/)
+      const value = { behavior: tokens[0], params: tokens.slice(1) }
+      expect(describeBinding(value, 'mac'), behavior.name).not.toContain('&')
+    }
   })
 })

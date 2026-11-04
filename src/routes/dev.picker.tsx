@@ -3,6 +3,9 @@ import { useState } from 'react'
 import { BindingPicker } from '../components/picker/BindingPicker'
 import type { PickerHoldTap, PickerLayer, PickerMacro } from '../components/picker/items'
 import { formatBinding, type BindingValue } from '../lib/keycodes/binding'
+import customKeymap from '../../fixtures/issues/custom-keycodes.keymap?raw'
+import customHeader from '../../fixtures/issues/custom-keycodes.h?raw'
+import { resolve } from '../lib/zmk'
 
 export const Route = createFileRoute('/dev/picker')({ component: PickerPage })
 
@@ -22,6 +25,13 @@ const MACROS: PickerMacro[] = [
 const HOLD_TAPS: PickerHoldTap[] = [{ label: 'hm' }, { label: 'td_esc' }]
 
 const START: BindingValue = { behavior: '&kp', params: ['LC(LS(K))'] }
+const USER_KEYCODES = resolve(
+  {
+    'custom-keycodes.keymap': customKeymap,
+    'custom-keycodes.h': customHeader,
+  },
+  'custom-keycodes.keymap',
+).userKeycodes
 
 /**
  * Dev-only page that shows the binding picker open against sample layers, macros and hold-taps,
@@ -45,6 +55,7 @@ function PickerPage() {
           layers={LAYERS}
           macros={MACROS}
           holdTaps={HOLD_TAPS}
+          userKeycodes={USER_KEYCODES}
           onChange={(next) => {
             setBinding(next)
             setLog((previous) => [formatBinding(next), ...previous].slice(0, 5))

@@ -4,6 +4,7 @@ import {
   LAYER_ACTIONS,
   resolveKeyCode,
   type GroupId,
+  type UserKeycode,
 } from '../../lib/keycodes/catalog'
 import {
   formatBinding,
@@ -44,6 +45,8 @@ export interface PickerItem extends SearchFields {
   glyph?: string
   aliases: readonly string[]
   keywords: readonly string[]
+  weight?: number
+  note?: string
   /** Completes a single-slot binding. */
   choice?: Choice
   /** Starts a two-slot (tap + hold) binding; the hold slot takes a key or a layer. */
@@ -105,6 +108,7 @@ export function buildItems(
   macros: readonly PickerMacro[],
   holdTaps: readonly PickerHoldTap[],
   platform: ResolvedPlatform,
+  userKeycodes: readonly UserKeycode[] = [],
 ): PickerItem[] {
   const items: PickerItem[] = []
   for (const entry of KEYS) {
@@ -116,7 +120,26 @@ export function buildItems(
       glyph: entry.glyph,
       aliases: entry.aliases,
       keywords: entry.keywords,
+      weight: entry.searchWeight,
+      note: entry.note,
       choice: { kind: 'key', code: entry.code },
+    })
+  }
+  const knownNames = new Set(
+    KEYS.flatMap((entry) => [entry.code, ...entry.aliases]).map((name) => name.toUpperCase()),
+  )
+  for (const entry of userKeycodes) {
+    if (knownNames.has(entry.name.toUpperCase())) continue
+    knownNames.add(entry.name.toUpperCase())
+    items.push({
+      id: `key:${entry.name}`,
+      group: 'international',
+      label: entry.label,
+      code: entry.name,
+      aliases: [],
+      keywords: ['user header', 'custom keycode', 'raw', entry.source],
+      note: `Defined in ${entry.source}; value: ${entry.value}`,
+      choice: { kind: 'key', code: entry.name },
     })
   }
   for (const entry of ACTIONS) {
@@ -224,7 +247,10 @@ export interface KeycapParts {
  * @param value - The binding to show.
  * @returns Glyphs and text for a keycap.
  */
-export function keycapParts(value: BindingValue): KeycapParts {
+export function keycapParts(
+  value: BindingValue,
+  userKeycodes: readonly UserKeycode[] = [],
+): KeycapParts {
   const mods = (param: string): { mods: string[]; main: string } => {
     const unwrapped = unwrapMods(param)
     const glyphs = unwrapped.mods.map((mod) => {
@@ -232,7 +258,13 @@ export function keycapParts(value: BindingValue): KeycapParts {
       return chip?.glyph ?? mod
     })
     const def = resolveKeyCode(unwrapped.code)
-    return { mods: glyphs, main: def ? (def.glyph ?? def.label) : unwrapped.code }
+    const userKey = userKeycodes.find(
+      (entry) => entry.name.toUpperCase() === unwrapped.code.toUpperCase(),
+    )
+    return {
+      mods: glyphs,
+      main: def ? (def.glyph ?? def.label) : (userKey?.label ?? unwrapped.code),
+    }
   }
   if (value.behavior === '&kp' && value.params.length === 1) {
     return mods(value.params[0])
@@ -242,7 +274,30 @@ export function keycapParts(value: BindingValue): KeycapParts {
     const hold = value.behavior === '&lt' ? `Layer ${value.params[0]}` : mods(value.params[0]).main
     return { ...tap, detail: `hold ${hold}` }
   }
-  return { mods: [], main: value.behavior, detail: value.params.join(' ') || undefined }
+  const action =
+    ACTIONS.find(
+      (entry) =>
+        entry.behavior === value.behavior && entry.params.join(' ') === value.params.join(' '),
+    ) ??
+    (value.params.length === 0
+      ? ACTIONS.find((entry) => entry.behavior === value.behavior)
+      : undefined)
+  const layerAction = LAYER_ACTIONS.find((entry) => entry.behavior === value.behavior)
+  const dynamicLabel =
+    value.behavior === '&sk' && value.params[0]
+      ? `Sticky ${resolveKeyCode(value.params[0])?.label ?? value.params[0]}`
+      : value.behavior === '&kt' && value.params[0]
+        ? `Toggle ${resolveKeyCode(value.params[0])?.label ?? value.params[0]}`
+        : undefined
+  return {
+    mods: [],
+    main: dynamicLabel ?? action?.label ?? layerAction?.label ?? value.behavior,
+    detail: layerAction
+      ? value.params.join(' ')
+      : action?.params.join(' ') === value.params.join(' ')
+        ? undefined
+        : value.params.join(' ') || undefined,
+  }
 }
 
 /** Spoken modifier names per family and platform, e.g. `Control` or `Ctrl`. */
@@ -258,14 +313,22 @@ const MOD_NAMES: Record<ResolvedPlatform, Record<ModChip['family'], string>> = {
  * @param platform - Platform, for modifier names.
  * @returns The label shown beside the keycap.
  */
-export function describeBinding(value: BindingValue, platform: ResolvedPlatform): string {
+export function describeBinding(
+  value: BindingValue,
+  platform: ResolvedPlatform,
+  userKeycodes: readonly UserKeycode[] = [],
+): string {
   const keyText = (param: string): string => {
     const unwrapped = unwrapMods(param)
     const names = unwrapped.mods.map((mod) => {
       const chip = MOD_CHIPS.find((candidate) => candidate.left === mod || candidate.right === mod)
       return chip ? MOD_NAMES[platform][chip.family] : mod
     })
-    const label = resolveKeyCode(unwrapped.code)?.label ?? unwrapped.code
+    const label =
+      resolveKeyCode(unwrapped.code)?.label ??
+      userKeycodes.find((entry) => entry.name.toUpperCase() === unwrapped.code.toUpperCase())
+        ?.label ??
+      unwrapped.code
     return [...names, label].join(' + ')
   }
   const [first, second] = value.params
@@ -276,6 +339,17 @@ export function describeBinding(value: BindingValue, platform: ResolvedPlatform)
   if (value.behavior === '&lt' && value.params.length === 2) {
     return `${keyText(second)} (hold layer ${first})`
   }
+  const action =
+    ACTIONS.find(
+      (entry) =>
+        entry.behavior === value.behavior && entry.params.join(' ') === value.params.join(' '),
+    ) ??
+    (value.params.length === 0
+      ? ACTIONS.find((entry) => entry.behavior === value.behavior)
+      : undefined)
+  const layerAction = LAYER_ACTIONS.find((entry) => entry.behavior === value.behavior)
+  if (layerAction) return `${layerAction.label} ${value.params.join(' ')}`.trim()
+  if (action) return action.label
   return formatBinding(value)
 }
 

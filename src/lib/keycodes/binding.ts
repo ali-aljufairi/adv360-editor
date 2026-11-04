@@ -232,7 +232,12 @@ export function draftFromBinding(value: BindingValue): Draft {
 }
 
 /** The result of parsing keymap text. */
-export type ParseResult = { ok: true; value: BindingValue } | { ok: false; error: string }
+export type ParseResult =
+  { ok: true; value: BindingValue; warning?: string } | { ok: false; error: string }
+
+function isRawKeyParam(param: string): boolean {
+  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(unwrapMods(param).code)
+}
 
 /**
  * Validates one binding's parameters against its behavior.
@@ -240,18 +245,24 @@ export type ParseResult = { ok: true; value: BindingValue } | { ok: false; error
  * @param params - Parameters following the behavior.
  * @returns An error message, or null when the parameters are acceptable.
  */
-function checkParams(behavior: string, params: readonly string[]): string | null {
+function checkParams(
+  behavior: string,
+  params: readonly string[],
+  customKeys: ReadonlySet<string>,
+): string | null {
+  const knownKey = (param: string) =>
+    isValidKeyParam(param) || customKeys.has(unwrapMods(param).code.toUpperCase())
   if (behavior === '&kp') {
     if (params.length !== 1) return '&kp takes exactly one key'
-    return isValidKeyParam(params[0]) ? null : `Unknown key "${params[0]}"`
+    return knownKey(params[0]) || isRawKeyParam(params[0]) ? null : `Unknown key "${params[0]}"`
   }
   if (behavior === '&mt' || behavior === '&lt') {
     if (params.length !== 2) return `${behavior} takes a hold and a tap`
     if (behavior === '&lt' && !NUMBER_PATTERN.test(params[0])) return 'Layer must be a number'
-    if (behavior === '&mt' && !isValidKeyParam(params[0])) {
+    if (behavior === '&mt' && !knownKey(params[0]) && !isRawKeyParam(params[0])) {
       return `Unknown key "${params[0]}"`
     }
-    return isValidKeyParam(params[1]) ? null : `Unknown key "${params[1]}"`
+    return knownKey(params[1]) || isRawKeyParam(params[1]) ? null : `Unknown key "${params[1]}"`
   }
   if (LAYER_BEHAVIORS.has(behavior)) {
     if (params.length !== 1 || !NUMBER_PATTERN.test(params[0])) return 'Layer must be a number'
@@ -272,14 +283,41 @@ function checkParams(behavior: string, params: readonly string[]): string | null
  * @param text - The binding as the user typed it.
  * @returns The parsed binding, or an error message for the advanced field.
  */
-export function parseBindingText(text: string): ParseResult {
-  const tokens = text.trim().split(/\s+/).filter((token) => token.length > 0)
+export function parseBindingText(
+  text: string,
+  customKeyNames: readonly string[] = [],
+): ParseResult {
+  const tokens = text
+    .trim()
+    .split(/\s+/)
+    .filter((token) => token.length > 0)
   if (tokens.length === 0) return { ok: false, error: 'Enter a binding such as &kp A' }
   const [behavior, ...params] = tokens
   if (!BEHAVIOR_PATTERN.test(behavior)) {
     return { ok: false, error: 'A binding starts with a behavior such as &kp' }
   }
-  const error = checkParams(behavior, params)
+  const customKeys = new Set(customKeyNames.map((name) => name.toUpperCase()))
+  const error = checkParams(behavior, params, customKeys)
   if (error) return { ok: false, error }
-  return { ok: true, value: { behavior, params } }
+  const unknownKey =
+    (behavior === '&kp' &&
+      !isValidKeyParam(params[0]) &&
+      !customKeys.has(unwrapMods(params[0]).code.toUpperCase())) ||
+    ((behavior === '&mt' || behavior === '&lt') &&
+      params.some(
+        (param) =>
+          !NUMBER_PATTERN.test(param) &&
+          !isValidKeyParam(param) &&
+          !customKeys.has(unwrapMods(param).code.toUpperCase()),
+      ))
+  return {
+    ok: true,
+    value: { behavior, params },
+    ...(unknownKey
+      ? {
+          warning:
+            'Unlisted key name kept as raw text; verify it is defined by an included header.',
+        }
+      : {}),
+  }
 }

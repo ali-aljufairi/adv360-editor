@@ -12,6 +12,7 @@ import {
   resolveKeyCode,
   type GroupId,
   type PreferredNames,
+  type UserKeycode,
 } from '../../lib/keycodes/catalog'
 import {
   buildBinding,
@@ -46,7 +47,13 @@ import {
   type PickerLayer,
   type PickerMacro,
 } from './items'
-import { matchSpans, pickerKeyAction } from './listKeys'
+import {
+  advancePickerSlot,
+  focusPickerSearch,
+  matchSpans,
+  pickerKeyAction,
+  preservePickerSearchFocus,
+} from './listKeys'
 import { useOptionalSettings } from './useOptionalSettings'
 import './picker.css'
 
@@ -67,6 +74,8 @@ export interface BindingPickerProps {
   scheme?: SchemeName
   /** Usage id to the spelling the user's keymap uses; see `collectPreferredNames`. */
   preferredNames?: PreferredNames
+  /** Key names read from user-included headers; unknown names remain raw with a warning. */
+  userKeycodes?: UserKeycode[]
 }
 
 type Slot = 'tap' | 'hold'
@@ -132,6 +141,7 @@ function choiceLabel(choice: Choice | null, layers: readonly PickerLayer[]): str
  */
 export function BindingPicker(props: BindingPickerProps) {
   const { value, layers, macros, holdTaps, onChange, onClose } = props
+  const userKeycodes = props.userKeycodes
   const preferredNames = props.preferredNames ?? {}
   const settings = useOptionalSettings()
   const platformSetting: PlatformSetting = props.platform ?? settings?.platform ?? 'auto'
@@ -144,8 +154,8 @@ export function BindingPicker(props: BindingPickerProps) {
   const idBase = useId()
   const listId = `${idBase}-list`
   const allItems = useMemo(
-    () => buildItems(layers, macros, holdTaps, platform),
-    [layers, macros, holdTaps, platform],
+    () => buildItems(layers, macros, holdTaps, platform, userKeycodes),
+    [layers, macros, holdTaps, platform, userKeycodes],
   )
   const holdLayerItems = useMemo(() => buildHoldLayerItems(layers), [layers])
 
@@ -160,8 +170,23 @@ export function BindingPicker(props: BindingPickerProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const rawRef = useRef<HTMLInputElement>(null)
   const focusRawOnOpen = useRef(false)
-  const parsedRaw = useMemo(() => parseBindingText(raw), [raw])
+  const parsedRaw = useMemo(
+    () =>
+      parseBindingText(
+        raw,
+        userKeycodes?.map((entry) => entry.name),
+      ),
+    [raw, userKeycodes],
+  )
+  const currentRawWarning = useMemo(() => {
+    const parsed = parseBindingText(
+      formatBinding(value),
+      userKeycodes?.map((entry) => entry.name),
+    )
+    return parsed.ok ? parsed.warning : undefined
+  }, [value, userKeycodes])
   const rawError = parsedRaw.ok ? null : parsedRaw.error
+  const rawWarning = parsedRaw.ok ? parsedRaw.warning : undefined
 
   const holdMode = draft.mode === 'hold'
   const holdLayers = holdMode && draft.behavior === '&lt'
@@ -260,7 +285,7 @@ export function BindingPicker(props: BindingPickerProps) {
         setSlot('tap')
         setQuery('')
         setActive(0)
-        inputRef.current?.focus()
+        focusPickerSearch(inputRef.current)
         return
       }
       const next: Draft = { mode: 'single', choice: item.choice ?? null, mods: draft.mods }
@@ -278,10 +303,9 @@ export function BindingPicker(props: BindingPickerProps) {
       return
     }
     setDraft(next)
-    setSlot(slot === 'tap' ? 'hold' : 'tap')
+    setSlot(advancePickerSlot(slot, inputRef.current))
     setQuery('')
     setActive(0)
-    inputRef.current?.focus()
   }
 
   /** Cycles a modifier chip: off, left, right, off. */
@@ -312,7 +336,7 @@ export function BindingPicker(props: BindingPickerProps) {
   function toggleAdvanced(): void {
     if (advancedOpen) {
       setAdvancedOpen(false)
-      inputRef.current?.focus()
+      focusPickerSearch(inputRef.current)
       return
     }
     focusRawOnOpen.current = true
@@ -330,7 +354,7 @@ export function BindingPicker(props: BindingPickerProps) {
     } else if (action === 'close') {
       event.preventDefault()
       onClose()
-    } else if (event.key === 'Enter') {
+    } else if (action === 'select') {
       event.preventDefault()
       const row = rows[current]
       if (row) choose(row.item)
@@ -370,8 +394,8 @@ export function BindingPicker(props: BindingPickerProps) {
     )
   }
 
-  const preview = keycapParts(value)
-  const currentLabel = describeBinding(value, platform)
+  const preview = keycapParts(value, userKeycodes)
+  const currentLabel = describeBinding(value, platform, userKeycodes)
   const chipsDisabled = holdMode && slot === 'hold'
   const listLabel = holdMode
     ? `Choose the ${slot === 'tap' ? 'tap' : 'hold'} action`
@@ -403,6 +427,11 @@ export function BindingPicker(props: BindingPickerProps) {
           <span className="bp-visually-hidden">Current binding: </span>
           {currentLabel}
         </span>
+        {currentRawWarning ? (
+          <span className="bp-current-warning" title={currentRawWarning}>
+            Raw key
+          </span>
+        ) : null}
       </header>
 
       <div className="bp-search">
@@ -451,7 +480,10 @@ export function BindingPicker(props: BindingPickerProps) {
               aria-keyshortcuts={`Alt+${index + 1}`}
               disabled={chipsDisabled}
               title={`${chip.label} (Alt+${index + 1}): off, left, right`}
-              onClick={() => cycleMod(chip)}
+              onClick={() => {
+                cycleMod(chip)
+                focusPickerSearch(inputRef.current)
+              }}
             >
               <span aria-hidden="true">{chip.glyph}</span>
               {side ? <sup aria-hidden="true">{side}</sup> : null}
@@ -469,7 +501,7 @@ export function BindingPicker(props: BindingPickerProps) {
             onClick={() => {
               setSlot('tap')
               setActive(0)
-              inputRef.current?.focus()
+              focusPickerSearch(inputRef.current)
             }}
           >
             <span className="bp-slot-name">Tap</span>
@@ -482,7 +514,7 @@ export function BindingPicker(props: BindingPickerProps) {
             onClick={() => {
               setSlot('hold')
               setActive(0)
-              inputRef.current?.focus()
+              focusPickerSearch(inputRef.current)
             }}
           >
             <span className="bp-slot-name">Hold</span>
@@ -512,13 +544,16 @@ export function BindingPicker(props: BindingPickerProps) {
                   onMouseMove={() => {
                     if (!isActive) setActive(index)
                   }}
-                  onMouseDown={(event) => event.preventDefault()}
+                  onMouseDown={(event) => preservePickerSearchFocus(event, inputRef.current)}
                   onClick={() => choose(item)}
                 >
                   <span className="bp-glyph" aria-hidden="true">
                     {item.glyph ?? item.label.charAt(0)}
                   </span>
-                  <span className="bp-label">{renderLabel(item.label)}</span>
+                  <span className="bp-label">
+                    <span>{renderLabel(item.label)}</span>
+                    {item.note ? <small className="bp-note">{item.note}</small> : null}
+                  </span>
                   <code className="bp-code">{item.code}</code>
                 </div>
               )
@@ -555,6 +590,11 @@ export function BindingPicker(props: BindingPickerProps) {
           {rawTouched && rawError ? (
             <p id={`${idBase}-raw-error`} className="bp-raw-error" role="alert">
               {rawError}
+            </p>
+          ) : null}
+          {advancedOpen && rawWarning ? (
+            <p className="bp-raw-warning" role="status">
+              {rawWarning}
             </p>
           ) : null}
         </div>

@@ -122,7 +122,14 @@ describe('reading bindings back into the picker', () => {
 
 describe('raw ZMK text validation', () => {
   it('accepts well-formed bindings', () => {
-    for (const text of ['&kp A', '&kp LC(LS(K))', '&mt LSHFT A', '&lt 1 SPACE', '&mo 2', '&trans']) {
+    for (const text of [
+      '&kp A',
+      '&kp LC(LS(K))',
+      '&mt LSHFT A',
+      '&lt 1 SPACE',
+      '&mo 2',
+      '&trans',
+    ]) {
       expect(parseBindingText(text).ok, text).toBe(true)
     }
   })
@@ -132,14 +139,30 @@ describe('raw ZMK text validation', () => {
     expect(parsed).toEqual({ ok: true, value: { behavior: '&hello_world', params: [] } })
   })
 
+  it('keeps unknown key names as raw bindings with an explicit warning', () => {
+    expect(parseBindingText('&kp CUSTOM_KEY')).toEqual({
+      ok: true,
+      value: { behavior: '&kp', params: ['CUSTOM_KEY'] },
+      warning: 'Unlisted key name kept as raw text; verify it is defined by an included header.',
+    })
+    expect(parseBindingText('&kp DE_AE', ['DE_AE'])).toEqual({
+      ok: true,
+      value: { behavior: '&kp', params: ['DE_AE'] },
+    })
+  })
+
   it('rejects text without a leading behavior', () => {
     const parsed = parseBindingText('kp A')
     expect(parsed.ok).toBe(false)
   })
 
-  it('rejects unknown key names with the offending name in the message', () => {
+  it('keeps unknown key names as raw text with a warning', () => {
     const parsed = parseBindingText('&kp FOO')
-    expect(parsed).toEqual({ ok: false, error: 'Unknown key "FOO"' })
+    expect(parsed).toMatchObject({
+      ok: true,
+      value: { behavior: '&kp', params: ['FOO'] },
+      warning: expect.stringContaining('Unlisted key name'),
+    })
   })
 
   it('rejects &kp without exactly one key', () => {

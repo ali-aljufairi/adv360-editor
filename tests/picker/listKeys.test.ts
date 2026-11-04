@@ -1,5 +1,10 @@
-import { describe, expect, it } from 'vitest'
-import { matchSpans, pickerKeyAction } from '../../src/components/picker/listKeys'
+import { describe, expect, it, vi } from 'vitest'
+import {
+  advancePickerSlot,
+  matchSpans,
+  pickerKeyAction,
+  preservePickerSearchFocus,
+} from '../../src/components/picker/listKeys'
 import { commonIds, describeBinding } from '../../src/components/picker/items'
 import { eventToToken } from '../../src/lib/navigation/keys'
 
@@ -54,6 +59,55 @@ describe('pickerKeyAction', () => {
       shiftKey: false,
     })
     expect(pickerKeyAction(token, 'vim')).toBe('down')
+  })
+
+  it('does not turn shifted search characters or modifier presses into picker actions (#113)', () => {
+    for (const [key, code] of [
+      ['$', 'Digit4'],
+      ['%', 'Digit5'],
+      ['^', 'Digit6'],
+      ['&', 'Digit7'],
+    ]) {
+      const token = eventToToken({
+        key,
+        code,
+        ctrlKey: false,
+        altKey: false,
+        metaKey: false,
+        shiftKey: true,
+      })
+      expect(pickerKeyAction(token, 'arrows')).toBeNull()
+    }
+    expect(
+      eventToToken({ key: 'Shift', ctrlKey: false, altKey: false, metaKey: false, shiftKey: true }),
+    ).toBeNull()
+  })
+
+  it('maps Enter to selection confirmation (#111)', () => {
+    const token = eventToToken({
+      key: 'Enter',
+      ctrlKey: false,
+      altKey: false,
+      metaKey: false,
+      shiftKey: false,
+    })
+    expect(pickerKeyAction(token, 'arrows')).toBe('select')
+  })
+})
+
+describe('picker search focus regressions', () => {
+  it('keeps focus in search while a result row receives a mouse down (#155)', () => {
+    const preventDefault = vi.fn()
+    const focus = vi.fn()
+    preservePickerSearchFocus({ preventDefault }, { focus })
+    expect(preventDefault).toHaveBeenCalledOnce()
+    expect(focus).toHaveBeenCalledOnce()
+  })
+
+  it('focuses search after advancing to the second parameter slot (#226)', () => {
+    const focus = vi.fn()
+    expect(advancePickerSlot('tap', { focus })).toBe('hold')
+    expect(focus).toHaveBeenCalledOnce()
   })
 })
 

@@ -646,666 +646,178 @@
     "GLOBE": 787101
   },
   "groups": {
-    "65665": [
-      "SYSTEM_POWER",
-      "SYS_PWR"
-    ],
-    "65666": [
-      "SYSTEM_SLEEP",
-      "SYS_SLEEP"
-    ],
-    "65667": [
-      "SYSTEM_WAKE_UP",
-      "SYS_WAKE"
-    ],
-    "458756": [
-      "A"
-    ],
-    "458757": [
-      "B"
-    ],
-    "458758": [
-      "C"
-    ],
-    "458759": [
-      "D"
-    ],
-    "458760": [
-      "E"
-    ],
-    "458761": [
-      "F"
-    ],
-    "458762": [
-      "G"
-    ],
-    "458763": [
-      "H"
-    ],
-    "458764": [
-      "I"
-    ],
-    "458765": [
-      "J"
-    ],
-    "458766": [
-      "K"
-    ],
-    "458767": [
-      "L"
-    ],
-    "458768": [
-      "M"
-    ],
-    "458769": [
-      "N"
-    ],
-    "458770": [
-      "O"
-    ],
-    "458771": [
-      "P"
-    ],
-    "458772": [
-      "Q"
-    ],
-    "458773": [
-      "R"
-    ],
-    "458774": [
-      "S"
-    ],
-    "458775": [
-      "T"
-    ],
-    "458776": [
-      "U"
-    ],
-    "458777": [
-      "V"
-    ],
-    "458778": [
-      "W"
-    ],
-    "458779": [
-      "X"
-    ],
-    "458780": [
-      "Y"
-    ],
-    "458781": [
-      "Z"
-    ],
-    "458782": [
-      "NUMBER_1",
-      "N1",
-      "NUM_1"
-    ],
-    "458783": [
-      "NUMBER_2",
-      "N2",
-      "NUM_2"
-    ],
-    "458784": [
-      "NUMBER_3",
-      "N3",
-      "NUM_3"
-    ],
-    "458785": [
-      "NUMBER_4",
-      "N4",
-      "NUM_4"
-    ],
-    "458786": [
-      "NUMBER_5",
-      "N5",
-      "NUM_5"
-    ],
-    "458787": [
-      "NUMBER_6",
-      "N6",
-      "NUM_6"
-    ],
-    "458788": [
-      "NUMBER_7",
-      "N7",
-      "NUM_7"
-    ],
-    "458789": [
-      "NUMBER_8",
-      "N8",
-      "NUM_8"
-    ],
-    "458790": [
-      "NUMBER_9",
-      "N9",
-      "NUM_9"
-    ],
-    "458791": [
-      "NUMBER_0",
-      "N0",
-      "NUM_0"
-    ],
-    "458792": [
-      "RETURN",
-      "ENTER",
-      "RET"
-    ],
-    "458793": [
-      "ESCAPE",
-      "ESC"
-    ],
-    "458794": [
-      "BACKSPACE",
-      "BSPC",
-      "BKSP"
-    ],
-    "458795": [
-      "TAB"
-    ],
-    "458796": [
-      "SPACE",
-      "SPC"
-    ],
-    "458797": [
-      "MINUS"
-    ],
-    "458798": [
-      "EQUAL",
-      "EQL"
-    ],
-    "458799": [
-      "LEFT_BRACKET",
-      "LBKT"
-    ],
-    "458800": [
-      "RIGHT_BRACKET",
-      "RBKT"
-    ],
-    "458801": [
-      "BACKSLASH",
-      "BSLH"
-    ],
-    "458802": [
-      "NON_US_HASH",
-      "NUHS"
-    ],
-    "458803": [
-      "SEMICOLON",
-      "SEMI",
-      "SCLN"
-    ],
-    "458804": [
-      "SINGLE_QUOTE",
-      "SQT",
-      "APOSTROPHE",
-      "APOS",
-      "QUOT"
-    ],
-    "458805": [
-      "GRAVE",
-      "GRAV"
-    ],
-    "458806": [
-      "COMMA",
-      "CMMA"
-    ],
-    "458807": [
-      "PERIOD",
-      "DOT"
-    ],
-    "458808": [
-      "SLASH",
-      "FSLH"
-    ],
-    "458809": [
-      "CAPSLOCK",
-      "CAPS",
-      "CLCK"
-    ],
-    "458810": [
-      "F1"
-    ],
-    "458811": [
-      "F2"
-    ],
-    "458812": [
-      "F3"
-    ],
-    "458813": [
-      "F4"
-    ],
-    "458814": [
-      "F5"
-    ],
-    "458815": [
-      "F6"
-    ],
-    "458816": [
-      "F7"
-    ],
-    "458817": [
-      "F8"
-    ],
-    "458818": [
-      "F9"
-    ],
-    "458819": [
-      "F10"
-    ],
-    "458820": [
-      "F11"
-    ],
-    "458821": [
-      "F12"
-    ],
-    "458822": [
-      "PRINTSCREEN",
-      "PSCRN",
-      "PRSC"
-    ],
-    "458823": [
-      "SCROLLLOCK",
-      "SLCK",
-      "SCLK"
-    ],
-    "458824": [
-      "PAUSE_BREAK",
-      "PAUS"
-    ],
-    "458825": [
-      "INSERT",
-      "INS"
-    ],
-    "458826": [
-      "HOME"
-    ],
-    "458827": [
-      "PAGE_UP",
-      "PG_UP",
-      "PGUP"
-    ],
-    "458828": [
-      "DELETE",
-      "DEL"
-    ],
-    "458829": [
-      "END"
-    ],
-    "458830": [
-      "PAGE_DOWN",
-      "PG_DN",
-      "PGDN"
-    ],
-    "458831": [
-      "RIGHT_ARROW",
-      "RIGHT",
-      "RARW"
-    ],
-    "458832": [
-      "LEFT_ARROW",
-      "LEFT",
-      "LARW"
-    ],
-    "458833": [
-      "DOWN_ARROW",
-      "DOWN",
-      "DARW"
-    ],
-    "458834": [
-      "UP_ARROW",
-      "UP",
-      "UARW"
-    ],
-    "458835": [
-      "KP_NUMLOCK",
-      "KP_NUM",
-      "KP_NLCK"
-    ],
-    "458836": [
-      "KP_DIVIDE",
-      "KP_SLASH",
-      "KDIV"
-    ],
-    "458837": [
-      "KP_MULTIPLY",
-      "KP_ASTERISK",
-      "KMLT"
-    ],
-    "458838": [
-      "KP_MINUS",
-      "KP_SUBTRACT",
-      "KMIN"
-    ],
-    "458839": [
-      "KP_PLUS",
-      "KPLS"
-    ],
-    "458840": [
-      "KP_ENTER"
-    ],
-    "458841": [
-      "KP_NUMBER_1",
-      "KP_N1"
-    ],
-    "458842": [
-      "KP_NUMBER_2",
-      "KP_N2"
-    ],
-    "458843": [
-      "KP_NUMBER_3",
-      "KP_N3"
-    ],
-    "458844": [
-      "KP_NUMBER_4",
-      "KP_N4"
-    ],
-    "458845": [
-      "KP_NUMBER_5",
-      "KP_N5"
-    ],
-    "458846": [
-      "KP_NUMBER_6",
-      "KP_N6"
-    ],
-    "458847": [
-      "KP_NUMBER_7",
-      "KP_N7"
-    ],
-    "458848": [
-      "KP_NUMBER_8",
-      "KP_N8"
-    ],
-    "458849": [
-      "KP_NUMBER_9",
-      "KP_N9"
-    ],
-    "458850": [
-      "KP_NUMBER_0",
-      "KP_N0"
-    ],
-    "458851": [
-      "KP_DOT"
-    ],
-    "458852": [
-      "NON_US_BACKSLASH",
-      "NON_US_BSLH",
-      "NUBS"
-    ],
-    "458853": [
-      "K_APPLICATION",
-      "K_APP",
-      "K_CONTEXT_MENU",
-      "K_CMENU",
-      "GUI"
-    ],
-    "458854": [
-      "K_POWER",
-      "K_PWR"
-    ],
-    "458855": [
-      "KP_EQUAL"
-    ],
-    "458856": [
-      "F13"
-    ],
-    "458857": [
-      "F14"
-    ],
-    "458858": [
-      "F15"
-    ],
-    "458859": [
-      "F16"
-    ],
-    "458860": [
-      "F17"
-    ],
-    "458861": [
-      "F18"
-    ],
-    "458862": [
-      "F19"
-    ],
-    "458863": [
-      "F20"
-    ],
-    "458864": [
-      "F21"
-    ],
-    "458865": [
-      "F22"
-    ],
-    "458866": [
-      "F23"
-    ],
-    "458867": [
-      "F24"
-    ],
-    "458868": [
-      "K_EXECUTE",
-      "K_EXEC"
-    ],
-    "458869": [
-      "K_HELP"
-    ],
-    "458870": [
-      "K_MENU"
-    ],
-    "458871": [
-      "K_SELECT"
-    ],
-    "458872": [
-      "K_STOP"
-    ],
-    "458873": [
-      "K_AGAIN",
-      "K_REDO"
-    ],
-    "458874": [
-      "K_UNDO",
-      "UNDO"
-    ],
-    "458875": [
-      "K_CUT",
-      "CUT"
-    ],
-    "458876": [
-      "K_COPY",
-      "COPY"
-    ],
-    "458877": [
-      "K_PASTE",
-      "PSTE"
-    ],
-    "458878": [
-      "K_FIND"
-    ],
-    "458879": [
-      "K_MUTE"
-    ],
-    "458880": [
-      "K_VOLUME_UP",
-      "K_VOL_UP",
-      "VOLU"
-    ],
-    "458881": [
-      "K_VOLUME_DOWN",
-      "K_VOL_DN",
-      "VOLD"
-    ],
-    "458882": [
-      "LOCKING_CAPS",
-      "LCAPS"
-    ],
-    "458883": [
-      "LOCKING_NUM",
-      "LNLCK"
-    ],
-    "458884": [
-      "LOCKING_SCROLL",
-      "LSLCK"
-    ],
-    "458885": [
-      "KP_COMMA"
-    ],
-    "458886": [
-      "KP_EQUAL_AS400"
-    ],
-    "458887": [
-      "INTERNATIONAL_1",
-      "INT1",
-      "INT_RO"
-    ],
-    "458888": [
-      "INTERNATIONAL_2",
-      "INT2",
-      "INT_KATAKANAHIRAGANA",
-      "INT_KANA"
-    ],
-    "458889": [
-      "INTERNATIONAL_3",
-      "INT3",
-      "INT_YEN"
-    ],
-    "458890": [
-      "INTERNATIONAL_4",
-      "INT4",
-      "INT_HENKAN"
-    ],
-    "458891": [
-      "INTERNATIONAL_5",
-      "INT5",
-      "INT_MUHENKAN"
-    ],
-    "458892": [
-      "INTERNATIONAL_6",
-      "INT6",
-      "INT_KPJPCOMMA"
-    ],
-    "458893": [
-      "INTERNATIONAL_7",
-      "INT7"
-    ],
-    "458894": [
-      "INTERNATIONAL_8",
-      "INT8"
-    ],
-    "458895": [
-      "INTERNATIONAL_9",
-      "INT9"
-    ],
-    "458896": [
-      "LANGUAGE_1",
-      "LANG1",
-      "LANG_HANGEUL"
-    ],
-    "458897": [
-      "LANGUAGE_2",
-      "LANG2",
-      "LANG_HANJA"
-    ],
-    "458898": [
-      "LANGUAGE_3",
-      "LANG3",
-      "LANG_KATAKANA"
-    ],
-    "458899": [
-      "LANGUAGE_4",
-      "LANG4",
-      "LANG_HIRAGANA"
-    ],
-    "458900": [
-      "LANGUAGE_5",
-      "LANG5",
-      "LANG_ZENKAKUHANKAKU"
-    ],
-    "458901": [
-      "LANGUAGE_6",
-      "LANG6"
-    ],
-    "458902": [
-      "LANGUAGE_7",
-      "LANG7"
-    ],
-    "458903": [
-      "LANGUAGE_8",
-      "LANG8"
-    ],
-    "458904": [
-      "LANGUAGE_9",
-      "LANG9"
-    ],
-    "458905": [
-      "ALT_ERASE"
-    ],
-    "458906": [
-      "SYSREQ",
-      "ATTENTION"
-    ],
-    "458907": [
-      "K_CANCEL"
-    ],
-    "458908": [
-      "CLEAR"
-    ],
-    "458909": [
-      "PRIOR"
-    ],
-    "458910": [
-      "RETURN2",
-      "RET2"
-    ],
-    "458911": [
-      "SEPARATOR"
-    ],
-    "458912": [
-      "OUT"
-    ],
-    "458913": [
-      "OPER"
-    ],
-    "458914": [
-      "CLEAR_AGAIN"
-    ],
-    "458915": [
-      "CRSEL"
-    ],
-    "458916": [
-      "EXSEL"
-    ],
-    "458932": [
-      "CURU"
-    ],
-    "458934": [
-      "KP_LEFT_PARENTHESIS",
-      "KP_LPAR"
-    ],
-    "458935": [
-      "KP_RIGHT_PARENTHESIS",
-      "KP_RPAR"
-    ],
-    "458957": [
-      "KSPC"
-    ],
-    "458968": [
-      "KP_CLEAR"
-    ],
-    "458976": [
-      "LEFT_CONTROL",
-      "LCTRL",
-      "LCTL"
-    ],
-    "458977": [
-      "LEFT_SHIFT",
-      "LSHIFT",
-      "LSHFT",
-      "LSFT"
-    ],
-    "458978": [
-      "LEFT_ALT",
-      "LALT"
-    ],
+    "65665": ["SYSTEM_POWER", "SYS_PWR"],
+    "65666": ["SYSTEM_SLEEP", "SYS_SLEEP"],
+    "65667": ["SYSTEM_WAKE_UP", "SYS_WAKE"],
+    "458756": ["A"],
+    "458757": ["B"],
+    "458758": ["C"],
+    "458759": ["D"],
+    "458760": ["E"],
+    "458761": ["F"],
+    "458762": ["G"],
+    "458763": ["H"],
+    "458764": ["I"],
+    "458765": ["J"],
+    "458766": ["K"],
+    "458767": ["L"],
+    "458768": ["M"],
+    "458769": ["N"],
+    "458770": ["O"],
+    "458771": ["P"],
+    "458772": ["Q"],
+    "458773": ["R"],
+    "458774": ["S"],
+    "458775": ["T"],
+    "458776": ["U"],
+    "458777": ["V"],
+    "458778": ["W"],
+    "458779": ["X"],
+    "458780": ["Y"],
+    "458781": ["Z"],
+    "458782": ["NUMBER_1", "N1", "NUM_1"],
+    "458783": ["NUMBER_2", "N2", "NUM_2"],
+    "458784": ["NUMBER_3", "N3", "NUM_3"],
+    "458785": ["NUMBER_4", "N4", "NUM_4"],
+    "458786": ["NUMBER_5", "N5", "NUM_5"],
+    "458787": ["NUMBER_6", "N6", "NUM_6"],
+    "458788": ["NUMBER_7", "N7", "NUM_7"],
+    "458789": ["NUMBER_8", "N8", "NUM_8"],
+    "458790": ["NUMBER_9", "N9", "NUM_9"],
+    "458791": ["NUMBER_0", "N0", "NUM_0"],
+    "458792": ["RETURN", "ENTER", "RET"],
+    "458793": ["ESCAPE", "ESC"],
+    "458794": ["BACKSPACE", "BSPC", "BKSP"],
+    "458795": ["TAB"],
+    "458796": ["SPACE", "SPC"],
+    "458797": ["MINUS"],
+    "458798": ["EQUAL", "EQL"],
+    "458799": ["LEFT_BRACKET", "LBKT"],
+    "458800": ["RIGHT_BRACKET", "RBKT"],
+    "458801": ["BACKSLASH", "BSLH"],
+    "458802": ["NON_US_HASH", "NUHS"],
+    "458803": ["SEMICOLON", "SEMI", "SCLN"],
+    "458804": ["SINGLE_QUOTE", "SQT", "APOSTROPHE", "APOS", "QUOT"],
+    "458805": ["GRAVE", "GRAV"],
+    "458806": ["COMMA", "CMMA"],
+    "458807": ["PERIOD", "DOT"],
+    "458808": ["SLASH", "FSLH"],
+    "458809": ["CAPSLOCK", "CAPS", "CLCK"],
+    "458810": ["F1"],
+    "458811": ["F2"],
+    "458812": ["F3"],
+    "458813": ["F4"],
+    "458814": ["F5"],
+    "458815": ["F6"],
+    "458816": ["F7"],
+    "458817": ["F8"],
+    "458818": ["F9"],
+    "458819": ["F10"],
+    "458820": ["F11"],
+    "458821": ["F12"],
+    "458822": ["PRINTSCREEN", "PSCRN", "PRSC"],
+    "458823": ["SCROLLLOCK", "SLCK", "SCLK"],
+    "458824": ["PAUSE_BREAK", "PAUS"],
+    "458825": ["INSERT", "INS"],
+    "458826": ["HOME"],
+    "458827": ["PAGE_UP", "PG_UP", "PGUP"],
+    "458828": ["DELETE", "DEL"],
+    "458829": ["END"],
+    "458830": ["PAGE_DOWN", "PG_DN", "PGDN"],
+    "458831": ["RIGHT_ARROW", "RIGHT", "RARW"],
+    "458832": ["LEFT_ARROW", "LEFT", "LARW"],
+    "458833": ["DOWN_ARROW", "DOWN", "DARW"],
+    "458834": ["UP_ARROW", "UP", "UARW"],
+    "458835": ["KP_NUMLOCK", "KP_NUM", "KP_NLCK"],
+    "458836": ["KP_DIVIDE", "KP_SLASH", "KDIV"],
+    "458837": ["KP_MULTIPLY", "KP_ASTERISK", "KMLT"],
+    "458838": ["KP_MINUS", "KP_SUBTRACT", "KMIN"],
+    "458839": ["KP_PLUS", "KPLS"],
+    "458840": ["KP_ENTER"],
+    "458841": ["KP_NUMBER_1", "KP_N1"],
+    "458842": ["KP_NUMBER_2", "KP_N2"],
+    "458843": ["KP_NUMBER_3", "KP_N3"],
+    "458844": ["KP_NUMBER_4", "KP_N4"],
+    "458845": ["KP_NUMBER_5", "KP_N5"],
+    "458846": ["KP_NUMBER_6", "KP_N6"],
+    "458847": ["KP_NUMBER_7", "KP_N7"],
+    "458848": ["KP_NUMBER_8", "KP_N8"],
+    "458849": ["KP_NUMBER_9", "KP_N9"],
+    "458850": ["KP_NUMBER_0", "KP_N0"],
+    "458851": ["KP_DOT"],
+    "458852": ["NON_US_BACKSLASH", "NON_US_BSLH", "NUBS"],
+    "458853": ["K_APPLICATION", "K_APP", "K_CONTEXT_MENU", "K_CMENU", "GUI"],
+    "458854": ["K_POWER", "K_PWR"],
+    "458855": ["KP_EQUAL"],
+    "458856": ["F13"],
+    "458857": ["F14"],
+    "458858": ["F15"],
+    "458859": ["F16"],
+    "458860": ["F17"],
+    "458861": ["F18"],
+    "458862": ["F19"],
+    "458863": ["F20"],
+    "458864": ["F21"],
+    "458865": ["F22"],
+    "458866": ["F23"],
+    "458867": ["F24"],
+    "458868": ["K_EXECUTE", "K_EXEC"],
+    "458869": ["K_HELP"],
+    "458870": ["K_MENU"],
+    "458871": ["K_SELECT"],
+    "458872": ["K_STOP"],
+    "458873": ["K_AGAIN", "K_REDO"],
+    "458874": ["K_UNDO", "UNDO"],
+    "458875": ["K_CUT", "CUT"],
+    "458876": ["K_COPY", "COPY"],
+    "458877": ["K_PASTE", "PSTE"],
+    "458878": ["K_FIND"],
+    "458879": ["K_MUTE"],
+    "458880": ["K_VOLUME_UP", "K_VOL_UP", "VOLU"],
+    "458881": ["K_VOLUME_DOWN", "K_VOL_DN", "VOLD"],
+    "458882": ["LOCKING_CAPS", "LCAPS"],
+    "458883": ["LOCKING_NUM", "LNLCK"],
+    "458884": ["LOCKING_SCROLL", "LSLCK"],
+    "458885": ["KP_COMMA"],
+    "458886": ["KP_EQUAL_AS400"],
+    "458887": ["INTERNATIONAL_1", "INT1", "INT_RO"],
+    "458888": ["INTERNATIONAL_2", "INT2", "INT_KATAKANAHIRAGANA", "INT_KANA"],
+    "458889": ["INTERNATIONAL_3", "INT3", "INT_YEN"],
+    "458890": ["INTERNATIONAL_4", "INT4", "INT_HENKAN"],
+    "458891": ["INTERNATIONAL_5", "INT5", "INT_MUHENKAN"],
+    "458892": ["INTERNATIONAL_6", "INT6", "INT_KPJPCOMMA"],
+    "458893": ["INTERNATIONAL_7", "INT7"],
+    "458894": ["INTERNATIONAL_8", "INT8"],
+    "458895": ["INTERNATIONAL_9", "INT9"],
+    "458896": ["LANGUAGE_1", "LANG1", "LANG_HANGEUL"],
+    "458897": ["LANGUAGE_2", "LANG2", "LANG_HANJA"],
+    "458898": ["LANGUAGE_3", "LANG3", "LANG_KATAKANA"],
+    "458899": ["LANGUAGE_4", "LANG4", "LANG_HIRAGANA"],
+    "458900": ["LANGUAGE_5", "LANG5", "LANG_ZENKAKUHANKAKU"],
+    "458901": ["LANGUAGE_6", "LANG6"],
+    "458902": ["LANGUAGE_7", "LANG7"],
+    "458903": ["LANGUAGE_8", "LANG8"],
+    "458904": ["LANGUAGE_9", "LANG9"],
+    "458905": ["ALT_ERASE"],
+    "458906": ["SYSREQ", "ATTENTION"],
+    "458907": ["K_CANCEL"],
+    "458908": ["CLEAR"],
+    "458909": ["PRIOR"],
+    "458910": ["RETURN2", "RET2"],
+    "458911": ["SEPARATOR"],
+    "458912": ["OUT"],
+    "458913": ["OPER"],
+    "458914": ["CLEAR_AGAIN"],
+    "458915": ["CRSEL"],
+    "458916": ["EXSEL"],
+    "458932": ["CURU"],
+    "458934": ["KP_LEFT_PARENTHESIS", "KP_LPAR"],
+    "458935": ["KP_RIGHT_PARENTHESIS", "KP_RPAR"],
+    "458957": ["KSPC"],
+    "458968": ["KP_CLEAR"],
+    "458976": ["LEFT_CONTROL", "LCTRL", "LCTL"],
+    "458977": ["LEFT_SHIFT", "LSHIFT", "LSHFT", "LSFT"],
+    "458978": ["LEFT_ALT", "LALT"],
     "458979": [
       "LEFT_GUI",
       "LGUI",
@@ -1316,21 +828,9 @@
       "LEFT_META",
       "LMETA"
     ],
-    "458980": [
-      "RIGHT_CONTROL",
-      "RCTRL",
-      "RCTL"
-    ],
-    "458981": [
-      "RIGHT_SHIFT",
-      "RSHIFT",
-      "RSHFT",
-      "RSFT"
-    ],
-    "458982": [
-      "RIGHT_ALT",
-      "RALT"
-    ],
+    "458980": ["RIGHT_CONTROL", "RCTRL", "RCTL"],
+    "458981": ["RIGHT_SHIFT", "RSHIFT", "RSHFT", "RSFT"],
+    "458982": ["RIGHT_ALT", "RALT"],
     "458983": [
       "RIGHT_GUI",
       "RGUI",
@@ -1341,700 +841,847 @@
       "RIGHT_META",
       "RMETA"
     ],
-    "458984": [
-      "K_PLAY_PAUSE",
-      "K_PP"
-    ],
-    "458985": [
-      "K_STOP2"
-    ],
-    "458986": [
-      "K_PREVIOUS",
-      "K_PREV"
-    ],
-    "458987": [
-      "K_NEXT"
-    ],
-    "458988": [
-      "K_EJECT"
-    ],
-    "458989": [
-      "K_VOLUME_UP2",
-      "K_VOL_UP2"
-    ],
-    "458990": [
-      "K_VOLUME_DOWN2",
-      "K_VOL_DN2"
-    ],
-    "458991": [
-      "K_MUTE2"
-    ],
-    "458992": [
-      "K_WWW"
-    ],
-    "458993": [
-      "K_BACK"
-    ],
-    "458994": [
-      "K_FORWARD"
-    ],
-    "458995": [
-      "K_STOP3"
-    ],
-    "458996": [
-      "K_FIND2"
-    ],
-    "458997": [
-      "K_SCROLL_UP"
-    ],
-    "458998": [
-      "K_SCROLL_DOWN"
-    ],
-    "458999": [
-      "K_EDIT"
-    ],
-    "459000": [
-      "K_SLEEP"
-    ],
-    "459001": [
-      "K_LOCK",
-      "K_SCREENSAVER",
-      "K_COFFEE"
-    ],
-    "459002": [
-      "K_REFRESH"
-    ],
-    "459003": [
-      "K_CALCULATOR",
-      "K_CALC"
-    ],
-    "786480": [
-      "C_POWER",
-      "C_PWR"
-    ],
-    "786481": [
-      "C_RESET"
-    ],
-    "786482": [
-      "C_SLEEP"
-    ],
-    "786484": [
-      "C_SLEEP_MODE"
-    ],
-    "786496": [
-      "C_MENU"
-    ],
-    "786497": [
-      "C_MENU_PICK",
-      "C_MENU_SELECT"
-    ],
-    "786498": [
-      "C_MENU_UP"
-    ],
-    "786499": [
-      "C_MENU_DOWN"
-    ],
-    "786500": [
-      "C_MENU_LEFT"
-    ],
-    "786501": [
-      "C_MENU_RIGHT"
-    ],
-    "786502": [
-      "C_MENU_ESCAPE",
-      "C_MENU_ESC"
-    ],
-    "786503": [
-      "C_MENU_INCREASE",
-      "C_MENU_INC"
-    ],
-    "786504": [
-      "C_MENU_DECREASE",
-      "C_MENU_DEC"
-    ],
-    "786528": [
-      "C_DATA_ON_SCREEN"
-    ],
-    "786529": [
-      "C_CAPTIONS",
-      "C_SUBTITLES"
-    ],
-    "786533": [
-      "C_SNAPSHOT"
-    ],
-    "786535": [
-      "C_PIP"
-    ],
-    "786537": [
-      "C_RED_BUTTON",
-      "C_RED"
-    ],
-    "786538": [
-      "C_GREEN_BUTTON",
-      "C_GREEN"
-    ],
-    "786539": [
-      "C_BLUE_BUTTON",
-      "C_BLUE"
-    ],
-    "786540": [
-      "C_YELLOW_BUTTON",
-      "C_YELLOW"
-    ],
-    "786541": [
-      "C_ASPECT"
-    ],
-    "786543": [
-      "C_BRIGHTNESS_INC",
-      "C_BRI_INC",
-      "C_BRI_UP"
-    ],
-    "786544": [
-      "C_BRIGHTNESS_DEC",
-      "C_BRI_DEC",
-      "C_BRI_DN"
-    ],
-    "786546": [
-      "C_BACKLIGHT_TOGGLE",
-      "C_BKLT_TOG"
-    ],
-    "786547": [
-      "C_BRIGHTNESS_MINIMUM",
-      "C_BRI_MIN"
-    ],
-    "786548": [
-      "C_BRIGHTNESS_MAXIMUM",
-      "C_BRI_MAX"
-    ],
-    "786549": [
-      "C_BRIGHTNESS_AUTO",
-      "C_BRI_AUTO"
-    ],
-    "786562": [
-      "C_MEDIA_STEP",
-      "C_MODE_STEP"
-    ],
-    "786563": [
-      "C_RECALL_LAST",
-      "C_CHAN_LAST"
-    ],
-    "786568": [
-      "C_MEDIA_COMPUTER"
-    ],
-    "786569": [
-      "C_MEDIA_TV"
-    ],
-    "786570": [
-      "C_MEDIA_WWW"
-    ],
-    "786571": [
-      "C_MEDIA_DVD"
-    ],
-    "786572": [
-      "C_MEDIA_PHONE"
-    ],
-    "786573": [
-      "C_MEDIA_GUIDE"
-    ],
-    "786574": [
-      "C_MEDIA_VIDEOPHONE"
-    ],
-    "786575": [
-      "C_MEDIA_GAMES"
-    ],
-    "786576": [
-      "C_MEDIA_MESSAGES"
-    ],
-    "786577": [
-      "C_MEDIA_CD"
-    ],
-    "786578": [
-      "C_MEDIA_VCR"
-    ],
-    "786579": [
-      "C_MEDIA_TUNER"
-    ],
-    "786580": [
-      "C_QUIT"
-    ],
-    "786581": [
-      "C_HELP"
-    ],
-    "786582": [
-      "C_MEDIA_TAPE"
-    ],
-    "786583": [
-      "C_MEDIA_CABLE"
-    ],
-    "786584": [
-      "C_MEDIA_SATELLITE"
-    ],
-    "786586": [
-      "C_MEDIA_HOME"
-    ],
-    "786588": [
-      "C_CHANNEL_INC",
-      "C_CHAN_INC"
-    ],
-    "786589": [
-      "C_CHANNEL_DEC",
-      "C_CHAN_DEC"
-    ],
-    "786592": [
-      "C_MEDIA_VCR_PLUS"
-    ],
-    "786608": [
-      "C_PLAY"
-    ],
-    "786609": [
-      "C_PAUSE"
-    ],
-    "786610": [
-      "C_RECORD",
-      "C_REC"
-    ],
-    "786611": [
-      "C_FAST_FORWARD",
-      "C_FF"
-    ],
-    "786612": [
-      "C_REWIND",
-      "C_RW"
-    ],
-    "786613": [
-      "C_NEXT",
-      "M_NEXT"
-    ],
-    "786614": [
-      "C_PREVIOUS",
-      "C_PREV",
-      "M_PREV"
-    ],
-    "786615": [
-      "C_STOP",
-      "M_STOP"
-    ],
-    "786616": [
-      "C_EJECT",
-      "M_EJCT"
-    ],
-    "786617": [
-      "C_RANDOM_PLAY",
-      "C_SHUFFLE"
-    ],
-    "786620": [
-      "C_REPEAT"
-    ],
-    "786623": [
-      "C_SLOW_TRACKING",
-      "C_SLOW2"
-    ],
-    "786636": [
-      "C_STOP_EJECT"
-    ],
-    "786637": [
-      "C_PLAY_PAUSE",
-      "C_PP",
-      "M_PLAY"
-    ],
-    "786639": [
-      "C_VOICE_COMMAND"
-    ],
-    "786658": [
-      "C_MUTE",
-      "M_MUTE"
-    ],
-    "786661": [
-      "C_BASS_BOOST"
-    ],
-    "786665": [
-      "C_VOLUME_UP",
-      "C_VOL_UP",
-      "M_VOLU"
-    ],
-    "786666": [
-      "C_VOLUME_DOWN",
-      "C_VOL_DN",
-      "M_VOLD"
-    ],
-    "786677": [
-      "C_SLOW"
-    ],
-    "786803": [
-      "C_ALTERNATE_AUDIO_INCREMENT",
-      "C_ALT_AUDIO_INC"
-    ],
-    "786819": [
-      "C_AL_CCC"
-    ],
-    "786820": [
-      "C_AL_WORD"
-    ],
-    "786821": [
-      "C_AL_TEXT_EDITOR"
-    ],
-    "786822": [
-      "C_AL_SPREADSHEET",
-      "C_AL_SHEET"
-    ],
-    "786823": [
-      "C_AL_GRAPHICS_EDITOR"
-    ],
-    "786824": [
-      "C_AL_PRESENTATION"
-    ],
-    "786825": [
-      "C_AL_DATABASE",
-      "C_AL_DB"
-    ],
-    "786826": [
-      "C_AL_EMAIL",
-      "C_AL_MAIL"
-    ],
-    "786827": [
-      "C_AL_NEWS"
-    ],
-    "786828": [
-      "C_AL_VOICEMAIL"
-    ],
-    "786829": [
-      "C_AL_CONTACTS",
-      "C_AL_ADDRESS_BOOK"
-    ],
-    "786830": [
-      "C_AL_CALENDAR",
-      "C_AL_CAL"
-    ],
-    "786831": [
-      "C_AL_TASK_MANAGER"
-    ],
-    "786832": [
-      "C_AL_JOURNAL"
-    ],
-    "786833": [
-      "C_AL_FINANCE"
-    ],
-    "786834": [
-      "C_AL_CALCULATOR",
-      "C_AL_CALC"
-    ],
-    "786835": [
-      "C_AL_AV_CAPTURE_PLAYBACK"
-    ],
-    "786836": [
-      "C_AL_MY_COMPUTER"
-    ],
-    "786838": [
-      "C_AL_WWW"
-    ],
-    "786841": [
-      "C_AL_NETWORK_CHAT",
-      "C_AL_CHAT"
-    ],
-    "786844": [
-      "C_AL_LOGOFF"
-    ],
-    "786846": [
-      "C_AL_LOCK",
-      "C_AL_SCREENSAVER",
-      "C_AL_COFFEE"
-    ],
-    "786847": [
-      "C_AL_CONTROL_PANEL"
-    ],
-    "786850": [
-      "C_AL_SELECT_TASK"
-    ],
-    "786851": [
-      "C_AL_NEXT_TASK"
-    ],
-    "786852": [
-      "C_AL_PREVIOUS_TASK",
-      "C_AL_PREV_TASK"
-    ],
-    "786854": [
-      "C_AL_HELP"
-    ],
-    "786855": [
-      "C_AL_DOCUMENTS",
-      "C_AL_DOCS"
-    ],
-    "786859": [
-      "C_AL_SPELLCHECK",
-      "C_AL_SPELL"
-    ],
-    "786862": [
-      "C_AL_KEYBOARD_LAYOUT"
-    ],
-    "786865": [
-      "C_AL_SCREEN_SAVER"
-    ],
-    "786868": [
-      "C_AL_FILE_BROWSER",
-      "C_AL_FILES"
-    ],
-    "786870": [
-      "C_AL_IMAGE_BROWSER",
-      "C_AL_IMAGES"
-    ],
-    "786871": [
-      "C_AL_AUDIO_BROWSER",
-      "C_AL_AUDIO",
-      "C_AL_MUSIC"
-    ],
-    "786872": [
-      "C_AL_MOVIE_BROWSER",
-      "C_AL_MOVIES"
-    ],
-    "786876": [
-      "C_AL_INSTANT_MESSAGING",
-      "C_AL_IM"
-    ],
-    "786877": [
-      "C_AL_OEM_FEATURES",
-      "C_AL_TIPS",
-      "C_AL_TUTORIAL"
-    ],
-    "786945": [
-      "C_AC_NEW"
-    ],
-    "786946": [
-      "C_AC_OPEN"
-    ],
-    "786947": [
-      "C_AC_CLOSE"
-    ],
-    "786948": [
-      "C_AC_EXIT"
-    ],
-    "786951": [
-      "C_AC_SAVE"
-    ],
-    "786952": [
-      "C_AC_PRINT"
-    ],
-    "786953": [
-      "C_AC_PROPERTIES",
-      "C_AC_PROPS"
-    ],
-    "786970": [
-      "C_AC_UNDO"
-    ],
-    "786971": [
-      "C_AC_COPY"
-    ],
-    "786972": [
-      "C_AC_CUT"
-    ],
-    "786973": [
-      "C_AC_PASTE"
-    ],
-    "786975": [
-      "C_AC_FIND"
-    ],
-    "786977": [
-      "C_AC_SEARCH"
-    ],
-    "786978": [
-      "C_AC_GOTO"
-    ],
-    "786979": [
-      "C_AC_HOME"
-    ],
-    "786980": [
-      "C_AC_BACK"
-    ],
-    "786981": [
-      "C_AC_FORWARD"
-    ],
-    "786982": [
-      "C_AC_STOP"
-    ],
-    "786983": [
-      "C_AC_REFRESH"
-    ],
-    "786986": [
-      "C_AC_BOOKMARKS",
-      "C_AC_FAVORITES",
-      "C_AC_FAVOURITES"
-    ],
-    "786989": [
-      "C_AC_ZOOM_IN"
-    ],
-    "786990": [
-      "C_AC_ZOOM_OUT"
-    ],
-    "786991": [
-      "C_AC_ZOOM"
-    ],
-    "786994": [
-      "C_AC_VIEW_TOGGLE"
-    ],
-    "786995": [
-      "C_AC_SCROLL_UP"
-    ],
-    "786996": [
-      "C_AC_SCROLL_DOWN"
-    ],
-    "787005": [
-      "C_AC_EDIT"
-    ],
-    "787039": [
-      "C_AC_CANCEL"
-    ],
-    "787049": [
-      "C_AC_INSERT",
-      "C_AC_INS"
-    ],
-    "787050": [
-      "C_AC_DEL"
-    ],
-    "787065": [
-      "C_AC_REDO"
-    ],
-    "787081": [
-      "C_AC_REPLY"
-    ],
-    "787083": [
-      "C_AC_FORWARD_MAIL"
-    ],
-    "787084": [
-      "C_AC_SEND"
-    ],
-    "787101": [
-      "C_AC_NEXT_KEYBOARD_LAYOUT_SELECT",
-      "GLOBE"
-    ],
-    "787103": [
-      "C_AC_DESKTOP_SHOW_ALL_WINDOWS"
-    ],
-    "787106": [
-      "C_AC_DESKTOP_SHOW_ALL_APPLICATIONS"
-    ],
-    "787143": [
-      "C_KEYBOARD_INPUT_ASSIST_PREVIOUS",
-      "C_KBIA_PREV"
-    ],
-    "787144": [
-      "C_KEYBOARD_INPUT_ASSIST_NEXT",
-      "C_KBIA_NEXT"
-    ],
-    "787145": [
-      "C_KEYBOARD_INPUT_ASSIST_PREVIOUS_GROUP",
-      "C_KBIA_PREV_GRP"
-    ],
-    "787146": [
-      "C_KEYBOARD_INPUT_ASSIST_NEXT_GROUP",
-      "C_KBIA_NEXT_GRP"
-    ],
-    "787147": [
-      "C_KEYBOARD_INPUT_ASSIST_ACCEPT",
-      "C_KBIA_ACCEPT"
-    ],
-    "787148": [
-      "C_KEYBOARD_INPUT_ASSIST_CANCEL",
-      "C_KBIA_CANCEL"
-    ],
-    "34013214": [
-      "EXCLAMATION",
-      "EXCL",
-      "BANG"
-    ],
-    "34013215": [
-      "AT_SIGN",
-      "AT",
-      "ATSN"
-    ],
-    "34013216": [
-      "HASH",
-      "POUND"
-    ],
-    "34013217": [
-      "DOLLAR",
-      "DLLR"
-    ],
-    "34013218": [
-      "PERCENT",
-      "PRCNT",
-      "PRCT"
-    ],
-    "34013219": [
-      "CARET",
-      "CRRT"
-    ],
-    "34013220": [
-      "AMPERSAND",
-      "AMPS"
-    ],
-    "34013221": [
-      "ASTERISK",
-      "ASTRK",
-      "STAR"
-    ],
-    "34013222": [
-      "LEFT_PARENTHESIS",
-      "LPAR",
-      "LPRN"
-    ],
-    "34013223": [
-      "RIGHT_PARENTHESIS",
-      "RPAR",
-      "RPRN"
-    ],
-    "34013229": [
-      "UNDERSCORE",
-      "UNDER"
-    ],
-    "34013230": [
-      "PLUS"
-    ],
-    "34013231": [
-      "LEFT_BRACE",
-      "LBRC",
-      "LCUR"
-    ],
-    "34013232": [
-      "RIGHT_BRACE",
-      "RBRC",
-      "RCUR"
-    ],
-    "34013233": [
-      "PIPE"
-    ],
-    "34013234": [
-      "TILDE2"
-    ],
-    "34013235": [
-      "COLON",
-      "COLN"
-    ],
-    "34013236": [
-      "DOUBLE_QUOTES",
-      "DQT"
-    ],
-    "34013237": [
-      "TILDE",
-      "TILD"
-    ],
-    "34013238": [
-      "LESS_THAN",
-      "LT",
-      "LABT"
-    ],
-    "34013239": [
-      "GREATER_THAN",
-      "GT",
-      "RABT"
-    ],
-    "34013240": [
-      "QUESTION",
-      "QMARK"
-    ],
-    "34013267": [
-      "CLEAR2"
-    ],
-    "34013284": [
-      "PIPE2"
-    ]
+    "458984": ["K_PLAY_PAUSE", "K_PP"],
+    "458985": ["K_STOP2"],
+    "458986": ["K_PREVIOUS", "K_PREV"],
+    "458987": ["K_NEXT"],
+    "458988": ["K_EJECT"],
+    "458989": ["K_VOLUME_UP2", "K_VOL_UP2"],
+    "458990": ["K_VOLUME_DOWN2", "K_VOL_DN2"],
+    "458991": ["K_MUTE2"],
+    "458992": ["K_WWW"],
+    "458993": ["K_BACK"],
+    "458994": ["K_FORWARD"],
+    "458995": ["K_STOP3"],
+    "458996": ["K_FIND2"],
+    "458997": ["K_SCROLL_UP"],
+    "458998": ["K_SCROLL_DOWN"],
+    "458999": ["K_EDIT"],
+    "459000": ["K_SLEEP"],
+    "459001": ["K_LOCK", "K_SCREENSAVER", "K_COFFEE"],
+    "459002": ["K_REFRESH"],
+    "459003": ["K_CALCULATOR", "K_CALC"],
+    "786480": ["C_POWER", "C_PWR"],
+    "786481": ["C_RESET"],
+    "786482": ["C_SLEEP"],
+    "786484": ["C_SLEEP_MODE"],
+    "786496": ["C_MENU"],
+    "786497": ["C_MENU_PICK", "C_MENU_SELECT"],
+    "786498": ["C_MENU_UP"],
+    "786499": ["C_MENU_DOWN"],
+    "786500": ["C_MENU_LEFT"],
+    "786501": ["C_MENU_RIGHT"],
+    "786502": ["C_MENU_ESCAPE", "C_MENU_ESC"],
+    "786503": ["C_MENU_INCREASE", "C_MENU_INC"],
+    "786504": ["C_MENU_DECREASE", "C_MENU_DEC"],
+    "786528": ["C_DATA_ON_SCREEN"],
+    "786529": ["C_CAPTIONS", "C_SUBTITLES"],
+    "786533": ["C_SNAPSHOT"],
+    "786535": ["C_PIP"],
+    "786537": ["C_RED_BUTTON", "C_RED"],
+    "786538": ["C_GREEN_BUTTON", "C_GREEN"],
+    "786539": ["C_BLUE_BUTTON", "C_BLUE"],
+    "786540": ["C_YELLOW_BUTTON", "C_YELLOW"],
+    "786541": ["C_ASPECT"],
+    "786543": ["C_BRIGHTNESS_INC", "C_BRI_INC", "C_BRI_UP"],
+    "786544": ["C_BRIGHTNESS_DEC", "C_BRI_DEC", "C_BRI_DN"],
+    "786546": ["C_BACKLIGHT_TOGGLE", "C_BKLT_TOG"],
+    "786547": ["C_BRIGHTNESS_MINIMUM", "C_BRI_MIN"],
+    "786548": ["C_BRIGHTNESS_MAXIMUM", "C_BRI_MAX"],
+    "786549": ["C_BRIGHTNESS_AUTO", "C_BRI_AUTO"],
+    "786562": ["C_MEDIA_STEP", "C_MODE_STEP"],
+    "786563": ["C_RECALL_LAST", "C_CHAN_LAST"],
+    "786568": ["C_MEDIA_COMPUTER"],
+    "786569": ["C_MEDIA_TV"],
+    "786570": ["C_MEDIA_WWW"],
+    "786571": ["C_MEDIA_DVD"],
+    "786572": ["C_MEDIA_PHONE"],
+    "786573": ["C_MEDIA_GUIDE"],
+    "786574": ["C_MEDIA_VIDEOPHONE"],
+    "786575": ["C_MEDIA_GAMES"],
+    "786576": ["C_MEDIA_MESSAGES"],
+    "786577": ["C_MEDIA_CD"],
+    "786578": ["C_MEDIA_VCR"],
+    "786579": ["C_MEDIA_TUNER"],
+    "786580": ["C_QUIT"],
+    "786581": ["C_HELP"],
+    "786582": ["C_MEDIA_TAPE"],
+    "786583": ["C_MEDIA_CABLE"],
+    "786584": ["C_MEDIA_SATELLITE"],
+    "786586": ["C_MEDIA_HOME"],
+    "786588": ["C_CHANNEL_INC", "C_CHAN_INC"],
+    "786589": ["C_CHANNEL_DEC", "C_CHAN_DEC"],
+    "786592": ["C_MEDIA_VCR_PLUS"],
+    "786608": ["C_PLAY"],
+    "786609": ["C_PAUSE"],
+    "786610": ["C_RECORD", "C_REC"],
+    "786611": ["C_FAST_FORWARD", "C_FF"],
+    "786612": ["C_REWIND", "C_RW"],
+    "786613": ["C_NEXT", "M_NEXT"],
+    "786614": ["C_PREVIOUS", "C_PREV", "M_PREV"],
+    "786615": ["C_STOP", "M_STOP"],
+    "786616": ["C_EJECT", "M_EJCT"],
+    "786617": ["C_RANDOM_PLAY", "C_SHUFFLE"],
+    "786620": ["C_REPEAT"],
+    "786623": ["C_SLOW_TRACKING", "C_SLOW2"],
+    "786636": ["C_STOP_EJECT"],
+    "786637": ["C_PLAY_PAUSE", "C_PP", "M_PLAY"],
+    "786639": ["C_VOICE_COMMAND"],
+    "786658": ["C_MUTE", "M_MUTE"],
+    "786661": ["C_BASS_BOOST"],
+    "786665": ["C_VOLUME_UP", "C_VOL_UP", "M_VOLU"],
+    "786666": ["C_VOLUME_DOWN", "C_VOL_DN", "M_VOLD"],
+    "786677": ["C_SLOW"],
+    "786803": ["C_ALTERNATE_AUDIO_INCREMENT", "C_ALT_AUDIO_INC"],
+    "786819": ["C_AL_CCC"],
+    "786820": ["C_AL_WORD"],
+    "786821": ["C_AL_TEXT_EDITOR"],
+    "786822": ["C_AL_SPREADSHEET", "C_AL_SHEET"],
+    "786823": ["C_AL_GRAPHICS_EDITOR"],
+    "786824": ["C_AL_PRESENTATION"],
+    "786825": ["C_AL_DATABASE", "C_AL_DB"],
+    "786826": ["C_AL_EMAIL", "C_AL_MAIL"],
+    "786827": ["C_AL_NEWS"],
+    "786828": ["C_AL_VOICEMAIL"],
+    "786829": ["C_AL_CONTACTS", "C_AL_ADDRESS_BOOK"],
+    "786830": ["C_AL_CALENDAR", "C_AL_CAL"],
+    "786831": ["C_AL_TASK_MANAGER"],
+    "786832": ["C_AL_JOURNAL"],
+    "786833": ["C_AL_FINANCE"],
+    "786834": ["C_AL_CALCULATOR", "C_AL_CALC"],
+    "786835": ["C_AL_AV_CAPTURE_PLAYBACK"],
+    "786836": ["C_AL_MY_COMPUTER"],
+    "786838": ["C_AL_WWW"],
+    "786841": ["C_AL_NETWORK_CHAT", "C_AL_CHAT"],
+    "786844": ["C_AL_LOGOFF"],
+    "786846": ["C_AL_LOCK", "C_AL_SCREENSAVER", "C_AL_COFFEE"],
+    "786847": ["C_AL_CONTROL_PANEL"],
+    "786850": ["C_AL_SELECT_TASK"],
+    "786851": ["C_AL_NEXT_TASK"],
+    "786852": ["C_AL_PREVIOUS_TASK", "C_AL_PREV_TASK"],
+    "786854": ["C_AL_HELP"],
+    "786855": ["C_AL_DOCUMENTS", "C_AL_DOCS"],
+    "786859": ["C_AL_SPELLCHECK", "C_AL_SPELL"],
+    "786862": ["C_AL_KEYBOARD_LAYOUT"],
+    "786865": ["C_AL_SCREEN_SAVER"],
+    "786868": ["C_AL_FILE_BROWSER", "C_AL_FILES"],
+    "786870": ["C_AL_IMAGE_BROWSER", "C_AL_IMAGES"],
+    "786871": ["C_AL_AUDIO_BROWSER", "C_AL_AUDIO", "C_AL_MUSIC"],
+    "786872": ["C_AL_MOVIE_BROWSER", "C_AL_MOVIES"],
+    "786876": ["C_AL_INSTANT_MESSAGING", "C_AL_IM"],
+    "786877": ["C_AL_OEM_FEATURES", "C_AL_TIPS", "C_AL_TUTORIAL"],
+    "786945": ["C_AC_NEW"],
+    "786946": ["C_AC_OPEN"],
+    "786947": ["C_AC_CLOSE"],
+    "786948": ["C_AC_EXIT"],
+    "786951": ["C_AC_SAVE"],
+    "786952": ["C_AC_PRINT"],
+    "786953": ["C_AC_PROPERTIES", "C_AC_PROPS"],
+    "786970": ["C_AC_UNDO"],
+    "786971": ["C_AC_COPY"],
+    "786972": ["C_AC_CUT"],
+    "786973": ["C_AC_PASTE"],
+    "786975": ["C_AC_FIND"],
+    "786977": ["C_AC_SEARCH"],
+    "786978": ["C_AC_GOTO"],
+    "786979": ["C_AC_HOME"],
+    "786980": ["C_AC_BACK"],
+    "786981": ["C_AC_FORWARD"],
+    "786982": ["C_AC_STOP"],
+    "786983": ["C_AC_REFRESH"],
+    "786986": ["C_AC_BOOKMARKS", "C_AC_FAVORITES", "C_AC_FAVOURITES"],
+    "786989": ["C_AC_ZOOM_IN"],
+    "786990": ["C_AC_ZOOM_OUT"],
+    "786991": ["C_AC_ZOOM"],
+    "786994": ["C_AC_VIEW_TOGGLE"],
+    "786995": ["C_AC_SCROLL_UP"],
+    "786996": ["C_AC_SCROLL_DOWN"],
+    "787005": ["C_AC_EDIT"],
+    "787039": ["C_AC_CANCEL"],
+    "787049": ["C_AC_INSERT", "C_AC_INS"],
+    "787050": ["C_AC_DEL"],
+    "787065": ["C_AC_REDO"],
+    "787081": ["C_AC_REPLY"],
+    "787083": ["C_AC_FORWARD_MAIL"],
+    "787084": ["C_AC_SEND"],
+    "787101": ["C_AC_NEXT_KEYBOARD_LAYOUT_SELECT", "GLOBE"],
+    "787103": ["C_AC_DESKTOP_SHOW_ALL_WINDOWS"],
+    "787106": ["C_AC_DESKTOP_SHOW_ALL_APPLICATIONS"],
+    "787143": ["C_KEYBOARD_INPUT_ASSIST_PREVIOUS", "C_KBIA_PREV"],
+    "787144": ["C_KEYBOARD_INPUT_ASSIST_NEXT", "C_KBIA_NEXT"],
+    "787145": ["C_KEYBOARD_INPUT_ASSIST_PREVIOUS_GROUP", "C_KBIA_PREV_GRP"],
+    "787146": ["C_KEYBOARD_INPUT_ASSIST_NEXT_GROUP", "C_KBIA_NEXT_GRP"],
+    "787147": ["C_KEYBOARD_INPUT_ASSIST_ACCEPT", "C_KBIA_ACCEPT"],
+    "787148": ["C_KEYBOARD_INPUT_ASSIST_CANCEL", "C_KBIA_CANCEL"],
+    "34013214": ["EXCLAMATION", "EXCL", "BANG"],
+    "34013215": ["AT_SIGN", "AT", "ATSN"],
+    "34013216": ["HASH", "POUND"],
+    "34013217": ["DOLLAR", "DLLR"],
+    "34013218": ["PERCENT", "PRCNT", "PRCT"],
+    "34013219": ["CARET", "CRRT"],
+    "34013220": ["AMPERSAND", "AMPS"],
+    "34013221": ["ASTERISK", "ASTRK", "STAR"],
+    "34013222": ["LEFT_PARENTHESIS", "LPAR", "LPRN"],
+    "34013223": ["RIGHT_PARENTHESIS", "RPAR", "RPRN"],
+    "34013229": ["UNDERSCORE", "UNDER"],
+    "34013230": ["PLUS"],
+    "34013231": ["LEFT_BRACE", "LBRC", "LCUR"],
+    "34013232": ["RIGHT_BRACE", "RBRC", "RCUR"],
+    "34013233": ["PIPE"],
+    "34013234": ["TILDE2"],
+    "34013235": ["COLON", "COLN"],
+    "34013236": ["DOUBLE_QUOTES", "DQT"],
+    "34013237": ["TILDE", "TILD"],
+    "34013238": ["LESS_THAN", "LT", "LABT"],
+    "34013239": ["GREATER_THAN", "GT", "RABT"],
+    "34013240": ["QUESTION", "QMARK"],
+    "34013267": ["CLEAR2"],
+    "34013284": ["PIPE2"]
+  },
+  "labels": {
+    "SYSTEM_POWER": "System Power",
+    "SYS_PWR": "Sys Pwr",
+    "SYSTEM_SLEEP": "System Sleep",
+    "SYS_SLEEP": "Sys Sleep",
+    "SYSTEM_WAKE_UP": "System Wake Up",
+    "SYS_WAKE": "Sys Wake",
+    "A": "A",
+    "B": "B",
+    "C": "C",
+    "D": "D",
+    "E": "E",
+    "F": "F",
+    "G": "G",
+    "H": "H",
+    "I": "I",
+    "J": "J",
+    "K": "K",
+    "L": "L",
+    "M": "M",
+    "N": "N",
+    "O": "O",
+    "P": "P",
+    "Q": "Q",
+    "R": "R",
+    "S": "S",
+    "T": "T",
+    "U": "U",
+    "V": "V",
+    "W": "W",
+    "X": "X",
+    "Y": "Y",
+    "Z": "Z",
+    "NUMBER_1": "Number 1",
+    "N1": "N1",
+    "NUM_1": "Num 1",
+    "EXCLAMATION": "Exclamation",
+    "EXCL": "Excl",
+    "BANG": "Bang",
+    "NUMBER_2": "Number 2",
+    "N2": "N2",
+    "NUM_2": "Num 2",
+    "AT_SIGN": "At Sign",
+    "AT": "At",
+    "ATSN": "Atsn",
+    "NUMBER_3": "Number 3",
+    "N3": "N3",
+    "NUM_3": "Num 3",
+    "HASH": "Hash",
+    "POUND": "Pound",
+    "NUMBER_4": "Number 4",
+    "N4": "N4",
+    "NUM_4": "Num 4",
+    "DOLLAR": "Dollar",
+    "DLLR": "Dllr",
+    "NUMBER_5": "Number 5",
+    "N5": "N5",
+    "NUM_5": "Num 5",
+    "PERCENT": "Percent",
+    "PRCNT": "Prcnt",
+    "PRCT": "Prct",
+    "NUMBER_6": "Number 6",
+    "N6": "N6",
+    "NUM_6": "Num 6",
+    "CARET": "Caret",
+    "CRRT": "Crrt",
+    "NUMBER_7": "Number 7",
+    "N7": "N7",
+    "NUM_7": "Num 7",
+    "AMPERSAND": "Ampersand",
+    "AMPS": "Amps",
+    "NUMBER_8": "Number 8",
+    "N8": "N8",
+    "NUM_8": "Num 8",
+    "ASTERISK": "Asterisk",
+    "ASTRK": "Astrk",
+    "STAR": "Star",
+    "NUMBER_9": "Number 9",
+    "N9": "N9",
+    "NUM_9": "Num 9",
+    "LEFT_PARENTHESIS": "Left Parenthesis",
+    "LPAR": "Lpar",
+    "LPRN": "Lprn",
+    "NUMBER_0": "Number 0",
+    "N0": "N0",
+    "NUM_0": "Num 0",
+    "RIGHT_PARENTHESIS": "Right Parenthesis",
+    "RPAR": "Rpar",
+    "RPRN": "Rprn",
+    "RETURN": "Return",
+    "ENTER": "Enter",
+    "RET": "Ret",
+    "ESCAPE": "Escape",
+    "ESC": "Esc",
+    "BACKSPACE": "Backspace",
+    "BSPC": "Bspc",
+    "BKSP": "Bksp",
+    "TAB": "Tab",
+    "SPACE": "Space",
+    "SPC": "Spc",
+    "MINUS": "Minus",
+    "UNDERSCORE": "Underscore",
+    "UNDER": "Under",
+    "EQUAL": "Equal",
+    "EQL": "Eql",
+    "PLUS": "Plus",
+    "LEFT_BRACKET": "Left Bracket",
+    "LBKT": "Lbkt",
+    "LEFT_BRACE": "Left Brace",
+    "LBRC": "Lbrc",
+    "LCUR": "Lcur",
+    "RIGHT_BRACKET": "Right Bracket",
+    "RBKT": "Rbkt",
+    "RIGHT_BRACE": "Right Brace",
+    "RBRC": "Rbrc",
+    "RCUR": "Rcur",
+    "BACKSLASH": "Backslash",
+    "BSLH": "Bslh",
+    "PIPE": "Pipe",
+    "NON_US_HASH": "Non Us Hash",
+    "NUHS": "Nuhs",
+    "TILDE2": "Tilde2",
+    "SEMICOLON": "Semicolon",
+    "SEMI": "Semi",
+    "SCLN": "Scln",
+    "COLON": "Colon",
+    "COLN": "Coln",
+    "SINGLE_QUOTE": "Single Quote",
+    "SQT": "Sqt",
+    "APOSTROPHE": "Apostrophe",
+    "APOS": "Apos",
+    "QUOT": "Quot",
+    "DOUBLE_QUOTES": "Double Quotes",
+    "DQT": "Dqt",
+    "GRAVE": "Grave",
+    "GRAV": "Grav",
+    "TILDE": "Tilde",
+    "TILD": "Tild",
+    "COMMA": "Comma",
+    "CMMA": "Cmma",
+    "LESS_THAN": "Less Than",
+    "LT": "Lt",
+    "LABT": "Labt",
+    "PERIOD": "Period",
+    "DOT": "Dot",
+    "GREATER_THAN": "Greater Than",
+    "GT": "Gt",
+    "RABT": "Rabt",
+    "SLASH": "Slash",
+    "FSLH": "Fslh",
+    "QUESTION": "Question",
+    "QMARK": "Qmark",
+    "CAPSLOCK": "Capslock",
+    "CAPS": "Caps",
+    "CLCK": "Clck",
+    "F1": "F1",
+    "F2": "F2",
+    "F3": "F3",
+    "F4": "F4",
+    "F5": "F5",
+    "F6": "F6",
+    "F7": "F7",
+    "F8": "F8",
+    "F9": "F9",
+    "F10": "F10",
+    "F11": "F11",
+    "F12": "F12",
+    "PRINTSCREEN": "Printscreen",
+    "PSCRN": "Pscrn",
+    "PRSC": "Prsc",
+    "SCROLLLOCK": "Scrolllock",
+    "SLCK": "Slck",
+    "SCLK": "Sclk",
+    "PAUSE_BREAK": "Pause Break",
+    "PAUS": "Paus",
+    "INSERT": "Insert",
+    "INS": "Ins",
+    "HOME": "Home",
+    "PAGE_UP": "Page Up",
+    "PG_UP": "Pg Up",
+    "PGUP": "Pgup",
+    "DELETE": "Delete",
+    "DEL": "Del",
+    "END": "End",
+    "PAGE_DOWN": "Page Down",
+    "PG_DN": "Pg Dn",
+    "PGDN": "Pgdn",
+    "RIGHT_ARROW": "Right Arrow",
+    "RIGHT": "Right",
+    "RARW": "Rarw",
+    "LEFT_ARROW": "Left Arrow",
+    "LEFT": "Left",
+    "LARW": "Larw",
+    "DOWN_ARROW": "Down Arrow",
+    "DOWN": "Down",
+    "DARW": "Darw",
+    "UP_ARROW": "Up Arrow",
+    "UP": "Up",
+    "UARW": "Uarw",
+    "KP_NUMLOCK": "Numlock",
+    "KP_NUM": "Num",
+    "KP_NLCK": "Nlck",
+    "CLEAR2": "Clear2",
+    "KP_DIVIDE": "Divide",
+    "KP_SLASH": "Slash",
+    "KDIV": "Kdiv",
+    "KP_MULTIPLY": "Multiply",
+    "KP_ASTERISK": "Asterisk",
+    "KMLT": "Kmlt",
+    "KP_MINUS": "Minus",
+    "KP_SUBTRACT": "Subtract",
+    "KMIN": "Kmin",
+    "KP_PLUS": "Plus",
+    "KPLS": "Kpls",
+    "KP_ENTER": "Enter",
+    "KP_NUMBER_1": "Number 1",
+    "KP_N1": "N1",
+    "KP_NUMBER_2": "Number 2",
+    "KP_N2": "N2",
+    "KP_NUMBER_3": "Number 3",
+    "KP_N3": "N3",
+    "KP_NUMBER_4": "Number 4",
+    "KP_N4": "N4",
+    "KP_NUMBER_5": "Number 5",
+    "KP_N5": "N5",
+    "KP_NUMBER_6": "Number 6",
+    "KP_N6": "N6",
+    "KP_NUMBER_7": "Number 7",
+    "KP_N7": "N7",
+    "KP_NUMBER_8": "Number 8",
+    "KP_N8": "N8",
+    "KP_NUMBER_9": "Number 9",
+    "KP_N9": "N9",
+    "KP_NUMBER_0": "Number 0",
+    "KP_N0": "N0",
+    "KP_DOT": "Dot",
+    "NON_US_BACKSLASH": "Non Us Backslash",
+    "NON_US_BSLH": "Non Us Bslh",
+    "NUBS": "Nubs",
+    "PIPE2": "Pipe2",
+    "K_APPLICATION": "Application",
+    "K_APP": "App",
+    "K_CONTEXT_MENU": "Context Menu",
+    "K_CMENU": "Cmenu",
+    "GUI": "Gui",
+    "K_POWER": "Power",
+    "K_PWR": "Pwr",
+    "KP_EQUAL": "Equal",
+    "F13": "F13",
+    "F14": "F14",
+    "F15": "F15",
+    "F16": "F16",
+    "F17": "F17",
+    "F18": "F18",
+    "F19": "F19",
+    "F20": "F20",
+    "F21": "F21",
+    "F22": "F22",
+    "F23": "F23",
+    "F24": "F24",
+    "K_EXECUTE": "Execute",
+    "K_EXEC": "Exec",
+    "K_HELP": "Help",
+    "K_MENU": "Menu",
+    "K_SELECT": "Select",
+    "K_STOP": "Stop",
+    "K_AGAIN": "Again",
+    "K_REDO": "Redo",
+    "K_UNDO": "Undo",
+    "UNDO": "Undo",
+    "K_CUT": "Cut",
+    "CUT": "Cut",
+    "K_COPY": "Copy",
+    "COPY": "Copy",
+    "K_PASTE": "Paste",
+    "PSTE": "Pste",
+    "K_FIND": "Find",
+    "K_MUTE": "Mute",
+    "K_VOLUME_UP": "Volume Up",
+    "K_VOL_UP": "Vol Up",
+    "VOLU": "Volu",
+    "K_VOLUME_DOWN": "Volume Down",
+    "K_VOL_DN": "Vol Dn",
+    "VOLD": "Vold",
+    "LOCKING_CAPS": "Locking Caps",
+    "LCAPS": "Lcaps",
+    "LOCKING_NUM": "Locking Num",
+    "LNLCK": "Lnlck",
+    "LOCKING_SCROLL": "Locking Scroll",
+    "LSLCK": "Lslck",
+    "KP_COMMA": "Comma",
+    "KP_EQUAL_AS400": "Equal As400",
+    "INTERNATIONAL_1": "International 1",
+    "INT1": "Int1",
+    "INT_RO": "Ro",
+    "INTERNATIONAL_2": "International 2",
+    "INT2": "Int2",
+    "INT_KATAKANAHIRAGANA": "Katakanahiragana",
+    "INT_KANA": "Kana",
+    "INTERNATIONAL_3": "International 3",
+    "INT3": "Int3",
+    "INT_YEN": "Yen",
+    "INTERNATIONAL_4": "International 4",
+    "INT4": "Int4",
+    "INT_HENKAN": "Henkan",
+    "INTERNATIONAL_5": "International 5",
+    "INT5": "Int5",
+    "INT_MUHENKAN": "Muhenkan",
+    "INTERNATIONAL_6": "International 6",
+    "INT6": "Int6",
+    "INT_KPJPCOMMA": "Kpjpcomma",
+    "INTERNATIONAL_7": "International 7",
+    "INT7": "Int7",
+    "INTERNATIONAL_8": "International 8",
+    "INT8": "Int8",
+    "INTERNATIONAL_9": "International 9",
+    "INT9": "Int9",
+    "LANGUAGE_1": "Language 1",
+    "LANG1": "Lang1",
+    "LANG_HANGEUL": "Hangeul",
+    "LANGUAGE_2": "Language 2",
+    "LANG2": "Lang2",
+    "LANG_HANJA": "Hanja",
+    "LANGUAGE_3": "Language 3",
+    "LANG3": "Lang3",
+    "LANG_KATAKANA": "Katakana",
+    "LANGUAGE_4": "Language 4",
+    "LANG4": "Lang4",
+    "LANG_HIRAGANA": "Hiragana",
+    "LANGUAGE_5": "Language 5",
+    "LANG5": "Lang5",
+    "LANG_ZENKAKUHANKAKU": "Zenkakuhankaku",
+    "LANGUAGE_6": "Language 6",
+    "LANG6": "Lang6",
+    "LANGUAGE_7": "Language 7",
+    "LANG7": "Lang7",
+    "LANGUAGE_8": "Language 8",
+    "LANG8": "Lang8",
+    "LANGUAGE_9": "Language 9",
+    "LANG9": "Lang9",
+    "ALT_ERASE": "Alt Erase",
+    "SYSREQ": "Sysreq",
+    "ATTENTION": "Attention",
+    "K_CANCEL": "Cancel",
+    "CLEAR": "Clear",
+    "PRIOR": "Prior",
+    "RETURN2": "Return2",
+    "RET2": "Ret2",
+    "SEPARATOR": "Separator",
+    "OUT": "Out",
+    "OPER": "Oper",
+    "CLEAR_AGAIN": "Clear Again",
+    "CRSEL": "Crsel",
+    "EXSEL": "Exsel",
+    "CURU": "Curu",
+    "KP_LEFT_PARENTHESIS": "Left Parenthesis",
+    "KP_LPAR": "Lpar",
+    "KP_RIGHT_PARENTHESIS": "Right Parenthesis",
+    "KP_RPAR": "Rpar",
+    "KSPC": "Kspc",
+    "KP_CLEAR": "Clear",
+    "LEFT_CONTROL": "Left Control",
+    "LCTRL": "Lctrl",
+    "LCTL": "Lctl",
+    "LEFT_SHIFT": "Left Shift",
+    "LSHIFT": "Lshift",
+    "LSHFT": "Lshft",
+    "LSFT": "Lsft",
+    "LEFT_ALT": "Left Alt",
+    "LALT": "Lalt",
+    "LEFT_GUI": "Left Gui",
+    "LGUI": "Lgui",
+    "LEFT_WIN": "Left Win",
+    "LWIN": "Lwin",
+    "LEFT_COMMAND": "Left Command",
+    "LCMD": "Lcmd",
+    "LEFT_META": "Left Meta",
+    "LMETA": "Lmeta",
+    "RIGHT_CONTROL": "Right Control",
+    "RCTRL": "Rctrl",
+    "RCTL": "Rctl",
+    "RIGHT_SHIFT": "Right Shift",
+    "RSHIFT": "Rshift",
+    "RSHFT": "Rshft",
+    "RSFT": "Rsft",
+    "RIGHT_ALT": "Right Alt",
+    "RALT": "Ralt",
+    "RIGHT_GUI": "Right Gui",
+    "RGUI": "Rgui",
+    "RIGHT_WIN": "Right Win",
+    "RWIN": "Rwin",
+    "RIGHT_COMMAND": "Right Command",
+    "RCMD": "Rcmd",
+    "RIGHT_META": "Right Meta",
+    "RMETA": "Rmeta",
+    "K_PLAY_PAUSE": "Play Pause",
+    "K_PP": "Pp",
+    "K_STOP2": "Stop2",
+    "K_PREVIOUS": "Previous",
+    "K_PREV": "Prev",
+    "K_NEXT": "Next",
+    "K_EJECT": "Eject",
+    "K_VOLUME_UP2": "Volume Up2",
+    "K_VOL_UP2": "Vol Up2",
+    "K_VOLUME_DOWN2": "Volume Down2",
+    "K_VOL_DN2": "Vol Dn2",
+    "K_MUTE2": "Mute2",
+    "K_WWW": "Www",
+    "K_BACK": "Back",
+    "K_FORWARD": "Forward",
+    "K_STOP3": "Stop3",
+    "K_FIND2": "Find2",
+    "K_SCROLL_UP": "Scroll Up",
+    "K_SCROLL_DOWN": "Scroll Down",
+    "K_EDIT": "Edit",
+    "K_SLEEP": "Sleep",
+    "K_LOCK": "Lock",
+    "K_SCREENSAVER": "Screensaver",
+    "K_COFFEE": "Coffee",
+    "K_REFRESH": "Refresh",
+    "K_CALCULATOR": "Calculator",
+    "K_CALC": "Calc",
+    "C_POWER": "Power",
+    "C_PWR": "Pwr",
+    "C_RESET": "Reset",
+    "C_SLEEP": "Sleep",
+    "C_SLEEP_MODE": "Sleep Mode",
+    "C_MENU": "Menu",
+    "C_MENU_PICK": "Menu Pick",
+    "C_MENU_SELECT": "Menu Select",
+    "C_MENU_UP": "Menu Up",
+    "C_MENU_DOWN": "Menu Down",
+    "C_MENU_LEFT": "Menu Left",
+    "C_MENU_RIGHT": "Menu Right",
+    "C_MENU_ESCAPE": "Menu Escape",
+    "C_MENU_ESC": "Menu Esc",
+    "C_MENU_INCREASE": "Menu Increase",
+    "C_MENU_INC": "Menu Inc",
+    "C_MENU_DECREASE": "Menu Decrease",
+    "C_MENU_DEC": "Menu Dec",
+    "C_DATA_ON_SCREEN": "Data On Screen",
+    "C_CAPTIONS": "Captions",
+    "C_SUBTITLES": "Subtitles",
+    "C_SNAPSHOT": "Snapshot",
+    "C_PIP": "Pip",
+    "C_RED_BUTTON": "Red Button",
+    "C_RED": "Red",
+    "C_GREEN_BUTTON": "Green Button",
+    "C_GREEN": "Green",
+    "C_BLUE_BUTTON": "Blue Button",
+    "C_BLUE": "Blue",
+    "C_YELLOW_BUTTON": "Yellow Button",
+    "C_YELLOW": "Yellow",
+    "C_ASPECT": "Aspect",
+    "C_BRIGHTNESS_INC": "Brightness Inc",
+    "C_BRI_INC": "Bri Inc",
+    "C_BRI_UP": "Bri Up",
+    "C_BRIGHTNESS_DEC": "Brightness Dec",
+    "C_BRI_DEC": "Bri Dec",
+    "C_BRI_DN": "Bri Dn",
+    "C_BACKLIGHT_TOGGLE": "Backlight Toggle",
+    "C_BKLT_TOG": "Bklt Tog",
+    "C_BRIGHTNESS_MINIMUM": "Brightness Minimum",
+    "C_BRI_MIN": "Bri Min",
+    "C_BRIGHTNESS_MAXIMUM": "Brightness Maximum",
+    "C_BRI_MAX": "Bri Max",
+    "C_BRIGHTNESS_AUTO": "Brightness Auto",
+    "C_BRI_AUTO": "Bri Auto",
+    "C_MEDIA_STEP": "Media Step",
+    "C_MODE_STEP": "Mode Step",
+    "C_RECALL_LAST": "Recall Last",
+    "C_CHAN_LAST": "Chan Last",
+    "C_MEDIA_COMPUTER": "Media Computer",
+    "C_MEDIA_TV": "Media Tv",
+    "C_MEDIA_WWW": "Media Www",
+    "C_MEDIA_DVD": "Media Dvd",
+    "C_MEDIA_PHONE": "Media Phone",
+    "C_MEDIA_GUIDE": "Media Guide",
+    "C_MEDIA_VIDEOPHONE": "Media Videophone",
+    "C_MEDIA_GAMES": "Media Games",
+    "C_MEDIA_MESSAGES": "Media Messages",
+    "C_MEDIA_CD": "Media Cd",
+    "C_MEDIA_VCR": "Media Vcr",
+    "C_MEDIA_TUNER": "Media Tuner",
+    "C_QUIT": "Quit",
+    "C_HELP": "Help",
+    "C_MEDIA_TAPE": "Media Tape",
+    "C_MEDIA_CABLE": "Media Cable",
+    "C_MEDIA_SATELLITE": "Media Satellite",
+    "C_MEDIA_HOME": "Media Home",
+    "C_CHANNEL_INC": "Channel Inc",
+    "C_CHAN_INC": "Chan Inc",
+    "C_CHANNEL_DEC": "Channel Dec",
+    "C_CHAN_DEC": "Chan Dec",
+    "C_MEDIA_VCR_PLUS": "Media Vcr Plus",
+    "C_PLAY": "Play",
+    "C_PAUSE": "Pause",
+    "C_RECORD": "Record",
+    "C_REC": "Rec",
+    "C_FAST_FORWARD": "Fast Forward",
+    "C_FF": "Ff",
+    "C_REWIND": "Rewind",
+    "C_RW": "Rw",
+    "C_NEXT": "Next",
+    "M_NEXT": "Next",
+    "C_PREVIOUS": "Previous",
+    "C_PREV": "Prev",
+    "M_PREV": "Prev",
+    "C_STOP": "Stop",
+    "M_STOP": "Stop",
+    "C_EJECT": "Eject",
+    "M_EJCT": "Ejct",
+    "C_RANDOM_PLAY": "Random Play",
+    "C_SHUFFLE": "Shuffle",
+    "C_REPEAT": "Repeat",
+    "C_SLOW_TRACKING": "Slow Tracking",
+    "C_SLOW2": "Slow2",
+    "C_STOP_EJECT": "Stop Eject",
+    "C_PLAY_PAUSE": "Play Pause",
+    "C_PP": "Pp",
+    "M_PLAY": "Play",
+    "C_VOICE_COMMAND": "Voice Command",
+    "C_MUTE": "Mute",
+    "M_MUTE": "Mute",
+    "C_BASS_BOOST": "Bass Boost",
+    "C_VOLUME_UP": "Volume Up",
+    "C_VOL_UP": "Vol Up",
+    "M_VOLU": "Volu",
+    "C_VOLUME_DOWN": "Volume Down",
+    "C_VOL_DN": "Vol Dn",
+    "M_VOLD": "Vold",
+    "C_SLOW": "Slow",
+    "C_ALTERNATE_AUDIO_INCREMENT": "Alternate Audio Increment",
+    "C_ALT_AUDIO_INC": "Alt Audio Inc",
+    "C_AL_CCC": "Ccc",
+    "C_AL_WORD": "Word",
+    "C_AL_TEXT_EDITOR": "Text Editor",
+    "C_AL_SPREADSHEET": "Spreadsheet",
+    "C_AL_SHEET": "Sheet",
+    "C_AL_GRAPHICS_EDITOR": "Graphics Editor",
+    "C_AL_PRESENTATION": "Presentation",
+    "C_AL_DATABASE": "Database",
+    "C_AL_DB": "Db",
+    "C_AL_EMAIL": "Email",
+    "C_AL_MAIL": "Mail",
+    "C_AL_NEWS": "News",
+    "C_AL_VOICEMAIL": "Voicemail",
+    "C_AL_CONTACTS": "Contacts",
+    "C_AL_ADDRESS_BOOK": "Address Book",
+    "C_AL_CALENDAR": "Calendar",
+    "C_AL_CAL": "Cal",
+    "C_AL_TASK_MANAGER": "Task Manager",
+    "C_AL_JOURNAL": "Journal",
+    "C_AL_FINANCE": "Finance",
+    "C_AL_CALCULATOR": "Calculator",
+    "C_AL_CALC": "Calc",
+    "C_AL_AV_CAPTURE_PLAYBACK": "Av Capture Playback",
+    "C_AL_MY_COMPUTER": "My Computer",
+    "C_AL_WWW": "Www",
+    "C_AL_NETWORK_CHAT": "Network Chat",
+    "C_AL_CHAT": "Chat",
+    "C_AL_LOGOFF": "Logoff",
+    "C_AL_LOCK": "Lock",
+    "C_AL_SCREENSAVER": "Screensaver",
+    "C_AL_COFFEE": "Coffee",
+    "C_AL_CONTROL_PANEL": "Control Panel",
+    "C_AL_SELECT_TASK": "Select Task",
+    "C_AL_NEXT_TASK": "Next Task",
+    "C_AL_PREVIOUS_TASK": "Previous Task",
+    "C_AL_PREV_TASK": "Prev Task",
+    "C_AL_HELP": "Help",
+    "C_AL_DOCUMENTS": "Documents",
+    "C_AL_DOCS": "Docs",
+    "C_AL_SPELLCHECK": "Spellcheck",
+    "C_AL_SPELL": "Spell",
+    "C_AL_KEYBOARD_LAYOUT": "Keyboard Layout",
+    "C_AL_SCREEN_SAVER": "Screen Saver",
+    "C_AL_FILE_BROWSER": "File Browser",
+    "C_AL_FILES": "Files",
+    "C_AL_IMAGE_BROWSER": "Image Browser",
+    "C_AL_IMAGES": "Images",
+    "C_AL_AUDIO_BROWSER": "Audio Browser",
+    "C_AL_AUDIO": "Audio",
+    "C_AL_MUSIC": "Music",
+    "C_AL_MOVIE_BROWSER": "Movie Browser",
+    "C_AL_MOVIES": "Movies",
+    "C_AL_INSTANT_MESSAGING": "Instant Messaging",
+    "C_AL_IM": "Im",
+    "C_AL_OEM_FEATURES": "Oem Features",
+    "C_AL_TIPS": "Tips",
+    "C_AL_TUTORIAL": "Tutorial",
+    "C_AC_NEW": "New",
+    "C_AC_OPEN": "Open",
+    "C_AC_CLOSE": "Close",
+    "C_AC_EXIT": "Exit",
+    "C_AC_SAVE": "Save",
+    "C_AC_PRINT": "Print",
+    "C_AC_PROPERTIES": "Properties",
+    "C_AC_PROPS": "Props",
+    "C_AC_UNDO": "Undo",
+    "C_AC_COPY": "Copy",
+    "C_AC_CUT": "Cut",
+    "C_AC_PASTE": "Paste",
+    "C_AC_FIND": "Find",
+    "C_AC_SEARCH": "Search",
+    "C_AC_GOTO": "Goto",
+    "C_AC_HOME": "Home",
+    "C_AC_BACK": "Back",
+    "C_AC_FORWARD": "Forward",
+    "C_AC_STOP": "Stop",
+    "C_AC_REFRESH": "Refresh",
+    "C_AC_BOOKMARKS": "Bookmarks",
+    "C_AC_FAVORITES": "Favorites",
+    "C_AC_FAVOURITES": "Favourites",
+    "C_AC_ZOOM_IN": "Zoom In",
+    "C_AC_ZOOM_OUT": "Zoom Out",
+    "C_AC_ZOOM": "Zoom",
+    "C_AC_VIEW_TOGGLE": "View Toggle",
+    "C_AC_SCROLL_UP": "Scroll Up",
+    "C_AC_SCROLL_DOWN": "Scroll Down",
+    "C_AC_EDIT": "Edit",
+    "C_AC_CANCEL": "Cancel",
+    "C_AC_INSERT": "Insert",
+    "C_AC_INS": "Ins",
+    "C_AC_DEL": "Del",
+    "C_AC_REDO": "Redo",
+    "C_AC_REPLY": "Reply",
+    "C_AC_FORWARD_MAIL": "Forward Mail",
+    "C_AC_SEND": "Send",
+    "C_AC_DESKTOP_SHOW_ALL_WINDOWS": "Desktop Show All Windows",
+    "C_AC_DESKTOP_SHOW_ALL_APPLICATIONS": "Desktop Show All Applications",
+    "C_KEYBOARD_INPUT_ASSIST_PREVIOUS": "Keyboard Input Assist Previous",
+    "C_KBIA_PREV": "Kbia Prev",
+    "C_KEYBOARD_INPUT_ASSIST_NEXT": "Keyboard Input Assist Next",
+    "C_KBIA_NEXT": "Kbia Next",
+    "C_KEYBOARD_INPUT_ASSIST_PREVIOUS_GROUP": "Keyboard Input Assist Previous Group",
+    "C_KBIA_PREV_GRP": "Kbia Prev Grp",
+    "C_KEYBOARD_INPUT_ASSIST_NEXT_GROUP": "Keyboard Input Assist Next Group",
+    "C_KBIA_NEXT_GRP": "Kbia Next Grp",
+    "C_KEYBOARD_INPUT_ASSIST_ACCEPT": "Keyboard Input Assist Accept",
+    "C_KBIA_ACCEPT": "Kbia Accept",
+    "C_KEYBOARD_INPUT_ASSIST_CANCEL": "Keyboard Input Assist Cancel",
+    "C_KBIA_CANCEL": "Kbia Cancel",
+    "C_AC_NEXT_KEYBOARD_LAYOUT_SELECT": "Next Keyboard Layout Select",
+    "GLOBE": "Globe"
   }
 }

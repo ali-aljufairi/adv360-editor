@@ -55,6 +55,20 @@ export interface KeyDef {
   group: GroupId
   /** Glyph shown in the keycap preview. */
   glyph?: string
+  /** Match multiplier for search; obscure raw HID usages score below friendly entries. */
+  searchWeight?: number
+  /** Visible context for uncommon HID usages. */
+  note?: string
+  /** This spelling is documented as a raw fallback rather than a friendly label. */
+  rawFallback?: boolean
+}
+
+/** A key name defined in a user-included header. */
+export interface UserKeycode {
+  name: string
+  label: string
+  value: string
+  source: string
 }
 
 /** A fixed, non-key behavior binding such as `&bt BT_SEL 0`. */
@@ -135,7 +149,7 @@ const DIGITS: KeyDef[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map(
 
 const FUNCTION_KEYS: KeyDef[] = Array.from({ length: 24 }, (_, index) => {
   const name = `F${index + 1}`
-  return key(name, [], name, 'keys', ['function'])
+  return key(name, [], name, 'keys', ['function', 'fn'])
 })
 
 const SYMBOLS: KeyDef[] = [
@@ -158,11 +172,25 @@ const MODIFIER_KEYS: KeyDef[] = [
   key('LCTRL', ['LCTL', 'LEFT_CONTROL'], 'Left Ctrl', 'modifiers', ['control'], GLYPH_CTRL),
   key('LSHIFT', ['LSHFT', 'LEFT_SHIFT'], 'Left Shift', 'modifiers', ['shift'], GLYPH_SHIFT),
   key('LALT', ['LEFT_ALT'], 'Left Alt', 'modifiers', ['option', 'opt'], GLYPH_ALT),
-  key('LGUI', ['LEFT_GUI', 'LCMD', 'LWIN'], 'Left Cmd', 'modifiers', ['command', 'super', 'win'], GLYPH_GUI),
+  key(
+    'LGUI',
+    ['LEFT_GUI', 'LCMD', 'LWIN'],
+    'Left Cmd',
+    'modifiers',
+    ['command', 'super', 'win'],
+    GLYPH_GUI,
+  ),
   key('RCTRL', ['RCTL', 'RIGHT_CONTROL'], 'Right Ctrl', 'modifiers', ['control'], GLYPH_CTRL),
   key('RSHIFT', ['RSHFT', 'RIGHT_SHIFT'], 'Right Shift', 'modifiers', ['shift'], GLYPH_SHIFT),
   key('RALT', ['RIGHT_ALT'], 'Right Alt', 'modifiers', ['option', 'opt', 'altgr'], GLYPH_ALT),
-  key('RGUI', ['RIGHT_GUI', 'RCMD', 'RWIN'], 'Right Cmd', 'modifiers', ['command', 'super', 'win'], GLYPH_GUI),
+  key(
+    'RGUI',
+    ['RIGHT_GUI', 'RCMD', 'RWIN'],
+    'Right Cmd',
+    'modifiers',
+    ['command', 'super', 'win'],
+    GLYPH_GUI,
+  ),
 ]
 
 const NAVIGATION_KEYS: KeyDef[] = [
@@ -183,11 +211,22 @@ const EDITING_KEYS: KeyDef[] = [
   key('ESCAPE', ['ESC'], 'Escape', 'editing', ['cancel'], GLYPH_ESC),
   key('TAB', [], 'Tab', 'editing', ['indent'], GLYPH_TAB),
   key('SPACE', ['SPC'], 'Space', 'editing', ['blank'], GLYPH_SPACE),
-  key('BACKSPACE', ['BSPC', 'BKSP'], 'Backspace', 'editing', ['delete back', 'erase'], GLYPH_BACKSPACE),
+  key(
+    'BACKSPACE',
+    ['BSPC', 'BKSP'],
+    'Backspace',
+    'editing',
+    ['delete back', 'erase'],
+    GLYPH_BACKSPACE,
+  ),
   key('DELETE', ['DEL'], 'Delete', 'editing', ['forward delete'], GLYPH_DELETE),
   key('INSERT', ['INS'], 'Insert', 'editing', []),
   key('CAPSLOCK', ['CAPS'], 'Caps lock', 'editing', ['capital']),
-  key('PRINTSCREEN', ['PSCRN'], 'Print screen', 'editing', ['screenshot', 'print']),
+  key('PRINTSCREEN', ['PSCRN', 'PRSC'], 'Print screen', 'editing', [
+    'screenshot',
+    'print',
+    'prtsc',
+  ]),
   key('K_APPLICATION', ['K_APP'], 'Menu', 'editing', ['context menu', 'app']),
 ]
 
@@ -223,11 +262,12 @@ const INTERNATIONAL_KEYS: KeyDef[] = [
   key('INT3', [], 'International 3 (yen)', 'international', ['jis', 'yen']),
   key('INT4', [], 'International 4 (henkan)', 'international', ['jis', 'convert']),
   key('INT5', [], 'International 5 (muhenkan)', 'international', ['jis', 'non-convert']),
-  key('LANG1', [], 'Kana (LANG1)', 'international', ['hangul', 'ime', 'japanese']),
+  key('LANG1', [], 'Kana (LANG1)', 'international', ['kana', 'hangul', 'ime', 'japanese']),
   key('LANG2', [], 'Eisu (LANG2)', 'international', ['hanja', 'ime', 'japanese']),
   key('LANG3', [], 'Katakana (LANG3)', 'international', ['ime', 'japanese']),
   key('LANG4', [], 'Hiragana (LANG4)', 'international', ['ime', 'japanese']),
   key('LANG5', [], 'Zenkaku/Hankaku (LANG5)', 'international', ['ime', 'japanese', 'half width']),
+  key('GLOBE', [], 'Globe', 'international', ['input source', 'keyboard layout']),
 ]
 
 /** Every key code the editor knows how to write with `&kp`. */
@@ -248,30 +288,62 @@ export const KEY_OVERLAY: readonly KeyDef[] = [
 // spelling, retaining header order when lengths tie.
 // All labels and search terms are indexed by usage; generated names alone define validity.
 const values = generated.values as Record<string, number>
+const labels = generated.labels as Record<string, string>
 const overlayByUsage = new Map(KEY_OVERLAY.map((item) => [values[item.code], item]))
 export const KEYS: readonly KeyDef[] = Object.entries(generated.groups).map(([usage, names]) => {
   const overlay = overlayByUsage.get(Number(usage))
-  const code = overlay?.code ??
-    names.reduce((best, name) => name.length < best.length ? name : best)
-  return key(code, names.filter((name) => name !== code), overlay?.label ?? code,
-    overlay?.group ?? 'keys', overlay?.keywords ?? [], overlay?.glyph)
+  const code =
+    overlay?.code ?? names.reduce((best, name) => (name.length < best.length ? name : best))
+  const page = Number(usage) >>> 16
+  const id = Number(usage) & 0xffff
+  const obscureHid = page !== 0x07 || id < 0x04 || id > 0x65
+  const entry = key(
+    code,
+    names.filter((name) => name !== code),
+    overlay?.label ?? labels[names[0]] ?? code,
+    overlay?.group ?? 'keys',
+    overlay?.keywords ?? [],
+    overlay?.glyph,
+  )
+  return {
+    ...entry,
+    searchWeight: overlay ? 1 : obscureHid ? 0.3 : 1,
+    ...(obscureHid && !overlay ? { note: 'HID key, may not work on macOS/Windows' } : {}),
+    ...(!overlay && !labels[names[0]] ? { rawFallback: true } : {}),
+  }
 })
 
 const BT_PROFILES: ActionDef[] = [0, 1, 2, 3, 4].map((slot) =>
-  action(
-    `bt-sel-${slot}`,
-    `Select profile ${slot}`,
-    '&bt',
-    ['BT_SEL', String(slot)],
+  action(`bt-sel-${slot}`, `Select profile ${slot}`, '&bt', ['BT_SEL', String(slot)], 'bluetooth', [
     'bluetooth',
-    ['bluetooth', 'pair', 'profile', 'bt'],
-  ),
+    'pair',
+    'profile',
+    'bt',
+  ]),
 )
 
 /** Fixed behavior bindings, one per row in the picker. */
 export const ACTIONS: readonly ActionDef[] = [
-  action('hold-tap', 'Hold-tap', '&mt', [], 'dual', ['tap', 'hold', 'dual role', 'mod tap'], undefined, 'key'),
-  action('layer-tap', 'Layer-tap', '&lt', [], 'dual', ['tap', 'hold', 'layer tap'], undefined, 'layer'),
+  action(
+    'hold-tap',
+    'Hold-tap',
+    '&mt',
+    [],
+    'dual',
+    ['tap', 'hold', 'dual role', 'mod tap'],
+    undefined,
+    'key',
+  ),
+  action(
+    'layer-tap',
+    'Layer-tap',
+    '&lt',
+    [],
+    'dual',
+    ['tap', 'hold', 'layer tap'],
+    undefined,
+    'layer',
+  ),
   ...BT_PROFILES,
   action('bt-clear', 'Clear profile', '&bt', ['BT_CLR'], 'bluetooth', ['unpair', 'forget']),
   action('bt-clear-all', 'Clear all profiles', '&bt', ['BT_CLR_ALL'], 'bluetooth', ['unpair all']),
@@ -281,14 +353,22 @@ export const ACTIONS: readonly ActionDef[] = [
   action('out-ble', 'Output: Bluetooth', '&out', ['OUT_BLE'], 'output', ['wireless', 'ble']),
   action('out-toggle', 'Toggle USB / Bluetooth', '&out', ['OUT_TOG'], 'output', ['switch']),
   action('rgb-toggle', 'RGB on / off', '&rgb_ug', ['RGB_TOG'], 'lighting', ['underglow', 'led']),
-  action('rgb-effect', 'RGB next effect', '&rgb_ug', ['RGB_EFF'], 'lighting', ['underglow', 'pattern']),
+  action('rgb-effect', 'RGB next effect', '&rgb_ug', ['RGB_EFF'], 'lighting', [
+    'underglow',
+    'pattern',
+  ]),
   action('rgb-hue-up', 'RGB hue up', '&rgb_ug', ['RGB_HUI'], 'lighting', ['color']),
   action('rgb-hue-down', 'RGB hue down', '&rgb_ug', ['RGB_HUD'], 'lighting', ['color']),
   action('rgb-sat-up', 'RGB saturation up', '&rgb_ug', ['RGB_SAI'], 'lighting', ['color']),
   action('rgb-sat-down', 'RGB saturation down', '&rgb_ug', ['RGB_SAD'], 'lighting', ['color']),
   action('rgb-bright-up', 'RGB brightness up', '&rgb_ug', ['RGB_BRI'], 'lighting', ['underglow']),
-  action('rgb-bright-down', 'RGB brightness down', '&rgb_ug', ['RGB_BRD'], 'lighting', ['underglow']),
-  action('bl-toggle', 'Backlight on / off', '&bl', ['BL_TOG'], 'lighting', ['screen', 'keyboard light']),
+  action('rgb-bright-down', 'RGB brightness down', '&rgb_ug', ['RGB_BRD'], 'lighting', [
+    'underglow',
+  ]),
+  action('bl-toggle', 'Backlight on / off', '&bl', ['BL_TOG'], 'lighting', [
+    'screen',
+    'keyboard light',
+  ]),
   action('bl-up', 'Backlight up', '&bl', ['BL_INC'], 'lighting', ['brighter']),
   action('bl-down', 'Backlight down', '&bl', ['BL_DEC'], 'lighting', ['dimmer']),
   action('mouse-left', 'Left click', '&mkp', ['LCLK'], 'mouse', ['button', 'click']),
@@ -296,10 +376,78 @@ export const ACTIONS: readonly ActionDef[] = [
   action('mouse-right', 'Right click', '&mkp', ['RCLK'], 'mouse', ['button', 'context']),
   action('mouse-back', 'Mouse back', '&mkp', ['MB4'], 'mouse', ['browser back']),
   action('mouse-forward', 'Mouse forward', '&mkp', ['MB5'], 'mouse', ['browser forward']),
+  action('mouse-up', 'Move mouse up', '&mmv', ['MOVE_UP'], 'mouse', ['pointer', 'cursor']),
+  action('mouse-down', 'Move mouse down', '&mmv', ['MOVE_DOWN'], 'mouse', ['pointer', 'cursor']),
+  action('mouse-left-move', 'Move mouse left', '&mmv', ['MOVE_LEFT'], 'mouse', [
+    'pointer',
+    'cursor',
+  ]),
+  action('mouse-right-move', 'Move mouse right', '&mmv', ['MOVE_RIGHT'], 'mouse', [
+    'pointer',
+    'cursor',
+  ]),
   action('scroll-up', 'Scroll up', '&msc', ['SCRL_UP'], 'mouse', ['wheel']),
   action('scroll-down', 'Scroll down', '&msc', ['SCRL_DOWN'], 'mouse', ['wheel']),
   action('scroll-left', 'Scroll left', '&msc', ['SCRL_LEFT'], 'mouse', ['wheel']),
   action('scroll-right', 'Scroll right', '&msc', ['SCRL_RIGHT'], 'mouse', ['wheel']),
+  action('key-repeat', 'Repeat last key', '&key_repeat', [], 'behaviors', ['repeat', 'again']),
+  action('soft-off', 'Soft off', '&soft_off', [], 'system', ['power', 'sleep', 'shutdown']),
+  action('studio-unlock', 'Unlock ZMK Studio', '&studio_unlock', [], 'system', ['studio', 'edit']),
+  action('caps-word', 'Caps Word', '&caps_word', [], 'editing', [
+    'uppercase',
+    'capital',
+    'capsword',
+  ]),
+  action('sticky-shift', 'Sticky Shift', '&sk', ['LSHIFT'], 'modifiers', [
+    'sticky',
+    'one shot',
+    'shift',
+  ]),
+  action('key-toggle-a', 'Toggle key A', '&kt', ['A'], 'behaviors', ['key toggle', 'latch']),
+  action('grave-escape', 'Grave / Escape', '&gresc', [], 'editing', ['backtick', 'tilde', 'esc']),
+  action('ext-power-on', 'External power on', '&ext_power', ['EP_ON'], 'system', ['power']),
+  action('ext-power-off', 'External power off', '&ext_power', ['EP_OFF'], 'system', ['power']),
+  action('ext-power-toggle', 'Toggle external power', '&ext_power', ['EP_TOG'], 'system', [
+    'power',
+  ]),
+  action('battery-level', 'Battery level indicator', '&stp', ['STP_BAT'], 'system', [
+    'battery',
+    'indicator',
+  ]),
+  action('macro-tap', 'Macro tap mode', '&macro_tap', [], 'macros', ['macro', 'tap']),
+  action('macro-press', 'Macro press mode', '&macro_press', [], 'macros', ['macro', 'press']),
+  action('macro-release', 'Macro release mode', '&macro_release', [], 'macros', [
+    'macro',
+    'release',
+  ]),
+  action('macro-pause', 'Pause macro until release', '&macro_pause_for_release', [], 'macros', [
+    'macro',
+    'wait',
+  ]),
+  action('macro-tap-time', 'Set macro tap time', '&macro_tap_time', ['200'], 'macros', [
+    'macro',
+    'duration',
+  ]),
+  action('macro-wait-time', 'Set macro wait time', '&macro_wait_time', ['10'], 'macros', [
+    'macro',
+    'delay',
+  ]),
+  action('macro-param-1to1', 'Macro parameter 1 → 1', '&macro_param_1to1', [], 'macros', [
+    'macro',
+    'placeholder',
+  ]),
+  action('macro-param-1to2', 'Macro parameter 1 → 2', '&macro_param_1to2', [], 'macros', [
+    'macro',
+    'placeholder',
+  ]),
+  action('macro-param-2to1', 'Macro parameters 2 → 1', '&macro_param_2to1', [], 'macros', [
+    'macro',
+    'placeholder',
+  ]),
+  action('macro-param-2to2', 'Macro parameters 2 → 2', '&macro_param_2to2', [], 'macros', [
+    'macro',
+    'placeholder',
+  ]),
   action('bootloader', 'Bootloader', '&bootloader', [], 'system', ['flash', 'dfu', 'uf2']),
   action('sys-reset', 'Reset', '&sys_reset', [], 'system', ['restart', 'reboot']),
   action('transparent', 'Transparent', '&trans', [], 'behaviors', ['pass through', 'fallthrough']),

@@ -8,6 +8,8 @@ export interface SearchFields {
   aliases?: readonly string[]
   /** Free-form keywords such as "copy". Weighted lowest so they never outrank names. */
   keywords?: readonly string[]
+  /** Whole-entry multiplier for catalog priority (e.g. obscure raw HID usages). */
+  weight?: number
 }
 
 const WEIGHT_PRIMARY = 1
@@ -46,6 +48,9 @@ function subsequenceScore(token: string, flat: string): number {
     else gaps += found - position
     position = found + 1
   }
+  const span = position - first
+  const density = token.length / span
+  if (density < 0.55 || gaps > Math.max(2, token.length * 2)) return 0
   return Math.max(1, 300 - Math.min(gaps * 4, 120) - Math.min(first, 40))
 }
 
@@ -95,7 +100,7 @@ export function scoreEntry(query: string, fields: SearchFields): number {
     if (best === 0) return 0
     total += best
   }
-  return total / tokens.length
+  return (total / tokens.length) * (fields.weight ?? 1)
 }
 
 /**

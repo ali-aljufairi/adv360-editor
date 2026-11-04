@@ -91,6 +91,16 @@ export interface Model {
   files: Record<string, CST>
   missingIncludes: string[]
   boardBehaviors: string[]
+  /** Object-like keycode names found in user headers reached through #include directives. */
+  userKeycodes: UserKeycodeDefinition[]
+}
+
+/** Raw #define data surfaced as a custom key option in the picker. */
+export interface UserKeycodeDefinition {
+  name: string
+  label: string
+  value: string
+  source: string
 }
 
 /** Physical key from board layout metadata. */

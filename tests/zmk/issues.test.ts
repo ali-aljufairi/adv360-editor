@@ -1,6 +1,15 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { expect, it } from 'vitest'
-import { createEditor, parse, resolve, serialize, validate, loadPhysicalLayout } from '../../src/lib/zmk'
+import {
+  createEditor,
+  parse,
+  resolve,
+  serialize,
+  validate,
+  loadPhysicalLayout,
+} from '../../src/lib/zmk'
+import { buildItems, describeBinding } from '../../src/components/picker/items'
+import { parseBindingText } from '../../src/lib/keycodes/binding'
 
 const issueFixtures = Object.fromEntries(
   readdirSync('fixtures/issues')
@@ -18,7 +27,10 @@ it('extracts each fixture into a useful model and reports no syntax errors', () 
     const model = resolve({ [file]: source }, file)
     expect(model.layers.length, file).toBeGreaterThan(0)
     expect(model.layers[0].bindings.length, file).toBeGreaterThan(0)
-    expect(validate(model).filter((issue) => issue.severity === 'error'), file).toEqual([])
+    expect(
+      validate(model).filter((issue) => issue.severity === 'error'),
+      file,
+    ).toEqual([])
   }
 
   const asMacro = resolve(issueFixtures, '103-define-as-binding.keymap')
@@ -28,18 +40,27 @@ it('extracts each fixture into a useful model and reports no syntax errors', () 
     editable: false,
     reason: expect.stringMatching(/preprocessor/i),
   })
-  expect(() => createEditor(issueFixtures, '103-define-as-binding.keymap').setBinding(0, 0, '&kp B'))
-    .toThrow(/opaque|preprocessor/i)
+  expect(() =>
+    createEditor(issueFixtures, '103-define-as-binding.keymap').setBinding(0, 0, '&kp B'),
+  ).toThrow(/opaque|preprocessor/i)
 
   const includes = resolve(issueFixtures, '198-local-includes.keymap')
-  expect(includes.missingIncludes).toEqual(expect.arrayContaining(['keymap_swiss_de.h', 'macros.dtsi']))
+  expect(includes.missingIncludes).toEqual(
+    expect.arrayContaining(['keymap_swiss_de.h', 'macros.dtsi']),
+  )
 
   const addressed = parse(issueFixtures['39-addressed-node.keymap'])
-  expect(addressed.children.flatMap((item) => item.kind === 'node' ? item.children : []))
-    .toEqual(expect.arrayContaining([expect.objectContaining({ kind: 'node', name: 'foo@123' })]))
+  expect(addressed.children.flatMap((item) => (item.kind === 'node' ? item.children : []))).toEqual(
+    expect.arrayContaining([expect.objectContaining({ kind: 'node', name: 'foo@123' })]),
+  )
 
   const branches = resolve(issueFixtures, '147-ifdef-duplicate-layers.keymap')
-  expect(branches.layers.map((layer) => layer.name)).toEqual(['default_layer', 'keymap_alt', 'default_layer', 'keymap_alt'])
+  expect(branches.layers.map((layer) => layer.name)).toEqual([
+    'default_layer',
+    'keymap_alt',
+    'default_layer',
+    'keymap_alt',
+  ])
 
   const nested = resolve(issueFixtures, '41-nested-spaced-functions.keymap')
   expect(nested.layers[0].bindings[0].params).toEqual(['LS( LA(F))'])
@@ -47,7 +68,9 @@ it('extracts each fixture into a useful model and reports no syntax errors', () 
   const placeholders = resolve(issueFixtures, '158-repeated-macro-placeholders.keymap')
   const macroSource = issueFixtures['158-repeated-macro-placeholders.keymap']
   expect(macroSource.match(/MACRO_PLACEHOLDER/g)).toHaveLength(2)
-  expect(placeholders.behaviors.find((behavior) => behavior.name === 'repeat')?.bindings).toHaveLength(4)
+  expect(
+    placeholders.behaviors.find((behavior) => behavior.name === 'repeat')?.bindings,
+  ).toHaveLength(4)
 
   const noLayerRestriction = resolve(issueFixtures, '83-combo-all-layers.keymap').combos[0]
   expect(noLayerRestriction.layers).toBeUndefined()
@@ -63,15 +86,24 @@ it('extracts each fixture into a useful model and reports no syntax errors', () 
   expect(macro254.macros.find((macro) => macro.name === 'long_text')?.bindings.length).toBe(400)
 
   const zeroAndMulti = resolve(issueFixtures, '304-zero-valued-params.keymap')
-  expect(zeroAndMulti.behaviors.find((behavior) => behavior.name === 'zero')?.properties['tapping-term-ms']).toBe('<0>')
+  expect(
+    zeroAndMulti.behaviors.find((behavior) => behavior.name === 'zero')?.properties[
+      'tapping-term-ms'
+    ],
+  ).toBe('<0>')
   expect(zeroAndMulti.layers[0].bindings[0].params).toEqual(['BT_SEL', '0'])
 
   const holdTap = resolve(issueFixtures, '77-hold-tap-parameters.keymap')
-  expect(holdTap.behaviors.find((behavior) => behavior.name === 'hold_preferred')?.properties['tapping-term-ms']).toBe('<0>')
+  expect(
+    holdTap.behaviors.find((behavior) => behavior.name === 'hold_preferred')?.properties[
+      'tapping-term-ms'
+    ],
+  ).toBe('<0>')
 
   const unicode = resolve(issueFixtures, 'utf8-comments-unicode-behaviors.keymap')
-  expect(unicode.behaviors.find((behavior) => behavior.name === 'greeting')?.properties.label)
-    .toContain('挨拶 ✨')
+  expect(
+    unicode.behaviors.find((behavior) => behavior.name === 'greeting')?.properties.label,
+  ).toContain('挨拶 ✨')
 })
 
 it('edits one intended binding in every fixture without changing neighboring bytes', () => {
@@ -99,20 +131,26 @@ it('removes an all-layer combo restriction instead of writing an empty list', ()
   editor.updateCombo('all_combo', { layers: [] })
   expect(editor.serialize()[file]).not.toMatch(/layers\s*=\s*<>/)
   expect(editor.serialize()[file]).not.toContain('layers =')
-  const created = createEditor({ new: '/ { keymap { default { bindings = <&kp A>; }; }; combos { }; };' }, 'new')
+  const created = createEditor(
+    { new: '/ { keymap { default { bindings = <&kp A>; }; }; combos { }; };' },
+    'new',
+  )
   created.addCombo({ name: 'all', bindings: ['&kp ESC'], keyPositions: [0], layers: [] })
   expect(created.serialize().new).not.toContain('layers =')
 })
 
 it('compares info.json key count and reports stale layer-zero labels as informational', () => {
   const layout = loadPhysicalLayout(readFileSync('fixtures/adv360/info.json', 'utf8'))
-  const model = resolve({
-    ...Object.fromEntries(
-      readdirSync('fixtures/adv360', { recursive: true, encoding: 'utf8' })
-        .filter((path) => /\.(keymap|dtsi)$/.test(path))
-        .map((path) => [path, readFileSync(`fixtures/adv360/${path}`, 'utf8')]),
-    ),
-  }, 'adv360.keymap')
+  const model = resolve(
+    {
+      ...Object.fromEntries(
+        readdirSync('fixtures/adv360', { recursive: true, encoding: 'utf8' })
+          .filter((path) => /\.(keymap|dtsi)$/.test(path))
+          .map((path) => [path, readFileSync(`fixtures/adv360/${path}`, 'utf8')]),
+      ),
+    },
+    'adv360.keymap',
+  )
   const issues = validate(model, { physicalLayout: layout })
   expect(issues.some((issue) => issue.code === 'info-key-count')).toBe(false)
   expect(issues).toContainEqual(
@@ -125,6 +163,40 @@ it('compares info.json key count and reports stale layer-zero labels as informat
   )
 
   const smallLayout = layout.slice(0, 1)
-  expect(validate(model, { physicalLayout: smallLayout }).some((issue) => issue.code === 'info-key-count'))
-    .toBe(true)
+  expect(
+    validate(model, { physicalLayout: smallLayout }).some(
+      (issue) => issue.code === 'info-key-count',
+    ),
+  ).toBe(true)
+})
+
+it('discovers, labels, and exposes names from included locale-style headers', () => {
+  const keymap = readFileSync('fixtures/issues/custom-keycodes.keymap', 'utf8')
+  const header = readFileSync('fixtures/issues/custom-keycodes.h', 'utf8')
+  const model = resolve(
+    {
+      'fixtures/issues/custom-keycodes.keymap': keymap,
+      'fixtures/issues/custom-keycodes.h': header,
+    },
+    'fixtures/issues/custom-keycodes.keymap',
+  )
+  expect(model.userKeycodes).toEqual([
+    expect.objectContaining({ name: 'DE_AE', label: 'German capital A umlaut', value: 'A' }),
+    expect.objectContaining({ name: 'DE_SS', label: 'German sharp S', value: 'SQT' }),
+    expect.objectContaining({ name: 'DE_CURRENCY', label: 'De Currency', value: '0x1234' }),
+  ])
+  const rows = buildItems([], [], [], 'mac', model.userKeycodes)
+  expect(rows.find((row) => row.id === 'key:DE_AE')).toMatchObject({
+    label: 'German capital A umlaut',
+    code: 'DE_AE',
+  })
+  expect(describeBinding({ behavior: '&kp', params: ['DE_AE'] }, 'mac', model.userKeycodes)).toBe(
+    'German capital A umlaut',
+  )
+  const parsedCustomKey = parseBindingText(
+    '&kp DE_AE',
+    model.userKeycodes.map((entry) => entry.name),
+  )
+  expect(parsedCustomKey.ok).toBe(true)
+  if (parsedCustomKey.ok) expect(parsedCustomKey.warning).toBeUndefined()
 })

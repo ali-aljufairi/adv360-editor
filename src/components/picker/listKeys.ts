@@ -1,13 +1,37 @@
 import type { SchemeName } from '../../lib/navigation/schemes'
 
 /** What a navigation key does in the results list. */
-export type ListAction = 'up' | 'down' | 'close'
+export type ListAction = 'up' | 'down' | 'close' | 'select'
 
 /** Arrow keys move the list in every scheme. */
 const ARROW_KEYS: ReadonlyMap<string, ListAction> = new Map<string, ListAction>([
   ['ArrowDown', 'down'],
   ['ArrowUp', 'up'],
+  ['Enter', 'select'],
 ])
+
+/** Refocuses the picker search after an explicit slot change. */
+export function focusPickerSearch(input: { focus: () => void } | null): void {
+  input?.focus()
+}
+
+/** Prevents a result click from moving focus away from the search field. */
+export function preservePickerSearchFocus(
+  event: { preventDefault: () => void },
+  input: { focus: () => void } | null,
+): void {
+  event.preventDefault()
+  focusPickerSearch(input)
+}
+
+/** Moves from the first half of a two-slot choice to the second and returns focus to search. */
+export function advancePickerSlot(
+  slot: 'tap' | 'hold',
+  input: { focus: () => void } | null,
+): 'tap' | 'hold' {
+  focusPickerSearch(input)
+  return slot === 'tap' ? 'hold' : 'tap'
+}
 
 /**
  * Extra list keys per scheme, on top of the arrows. Plain letters are never listed here: they
