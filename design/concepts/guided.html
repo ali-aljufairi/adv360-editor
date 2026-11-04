@@ -1,0 +1,1229 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keymap Guide · Advantage360 Pro</title>
+<meta name="description" content="A guided, plain-language keymap editor for the Kinesis Advantage360 Pro. Concept mockup.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;650;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FBF5EC; --surface:#FFFDF9; --surface2:#FAF3E7; --bg2:#F3E9D8;
+  --ink:#2B2119; --ink2:#5E5043; --muted:#8A7A69; --line:#E8DCCB;
+  --accent:#CC5F36; --accent-ink:#FFF8F1; --accent-soft:#F8E0D2;
+  --good:#2F7D62; --good-soft:#DCEFE5; --warn:#9A6212; --warn-soft:#FBEBC8;
+  --bad:#B1372A; --bad-soft:#F8DAD3; --info:#3566A0; --info-soft:#DDE8F5;
+  --cap:#FFFDF8; --cap-edge:#DCC9AE; --cap-shadow:#D8C6AA;
+  --cap-hold:#D3EADF; --cap-layer:#FAE4AE; --cap-macro:#E4D8F3; --cap-sys:#D5E4F3; --cap-danger:#F5CBC1; --cap-faint:#EFE6D8;
+  --hl:#23866F; --sel:#CC5F36;
+  --code:#2B2119; --code-ink:#F3E9D9; --add:#A8E4C6; --del:#F5A899;
+  --r:24px;
+  --shadow:0 1px 0 rgba(43,33,25,.04),0 16px 34px -22px rgba(74,44,16,.4);
+  --display:"Fraunces",Georgia,"Times New Roman",serif;
+  --body:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --t1:#CC5F36; --t2:#2F8F7A; --t3:#8256B0; --t4:#3566A0; --t5:#B07116; --t6:#5C8A3A;
+}
+[data-theme="dark"]{
+  --bg:#1A1510; --surface:#261E17; --surface2:#2C241C; --bg2:#33291F;
+  --ink:#F6ECDE; --ink2:#D3C4B0; --muted:#A09080; --line:#3E3429;
+  --accent:#F08A5D; --accent-ink:#2A130A; --accent-soft:#4A2C1F;
+  --good:#7CCBA9; --good-soft:#1E3A30; --warn:#F0C061; --warn-soft:#3F3119;
+  --bad:#F08B7C; --bad-soft:#4A2521; --info:#8DB8EA; --info-soft:#1E2D40;
+  --cap:#3A3026; --cap-edge:#55493A; --cap-shadow:#120D09;
+  --cap-hold:#244A3F; --cap-layer:#5A4420; --cap-macro:#3E3459; --cap-sys:#22405C; --cap-danger:#5C2B24; --cap-faint:#2B241D;
+  --hl:#6CD3B5; --sel:#F08A5D;
+  --code:#100C09; --code-ink:#F3E9D9; --add:#8FE0B8; --del:#F5A899;
+  --shadow:0 18px 36px -24px rgba(0,0,0,.7);
+  --t1:#F08A5D; --t2:#6CC3AE; --t3:#B99AE0; --t4:#8DB8EA; --t5:#F0C061; --t6:#A3D08A;
+}
+*{box-sizing:border-box}
+.home>*,.flow-grid>*,.tasks>*,.flow-main,.board-card,.board-scroll,.step-card{min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--body);-webkit-font-smoothing:antialiased;min-height:100vh;
+  background-image:radial-gradient(color-mix(in srgb,var(--ink) 7%,transparent) 1px,transparent 1.3px);background-size:24px 24px}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:inherit}
+button:disabled{cursor:not-allowed;opacity:.45}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px;border-radius:8px}
+h1,h2,h3,h4{font-family:var(--display);font-weight:600;letter-spacing:-.015em;line-height:1.12;margin:0}
+p{margin:0 0 10px}
+code{font-family:var(--mono);font-size:.88em;background:var(--bg2);padding:1px 6px;border-radius:7px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:650;margin:0 0 6px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.ico{width:22px;height:22px;flex:none}
+.link{color:var(--accent);font-weight:650;text-decoration:underline;text-underline-offset:3px;padding:0}
+
+/* ---------- top bar ---------- */
+.app{max-width:1320px;margin:0 auto;padding:18px 28px 130px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:4px 0 26px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand b{display:block;font-family:var(--display);font-size:20px;font-weight:600;letter-spacing:-.01em}
+.brand small{color:var(--muted);font-size:13px}
+.logo{width:42px;height:42px;flex:none}
+.top-r{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.chip{font-size:13px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink2)}
+.theme{display:inline-flex;align-items:center;gap:10px;padding:6px 6px 6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:13px;color:var(--ink2);font-weight:600}
+.theme .knob{width:38px;height:22px;border-radius:999px;background:var(--bg2);position:relative;transition:background .2s}
+.theme .knob::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--accent);transition:transform .2s}
+.theme[aria-pressed="true"] .knob::after{transform:translateX(16px)}
+
+/* ---------- hero + home ---------- */
+.hero{margin-bottom:22px}
+.hero h1{font-size:clamp(34px,4.6vw,54px);margin-bottom:12px}
+.hero h1 em{font-style:italic;color:var(--accent);font-weight:500}
+.lede{color:var(--ink2);font-size:17px;max-width:62ch;margin:0}
+.heads-up{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:18px;background:var(--surface);border:1px solid var(--line);margin:0 0 24px;font-size:14px;color:var(--ink2)}
+.heads-up b{color:var(--ink)}
+.home{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.25fr);gap:28px;align-items:start}
+.tasks{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.task{--t:var(--t1);position:relative;display:flex;flex-direction:column;align-items:stretch;gap:16px;text-align:left;padding:20px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);transition:transform .18s,border-color .18s;min-height:196px}
+.task:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--t) 55%,var(--line))}
+.task.t1{--t:var(--t1)}.task.t2{--t:var(--t2)}.task.t3{--t:var(--t3)}.task.t4{--t:var(--t4)}.task.t5{--t:var(--t5)}.task.t6{--t:var(--t6)}
+.task.wide{grid-column:span 2;flex-direction:row;align-items:center;min-height:0}
+.task .ico-wrap{width:50px;height:50px;border-radius:17px;display:grid;place-items:center;background:color-mix(in srgb,var(--t) 17%,transparent);color:var(--t);flex:none}
+.task.wide .ico-wrap{width:56px;height:56px}
+.task .tt{display:block}
+.task b{display:block;font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px}
+.task p{margin:0;color:var(--ink2);font-size:14px;line-height:1.45}
+.task .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+.task.wide .foot{margin-top:0}
+.task .prob-line{display:block;margin-top:8px;font-size:14px;color:var(--bad);font-weight:600;line-height:1.4}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:650;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.badge.bad{background:var(--bad-soft);color:var(--bad)}
+.badge.good{background:var(--good-soft);color:var(--good)}
+.badge.info{background:var(--info-soft);color:var(--info)}
+.badge.warn{background:var(--warn-soft);color:var(--warn)}
+.task.wide .badge{margin-left:auto}
+.pathline{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;font-size:13px;color:var(--muted);align-items:center}
+.pathline span{padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--ink2)}
+.pathline i{font-style:normal;color:var(--line)}
+
+/* ---------- board ---------- */
+.board-card{background:var(--surface);border:1px solid var(--line);border-radius:30px;padding:20px 20px 16px;box-shadow:var(--shadow);position:sticky;top:16px}
+.board-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.board-head h3{font-size:25px;margin-top:2px}
+.seg{display:inline-flex;background:var(--bg2);border-radius:999px;padding:4px;gap:2px;flex-wrap:wrap}
+.seg button{position:relative;padding:7px 13px;border-radius:999px;font-size:13px;font-weight:650;color:var(--ink2)}
+.seg button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line),0 2px 6px -3px rgba(0,0,0,.25)}
+.dot-warn{position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--bad)}
+.board-scroll{border-radius:20px;padding:10px;background:var(--surface2);border:1px solid var(--line)}
+.board-scroll svg{display:block;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:12px;font-size:12.5px;color:var(--ink2)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:13px;height:13px;border-radius:4px;border:1px solid var(--cap-edge);display:inline-block}
+.sw-key{background:var(--cap)}.sw-hold{background:var(--cap-hold)}.sw-layer{background:var(--cap-layer)}.sw-macro{background:var(--cap-macro)}.sw-sys{background:var(--cap-sys)}.sw-danger{background:var(--cap-danger)}.sw-faint{background:var(--cap-faint)}
+.k{cursor:pointer}
+.k .sh{fill:var(--cap-shadow)}
+.k .cap{fill:var(--cap);stroke:var(--cap-edge);stroke-width:.035;transition:stroke .15s}
+.k-hold .cap{fill:var(--cap-hold)}.k-layer .cap{fill:var(--cap-layer)}.k-macro .cap{fill:var(--cap-macro)}
+.k-sys .cap{fill:var(--cap-sys)}.k-danger .cap{fill:var(--cap-danger)}.k-faint .cap{fill:var(--cap-faint)}
+.k text{font-family:var(--body);font-weight:650;fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.k text.sub{font-weight:500;fill:var(--ink2)}
+.k-faint text{fill:var(--muted)}
+.k:hover .cap{stroke:var(--accent)}
+.k:focus{outline:none}.k:focus .cap{stroke:var(--accent);stroke-width:.08}
+.is-sel .cap{stroke:var(--sel);stroke-width:.09}
+.is-hl .cap{stroke:var(--hl);stroke-width:.1}
+.is-hl .sh{fill:var(--hl)}
+.hold-dot{fill:var(--good)}
+.chg{fill:var(--accent);stroke:var(--surface);stroke-width:.02}
+
+/* ---------- callouts, options, buttons ---------- */
+.callout{display:flex;gap:12px;align-items:flex-start;padding:13px 15px;border-radius:18px;font-size:14px;margin:14px 0;background:var(--info-soft);color:var(--ink)}
+.callout.warn{background:var(--warn-soft)}
+.callout.bad{background:var(--bad-soft)}
+.callout.good{background:var(--good-soft)}
+.callout.info{background:var(--info-soft)}
+.callout .ico{width:20px;height:20px;margin-top:1px}
+.callout b{font-weight:700}
+.never{display:flex;gap:14px;align-items:flex-start;padding:18px 20px;border-radius:22px;background:var(--good-soft);border:1px solid color-mix(in srgb,var(--good) 35%,transparent);margin-top:18px}
+.never .ico{width:28px;height:28px;color:var(--good);margin-top:2px}
+.never b{display:block;font-family:var(--display);font-size:19px;font-weight:600;margin-bottom:4px}
+.never p{margin:0;color:var(--ink2);font-size:14.5px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border-radius:15px;font-weight:650;font-size:15px;border:1px solid var(--line);background:var(--surface);transition:transform .12s,box-shadow .12s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;box-shadow:0 10px 20px -12px var(--accent)}
+.btn.ghost{background:transparent}
+.btn.big{padding:15px 24px;font-size:16px}
+.btn.small{padding:7px 12px;font-size:13px;border-radius:11px}
+.rowbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px}
+.opts.scroll{max-height:300px;overflow:auto;padding:2px}
+.opt{text-align:left;padding:12px 14px;border-radius:17px;border:1px solid var(--line);background:var(--surface2);display:flex;flex-direction:column;gap:2px;transition:border-color .15s,background .15s}
+.opt b{font-weight:650}
+.opt span{font-size:12.5px;color:var(--muted);font-family:var(--body)}
+.opt:hover{border-color:color-mix(in srgb,var(--accent) 50%,var(--line))}
+.opt.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent) inset}
+.opt.wide{grid-column:1/-1;padding:16px 18px}
+.opt.wide b{font-size:16px}
+.kinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.kind{display:flex;flex-direction:column;gap:6px;align-items:flex-start;text-align:left;padding:14px;border-radius:19px;border:1px solid var(--line);background:var(--surface2)}
+.kind .ico{color:var(--accent)}
+.kind b{font-weight:650}
+.kind small{color:var(--muted);font-size:12.5px;line-height:1.35}
+.kind.on{border-color:var(--accent);background:var(--accent-soft)}
+.search{display:block;margin:6px 0 12px}
+.search input{width:100%;padding:13px 15px;border-radius:15px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);font:inherit;font-size:15px}
+.search input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.results{margin-bottom:6px}
+.now{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:14px 16px;border-radius:20px;background:var(--surface2);border:1px solid var(--line);margin:10px 0 4px}
+.now b{font-family:var(--display);font-size:20px;font-weight:600}
+.now span.plain{flex-basis:100%;color:var(--ink2);font-size:14px}
+.pill{display:inline-flex;font-size:12px;font-weight:650;padding:4px 10px;border-radius:999px;background:var(--bg2);color:var(--ink2)}
+.tag{font-style:normal;font-size:12px;font-weight:650;padding:3px 9px;border-radius:999px;background:var(--bg2);color:var(--ink2)}
+.tag.info{background:var(--info-soft);color:var(--info)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.concept{margin-top:16px;padding:20px 22px;border-radius:24px;background:var(--accent-soft);color:var(--ink)}
+.concept h4{font-size:18px;margin-bottom:8px}
+.concept p{color:var(--ink);font-size:14.5px;margin:0 0 8px}
+.concept p:last-child{margin:0}
+.concept b{font-weight:700}
+
+/* ---------- flow ---------- */
+.flow-top{margin-bottom:18px}
+.back-link{color:var(--muted);font-size:14px;font-weight:600;padding:0;margin-bottom:10px;display:inline-block}
+.flow-top h1{font-size:38px;margin-bottom:16px}
+.stepper{list-style:none;display:flex;gap:8px;padding:0;margin:0;flex-wrap:wrap}
+.stepper li{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);padding:5px 13px 5px 5px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-weight:600}
+.stepper li span{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--bg2);font-weight:700;font-size:12px;color:var(--ink2)}
+.stepper li.cur{color:var(--ink);border-color:var(--accent)}
+.stepper li.cur span{background:var(--accent);color:var(--accent-ink)}
+.stepper li.done span{background:var(--good-soft);color:var(--good)}
+.flow-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:28px;align-items:start}
+.flow-grid.solo{grid-template-columns:minmax(0,760px)}
+.step-card{background:var(--surface);border:1px solid var(--line);border-radius:30px;padding:30px;box-shadow:var(--shadow)}
+.step-card h2{font-size:31px;margin-bottom:14px}
+.step-card > p{color:var(--ink2);font-size:15.5px}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:18px}
+.flow-side{position:sticky;top:16px}
+.home-board .board-card{position:static}
+.flow-side .board-card{position:static}
+.review-h{font-family:var(--display);font-size:24px;margin:4px 0 10px}
+.sum{list-style:none;padding:0;margin:0 0 6px;display:grid;gap:10px}
+.sum li{padding:16px 18px;border-radius:20px;background:var(--surface2);border:1px solid var(--line)}
+.sum li b{font-family:var(--display);font-size:18px;font-weight:600;display:block;line-height:1.3}
+.sum li small{display:block;color:var(--ink2);font-size:13.5px;margin-top:4px}
+.from-to{font-size:17px;margin:6px 0 0}
+details.raw{margin-top:18px;border-top:1px dashed var(--line);padding-top:14px}
+details.raw summary{cursor:pointer;color:var(--ink2);font-weight:650;font-size:14px}
+.hunk{margin-top:10px}
+.hunk-h{font-size:12px;color:var(--muted);margin-bottom:4px;font-family:var(--mono)}
+.diff{font:12.5px/1.6 var(--mono);background:var(--code);color:var(--code-ink);border-radius:16px;padding:12px 14px;overflow-x:auto;margin:0}
+.diff span{display:block;white-space:pre;width:max-content;min-width:100%}
+.diff .del{color:var(--del)}
+.diff .add{color:var(--add)}
+.steps{list-style:none;padding:0;margin:0 0 12px;display:grid;gap:8px}
+.step-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto auto auto;align-items:center;gap:8px;padding:10px 12px;border-radius:17px;background:var(--surface2);border:1px solid var(--line)}
+.step-row .n{width:27px;height:27px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center;font-weight:700;font-size:13px}
+.step-row .sn b{display:block;font-weight:650}
+.step-row .sn small{font-family:var(--mono);color:var(--muted);font-size:12px}
+.ib{width:36px;height:36px;border-radius:11px;border:1px solid var(--line);background:var(--surface);font-size:16px;display:grid;place-items:center}
+.preview{margin:14px 0}
+.typed{font:600 21px/1.4 var(--mono);padding:14px 16px;border-radius:18px;background:var(--surface2);border:1px dashed var(--line);min-height:58px;letter-spacing:.02em;word-break:break-all}
+.caret{display:inline-block;width:2px;height:1.15em;background:var(--accent);vertical-align:-.22em;margin:0 1px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.tpf{display:grid;gap:14px}
+.tpf-row{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:650}
+.tpf-row output{font-family:var(--display);font-size:26px;color:var(--accent)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+fieldset.flav{border:0;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+fieldset.flav legend{font-weight:650;margin-bottom:8px;padding:0}
+.flav-o{position:relative;text-align:left;padding:13px 14px;border-radius:17px;border:1px solid var(--line);background:var(--surface2);display:flex;flex-direction:column;gap:3px}
+.flav-o b{font-weight:650}
+.flav-o span{font-size:12.8px;color:var(--ink2);line-height:1.4}
+.flav-o em{font-style:normal;font-size:11px;font-weight:700;color:var(--good);letter-spacing:.04em;text-transform:uppercase}
+.flav-o.on{border-color:var(--accent);background:var(--accent-soft)}
+.tryit{border-radius:22px;padding:16px;background:var(--surface2);border:1px solid var(--line)}
+.hold-btn{width:100%;padding:22px 16px;border-radius:20px;background:var(--cap);border:1px solid var(--cap-edge);box-shadow:0 7px 0 var(--cap-shadow);font-weight:700;font-size:16px;transition:transform .08s,box-shadow .08s;color:var(--ink);user-select:none;touch-action:none}
+.hold-btn.down{transform:translateY(6px);box-shadow:0 1px 0 var(--cap-shadow)}
+.tryit p{margin:10px 0 0;font-size:14px;color:var(--ink2);text-align:center;min-height:21px}
+.warn-line{font-size:13.5px;color:var(--warn);background:var(--warn-soft);padding:11px 13px;border-radius:15px;margin:0}
+.prob{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:19px;border:1px solid var(--line);background:var(--surface2);margin-bottom:10px}
+.prob b{display:block;font-weight:650;margin-bottom:2px}
+.prob small{color:var(--ink2);font-size:13.5px;line-height:1.4;display:block}
+.combos{list-style:none;padding:0;margin:0 0 6px;display:grid;gap:10px}
+.combo{width:100%;text-align:left;padding:15px 16px;border-radius:19px;border:1px solid var(--line);background:var(--surface2);display:grid;gap:4px}
+.combo.on{border-color:var(--accent);background:var(--accent-soft)}
+.combo-k{font-family:var(--display);font-size:19px;font-weight:600}
+.combo b{font-weight:600;color:var(--ink2);font-size:14px}
+.combo .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.field{display:grid;gap:6px;margin:14px 0;font-weight:650;font-size:14px}
+.field input,.field textarea{font:inherit;font-weight:500;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:15px;padding:12px 14px;width:100%}
+.field textarea{resize:vertical}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.jobs{list-style:none;padding:0;margin:14px 0;display:grid;gap:8px}
+.jobs li{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--surface2);border:1px solid var(--line);font-weight:600}
+.jobs .st{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:12px}
+.jobs .run .st{border-color:var(--accent);border-top-color:transparent;animation:spin .8s linear infinite}
+.jobs .done .st{background:var(--good);border-color:var(--good);color:#fff}
+.jobs .done{color:var(--ink2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.logs{font:12.5px/1.6 var(--mono);background:var(--code);color:var(--code-ink);border-radius:18px;padding:14px 16px;min-height:120px;white-space:pre-wrap}
+.dl-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+.dl{display:flex;flex-direction:column;gap:6px;padding:18px;border-radius:20px;background:var(--surface2);border:1px solid var(--line)}
+.dl b{font-family:var(--mono);font-size:14px}
+.dl span{font-size:13px;color:var(--ink2)}
+.dl em{font-style:normal;margin-top:8px;color:var(--accent);font-weight:700}
+.ro-list{display:grid;gap:8px;margin:12px 0}
+.ro{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:var(--surface2);border:1px solid var(--line)}
+.ro b{font-weight:650}
+.ro small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+
+/* ---------- tray + toast ---------- */
+#tray{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:20;display:flex;align-items:center;gap:14px;padding:8px 8px 8px 20px;border-radius:999px;background:var(--ink);color:var(--bg);box-shadow:0 18px 36px -14px rgba(0,0,0,.45);font-weight:600;font-size:14.5px;white-space:nowrap}
+#tray:empty{display:none}
+#tray .btn{background:var(--accent);color:var(--accent-ink);border:0;padding:10px 16px;border-radius:999px;box-shadow:none}
+#toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,16px);opacity:0;pointer-events:none;background:var(--surface);border:1px solid var(--line);color:var(--ink);padding:12px 18px;border-radius:16px;box-shadow:var(--shadow);font-weight:600;font-size:14px;transition:opacity .25s,transform .25s;z-index:30;max-width:92vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- responsive ---------- */
+@media (max-width:1080px){
+  .home,.flow-grid{grid-template-columns:minmax(0,1fr)}
+  .board-card{position:static}
+  .flow-side{position:static}
+  .home-board .board-card{position:static}
+  .flow-grid.solo{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:640px){
+  .app{padding:12px 16px 130px}
+  .top{padding-bottom:16px}
+  .brand small{display:none}
+  .chip{display:none}
+  .tasks{grid-template-columns:minmax(0,1fr)}
+  .task{min-height:0}
+  .task.wide{grid-column:auto;flex-direction:column;align-items:stretch}
+  .task.wide .badge{margin-left:0}
+  .hero h1{font-size:32px}
+  .step-card{padding:20px}
+  .step-card h2{font-size:25px}
+  .flow-top h1{font-size:28px}
+  .board-card{padding:14px 12px}
+  .board-scroll{overflow-x:auto}
+  .board-scroll svg{min-width:680px}
+  fieldset.flav{grid-template-columns:1fr}
+  .dl-cards{grid-template-columns:minmax(0,1fr)}
+  .kinds{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  #tray{left:12px;right:12px;transform:none;justify-content:space-between;white-space:normal}
+  #toast{bottom:86px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <button class="brand" data-act="home" aria-label="Keymap Guide home">
+      <svg class="logo" viewBox="0 0 42 42" aria-hidden="true">
+        <rect x="3" y="9" width="36" height="24" rx="8" fill="var(--accent)"/>
+        <rect x="8" y="15" width="7" height="6" rx="2" fill="var(--accent-ink)"/>
+        <rect x="17.5" y="15" width="7" height="6" rx="2" fill="var(--accent-ink)"/>
+        <rect x="27" y="15" width="7" height="6" rx="2" fill="var(--accent-ink)"/>
+        <rect x="12" y="24" width="18" height="5" rx="2.5" fill="var(--accent-ink)"/>
+      </svg>
+      <span><b>Keymap Guide</b><small>Kinesis Advantage360 Pro</small></span>
+    </button>
+    <div class="top-r">
+      <span class="chip">Config branch <b>V3.0</b></span>
+      <button class="theme" data-act="theme" aria-pressed="false" aria-label="Dark mode">Dark <span class="knob"></span></button>
+    </div>
+  </header>
+  <main id="app"></main>
+</div>
+<div id="tray"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ==========================================================
+   Data: generated from fixtures/adv360 by build_data.py.
+   Positions 0-75 follow info.json order. Layer bindings are
+   the real ones parsed from adv360.keymap.
+   ========================================================== */
+const DATA = {"keys": [{"x": 0, "y": 0.25, "w": 1.25, "h": 1, "r": 0, "rx": 0, "ry": 0.25}, {"x": 1.25, "y": 0.25, "w": 1, "h": 1, "r": 0, "rx": 1.25, "ry": 0.25}, {"x": 2.25, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 2.25, "ry": 0}, {"x": 3.25, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 3.25, "ry": 0}, {"x": 4.25, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 4.25, "ry": 0}, {"x": 5.25, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 5.25, "ry": 0}, {"x": 6.25, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 6.25, "ry": 0}, {"x": 10.75, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 10.75, "ry": 0}, {"x": 11.75, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 11.75, "ry": 0}, {"x": 12.75, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 12.75, "ry": 0}, {"x": 13.75, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 13.75, "ry": 0}, {"x": 14.75, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 14.75, "ry": 0}, {"x": 15.75, "y": 0.25, "w": 1, "h": 1, "r": 0, "rx": 15.75, "ry": 0.25}, {"x": 16.75, "y": 0.25, "w": 1.25, "h": 1, "r": 0, "rx": 16.75, "ry": 0.25}, {"x": 0, "y": 1.25, "w": 1.25, "h": 1, "r": 0, "rx": 0, "ry": 1.25}, {"x": 1.25, "y": 1.25, "w": 1, "h": 1, "r": 0, "rx": 1.25, "ry": 1.25}, {"x": 2.25, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 2.25, "ry": 1}, {"x": 3.25, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 3.25, "ry": 1}, {"x": 4.25, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 4.25, "ry": 1}, {"x": 5.25, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 5.25, "ry": 1}, {"x": 6.25, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 6.25, "ry": 1}, {"x": 10.75, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 10.75, "ry": 1}, {"x": 11.75, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 11.75, "ry": 1}, {"x": 12.75, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 12.75, "ry": 1}, {"x": 13.75, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 13.75, "ry": 1}, {"x": 14.75, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 14.75, "ry": 1}, {"x": 15.75, "y": 1.25, "w": 1, "h": 1, "r": 0, "rx": 15.75, "ry": 1.25}, {"x": 16.75, "y": 1.25, "w": 1.25, "h": 1, "r": 0, "rx": 16.75, "ry": 1.25}, {"x": 0, "y": 2.25, "w": 1.25, "h": 1, "r": 0, "rx": 0, "ry": 2.25}, {"x": 1.25, "y": 2.25, "w": 1, "h": 1, "r": 0, "rx": 1.25, "ry": 2.25}, {"x": 2.25, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 2.25, "ry": 2}, {"x": 3.25, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 3.25, "ry": 2}, {"x": 4.25, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 4.25, "ry": 2}, {"x": 5.25, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 5.25, "ry": 2}, {"x": 6.25, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 6.25, "ry": 2}, {"x": 6.75, "y": 4, "w": 1, "h": 1, "r": 15, "rx": 5.25, "ry": 4}, {"x": 7.75, "y": 4, "w": 1, "h": 1, "r": 15, "rx": 5.25, "ry": 4}, {"x": 9.25, "y": 4, "w": 1, "h": 1, "r": -15, "rx": 12.75, "ry": 4}, {"x": 10.25, "y": 4, "w": 1, "h": 1, "r": -15, "rx": 12.75, "ry": 4}, {"x": 10.75, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 10.75, "ry": 2}, {"x": 11.75, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 11.75, "ry": 2}, {"x": 12.75, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 12.75, "ry": 2}, {"x": 13.75, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 13.75, "ry": 2}, {"x": 14.75, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 14.75, "ry": 2}, {"x": 15.75, "y": 2.25, "w": 1, "h": 1, "r": 0, "rx": 15.75, "ry": 2.25}, {"x": 16.75, "y": 2.25, "w": 1.25, "h": 1, "r": 0, "rx": 16.75, "ry": 2.25}, {"x": 0, "y": 3.25, "w": 1.25, "h": 1, "r": 0, "rx": 0, "ry": 3.25}, {"x": 1.25, "y": 3.25, "w": 1, "h": 1, "r": 0, "rx": 1.25, "ry": 3.25}, {"x": 2.25, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 2.25, "ry": 3}, {"x": 3.25, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 3.25, "ry": 3}, {"x": 4.25, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 4.25, "ry": 3}, {"x": 5.25, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 5.25, "ry": 3}, {"x": 7.75, "y": 5, "w": 1, "h": 1, "r": 15, "rx": 5.25, "ry": 4}, {"x": 9.25, "y": 5, "w": 1, "h": 1, "r": -15, "rx": 12.75, "ry": 4}, {"x": 11.75, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 11.75, "ry": 3}, {"x": 12.75, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 12.75, "ry": 3}, {"x": 13.75, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 13.75, "ry": 3}, {"x": 14.75, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 14.75, "ry": 3}, {"x": 15.75, "y": 3.25, "w": 1, "h": 1, "r": 0, "rx": 15.75, "ry": 3.25}, {"x": 16.75, "y": 3.25, "w": 1.25, "h": 1, "r": 0, "rx": 16.75, "ry": 3.25}, {"x": 0, "y": 4.25, "w": 1.25, "h": 1, "r": 0, "rx": 0, "ry": 4.25}, {"x": 1.25, "y": 4.25, "w": 1, "h": 1, "r": 0, "rx": 1.25, "ry": 4.25}, {"x": 2.25, "y": 4, "w": 1, "h": 1, "r": 0, "rx": 2.25, "ry": 4}, {"x": 3.25, "y": 4, "w": 1, "h": 1, "r": 0, "rx": 3.25, "ry": 4}, {"x": 4.25, "y": 4, "w": 1, "h": 1, "r": 0, "rx": 4.25, "ry": 4}, {"x": 5.75, "y": 5, "w": 1, "h": 2, "r": 15, "rx": 5.25, "ry": 4}, {"x": 6.75, "y": 5, "w": 1, "h": 2, "r": 15, "rx": 5.25, "ry": 4}, {"x": 7.75, "y": 6, "w": 1, "h": 1, "r": 15, "rx": 5.25, "ry": 4}, {"x": 9.25, "y": 6, "w": 1, "h": 1, "r": -15, "rx": 12.75, "ry": 4}, {"x": 10.25, "y": 5, "w": 1, "h": 2, "r": -15, "rx": 12.75, "ry": 4}, {"x": 11.25, "y": 5, "w": 1, "h": 2, "r": -15, "rx": 12.75, "ry": 4}, {"x": 12.75, "y": 4, "w": 1, "h": 1, "r": 0, "rx": 12.75, "ry": 4}, {"x": 13.75, "y": 4, "w": 1, "h": 1, "r": 0, "rx": 13.75, "ry": 4}, {"x": 14.75, "y": 4, "w": 1, "h": 1, "r": 0, "rx": 14.75, "ry": 4}, {"x": 15.75, "y": 4.25, "w": 1, "h": 1, "r": 0, "rx": 15.75, "ry": 4.25}, {"x": 16.75, "y": 4.25, "w": 1.25, "h": 1, "r": 0, "rx": 16.75, "ry": 4.25}], "layers": [{"node": "default_layer", "name": "Base", "bindings": ["&kp EQUAL", "&tpf F1 NUMBER_1", "&tpf F2 NUMBER_2", "&tpf F3 NUMBER_3", "&tpf F4 NUMBER_4", "&tpf F5 N5", "&kp LG(LC(NUMBER_4))", "&tog 1", "&tpf F6 NUMBER_6", "&tpf F7 N7", "&tpf F8 NUMBER_8", "&tpf F9 N9", "&tpf F10 NUMBER_0", "&tpf F11 MINUS", "&kp TAB", "&kp Q", "&tpf LG(LS(W)) W", "&kp E", "&kp R", "&kp T", "&tpf F12 C_MENU", "&kp C_PLAY_PAUSE", "&kp Y", "&kp U", "&kp I", "&kp O", "&kp P", "&tpf F12 BACKSLASH", "&kp ESC", "&kp A", "&kp S", "&kp D", "&kp F", "&kp G", "&kp RC(SPACE)", "&kp LEFT_ALT", "&kp LC(E)", "&kp RIGHT_CONTROL", "&tpf INT_KATAKANAHIRAGANA COLON", "&tpf LC(GRAVE) GRAVE", "&kp H", "&kp J", "&kp K", "&kp L", "&kp SEMI", "&kp SQT", "&kp LSHFT", "&kp Z", "&kp X", "&tpf LS(LG(LA(C))) C", "&kp V", "&kp B", "&kp LEFT_CONTROL", "&kp RIGHT_ALT", "&kp N", "&kp M", "&kp COMMA", "&kp DOT", "&kp FSLH", "&kp RSHFT", "&mo 1", "&kp K_MENU", "&kp DELETE", "&kp LEFT", "&kp RIGHT", "&kp SPACE", "&kp CAPSLOCK", "&kp LGUI", "&kp LGUI", "&kp ENTER", "&kp BACKSPACE", "&kp UP", "&kp DOWN", "&kp LBKT", "&kp RBKT", "&mo 3"], "spans": [{"line": 76, "s": 0, "e": 9}, {"line": 76, "s": 11, "e": 27}, {"line": 76, "s": 29, "e": 45}, {"line": 76, "s": 47, "e": 63}, {"line": 76, "s": 69, "e": 85}, {"line": 76, "s": 87, "e": 97}, {"line": 76, "s": 99, "e": 119}, {"line": 76, "s": 209, "e": 215}, {"line": 76, "s": 231, "e": 247}, {"line": 76, "s": 249, "e": 259}, {"line": 76, "s": 261, "e": 277}, {"line": 76, "s": 279, "e": 289}, {"line": 76, "s": 291, "e": 308}, {"line": 76, "s": 310, "e": 324}, {"line": 77, "s": 0, "e": 7}, {"line": 77, "s": 11, "e": 16}, {"line": 77, "s": 29, "e": 45}, {"line": 77, "s": 47, "e": 52}, {"line": 77, "s": 69, "e": 74}, {"line": 77, "s": 87, "e": 92}, {"line": 77, "s": 99, "e": 114}, {"line": 77, "s": 209, "e": 225}, {"line": 77, "s": 231, "e": 236}, {"line": 77, "s": 249, "e": 254}, {"line": 77, "s": 261, "e": 266}, {"line": 77, "s": 279, "e": 284}, {"line": 77, "s": 291, "e": 296}, {"line": 77, "s": 310, "e": 328}, {"line": 78, "s": 0, "e": 7}, {"line": 78, "s": 11, "e": 16}, {"line": 78, "s": 29, "e": 34}, {"line": 78, "s": 47, "e": 52}, {"line": 78, "s": 69, "e": 74}, {"line": 78, "s": 87, "e": 92}, {"line": 78, "s": 99, "e": 112}, {"line": 78, "s": 121, "e": 133}, {"line": 78, "s": 135, "e": 144}, {"line": 78, "s": 157, "e": 174}, {"line": 78, "s": 176, "e": 207}, {"line": 78, "s": 209, "e": 229}, {"line": 78, "s": 231, "e": 236}, {"line": 78, "s": 249, "e": 254}, {"line": 78, "s": 261, "e": 266}, {"line": 78, "s": 279, "e": 284}, {"line": 78, "s": 291, "e": 299}, {"line": 78, "s": 310, "e": 317}, {"line": 79, "s": 0, "e": 9}, {"line": 79, "s": 11, "e": 16}, {"line": 79, "s": 29, "e": 34}, {"line": 79, "s": 47, "e": 67}, {"line": 79, "s": 69, "e": 74}, {"line": 79, "s": 87, "e": 92}, {"line": 79, "s": 135, "e": 151}, {"line": 79, "s": 157, "e": 170}, {"line": 79, "s": 231, "e": 236}, {"line": 79, "s": 249, "e": 254}, {"line": 79, "s": 261, "e": 270}, {"line": 79, "s": 279, "e": 286}, {"line": 79, "s": 291, "e": 299}, {"line": 79, "s": 310, "e": 319}, {"line": 80, "s": 0, "e": 5}, {"line": 80, "s": 11, "e": 21}, {"line": 80, "s": 29, "e": 39}, {"line": 80, "s": 47, "e": 55}, {"line": 80, "s": 69, "e": 78}, {"line": 80, "s": 99, "e": 108}, {"line": 80, "s": 121, "e": 133}, {"line": 80, "s": 135, "e": 143}, {"line": 80, "s": 157, "e": 165}, {"line": 80, "s": 176, "e": 185}, {"line": 80, "s": 209, "e": 222}, {"line": 80, "s": 249, "e": 255}, {"line": 80, "s": 261, "e": 269}, {"line": 80, "s": 279, "e": 287}, {"line": 80, "s": 291, "e": 299}, {"line": 80, "s": 310, "e": 315}]}, {"node": "keypad", "name": "Numpad", "bindings": ["&kp EQUAL", "&kp N1", "&kp N2", "&kp N3", "&kp N4", "&kp N5", "&trans", "&tog 0", "&kp N6", "&kp KP_NUM", "&kp KP_EQUAL", "&kp KP_DIVIDE", "&kp KP_MULTIPLY", "&kp MINUS", "&kp TAB", "&kp Q", "&kp W", "&kp E", "&kp R", "&kp T", "&none", "&none", "&kp Y", "&kp KP_N7", "&kp KP_N8", "&kp KP_N9", "&kp KP_MINUS", "&kp BSLH", "&kp ESC", "&kp A", "&kp S", "&kp D", "&kp F", "&kp G", "&none", "&kp LCTRL", "&kp LALT", "&kp LGUI", "&kp BACKSPACE", "&none", "&kp H", "&kp KP_N4", "&kp KP_N5", "&kp KP_N6", "&kp KP_PLUS", "&kp SQT", "&kp LSHFT", "&kp Z", "&kp X", "&kp C", "&kp V", "&kp B", "&kp HOME", "&kp PG_UP", "&kp N", "&kp KP_N1", "&kp KP_N2", "&kp KP_N3", "&kp KP_ENTER", "&kp RSHFT", "&mo 0", "&kp GRAVE", "&kp CAPS", "&kp LEFT", "&kp RIGHT", "&kp BSPC", "&kp DEL", "&kp END", "&kp PG_DN", "&kp BACKSPACE", "&kp KP_N0", "&kp UP", "&kp DOWN", "&kp KP_DOT", "&kp RBKT", "&mo 0"], "spans": [{"line": 86, "s": 0, "e": 9}, {"line": 86, "s": 11, "e": 17}, {"line": 86, "s": 22, "e": 28}, {"line": 86, "s": 32, "e": 38}, {"line": 86, "s": 42, "e": 48}, {"line": 86, "s": 53, "e": 59}, {"line": 86, "s": 61, "e": 67}, {"line": 86, "s": 122, "e": 128}, {"line": 86, "s": 133, "e": 139}, {"line": 86, "s": 141, "e": 151}, {"line": 86, "s": 153, "e": 165}, {"line": 86, "s": 167, "e": 180}, {"line": 86, "s": 182, "e": 197}, {"line": 86, "s": 199, "e": 208}, {"line": 87, "s": 0, "e": 7}, {"line": 87, "s": 11, "e": 16}, {"line": 87, "s": 22, "e": 27}, {"line": 87, "s": 32, "e": 37}, {"line": 87, "s": 42, "e": 47}, {"line": 87, "s": 53, "e": 58}, {"line": 87, "s": 61, "e": 66}, {"line": 87, "s": 122, "e": 127}, {"line": 87, "s": 133, "e": 138}, {"line": 87, "s": 141, "e": 150}, {"line": 87, "s": 153, "e": 162}, {"line": 87, "s": 167, "e": 176}, {"line": 87, "s": 182, "e": 194}, {"line": 87, "s": 199, "e": 207}, {"line": 88, "s": 0, "e": 7}, {"line": 88, "s": 11, "e": 16}, {"line": 88, "s": 22, "e": 27}, {"line": 88, "s": 32, "e": 37}, {"line": 88, "s": 42, "e": 47}, {"line": 88, "s": 53, "e": 58}, {"line": 88, "s": 61, "e": 66}, {"line": 88, "s": 71, "e": 80}, {"line": 88, "s": 82, "e": 90}, {"line": 88, "s": 96, "e": 104}, {"line": 88, "s": 107, "e": 120}, {"line": 88, "s": 122, "e": 127}, {"line": 88, "s": 133, "e": 138}, {"line": 88, "s": 141, "e": 150}, {"line": 88, "s": 153, "e": 162}, {"line": 88, "s": 167, "e": 176}, {"line": 88, "s": 182, "e": 193}, {"line": 88, "s": 199, "e": 206}, {"line": 89, "s": 0, "e": 9}, {"line": 89, "s": 11, "e": 16}, {"line": 89, "s": 22, "e": 27}, {"line": 89, "s": 32, "e": 37}, {"line": 89, "s": 42, "e": 47}, {"line": 89, "s": 53, "e": 58}, {"line": 89, "s": 82, "e": 90}, {"line": 89, "s": 96, "e": 105}, {"line": 89, "s": 133, "e": 138}, {"line": 89, "s": 141, "e": 150}, {"line": 89, "s": 153, "e": 162}, {"line": 89, "s": 167, "e": 176}, {"line": 89, "s": 182, "e": 194}, {"line": 89, "s": 199, "e": 208}, {"line": 90, "s": 0, "e": 5}, {"line": 90, "s": 11, "e": 20}, {"line": 90, "s": 22, "e": 30}, {"line": 90, "s": 32, "e": 40}, {"line": 90, "s": 42, "e": 51}, {"line": 90, "s": 61, "e": 69}, {"line": 90, "s": 71, "e": 78}, {"line": 90, "s": 82, "e": 89}, {"line": 90, "s": 96, "e": 105}, {"line": 90, "s": 107, "e": 120}, {"line": 90, "s": 122, "e": 131}, {"line": 90, "s": 141, "e": 147}, {"line": 90, "s": 153, "e": 161}, {"line": 90, "s": 167, "e": 177}, {"line": 90, "s": 182, "e": 190}, {"line": 90, "s": 199, "e": 204}]}, {"node": "mod", "name": "Bluetooth & bootloader", "bindings": ["&none", "&bt BT_SEL 0", "&bt BT_SEL 1", "&bt BT_SEL 2", "&bt BT_SEL 3", "&bt BT_SEL 4", "&none", "&trans", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&kp Z", "&none", "&bootloader", "&bootloader", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&macro_ver", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&bt BT_CLR", "&none", "&rgb_ug RGB_MEFS_CMD 5", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&macro_ver", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&bl BL_TOG", "&rgb_ug RGB_TOG", "&bl BL_INC", "&bl BL_DEC", "&none", "&none", "&none"], "spans": [{"line": 96, "s": 0, "e": 5}, {"line": 96, "s": 7, "e": 19}, {"line": 96, "s": 21, "e": 33}, {"line": 96, "s": 35, "e": 47}, {"line": 96, "s": 49, "e": 61}, {"line": 96, "s": 63, "e": 75}, {"line": 96, "s": 77, "e": 82}, {"line": 96, "s": 132, "e": 138}, {"line": 96, "s": 156, "e": 161}, {"line": 96, "s": 163, "e": 168}, {"line": 96, "s": 175, "e": 180}, {"line": 96, "s": 187, "e": 192}, {"line": 96, "s": 194, "e": 199}, {"line": 96, "s": 201, "e": 206}, {"line": 97, "s": 0, "e": 5}, {"line": 97, "s": 7, "e": 12}, {"line": 97, "s": 21, "e": 26}, {"line": 97, "s": 35, "e": 40}, {"line": 97, "s": 49, "e": 54}, {"line": 97, "s": 63, "e": 68}, {"line": 97, "s": 77, "e": 88}, {"line": 97, "s": 132, "e": 143}, {"line": 97, "s": 156, "e": 161}, {"line": 97, "s": 163, "e": 168}, {"line": 97, "s": 175, "e": 180}, {"line": 97, "s": 187, "e": 192}, {"line": 97, "s": 194, "e": 199}, {"line": 97, "s": 201, "e": 206}, {"line": 98, "s": 0, "e": 5}, {"line": 98, "s": 7, "e": 17}, {"line": 98, "s": 21, "e": 26}, {"line": 98, "s": 35, "e": 40}, {"line": 98, "s": 49, "e": 54}, {"line": 98, "s": 63, "e": 68}, {"line": 98, "s": 77, "e": 82}, {"line": 98, "s": 90, "e": 95}, {"line": 98, "s": 97, "e": 102}, {"line": 98, "s": 108, "e": 118}, {"line": 98, "s": 120, "e": 125}, {"line": 98, "s": 132, "e": 154}, {"line": 98, "s": 156, "e": 161}, {"line": 98, "s": 163, "e": 168}, {"line": 98, "s": 175, "e": 180}, {"line": 98, "s": 187, "e": 192}, {"line": 98, "s": 194, "e": 199}, {"line": 98, "s": 201, "e": 206}, {"line": 99, "s": 0, "e": 5}, {"line": 99, "s": 7, "e": 12}, {"line": 99, "s": 21, "e": 26}, {"line": 99, "s": 35, "e": 40}, {"line": 99, "s": 49, "e": 59}, {"line": 99, "s": 63, "e": 68}, {"line": 99, "s": 97, "e": 102}, {"line": 99, "s": 108, "e": 113}, {"line": 99, "s": 156, "e": 161}, {"line": 99, "s": 163, "e": 168}, {"line": 99, "s": 175, "e": 180}, {"line": 99, "s": 187, "e": 192}, {"line": 99, "s": 194, "e": 199}, {"line": 99, "s": 201, "e": 206}, {"line": 100, "s": 0, "e": 5}, {"line": 100, "s": 7, "e": 12}, {"line": 100, "s": 21, "e": 26}, {"line": 100, "s": 35, "e": 40}, {"line": 100, "s": 49, "e": 54}, {"line": 100, "s": 77, "e": 82}, {"line": 100, "s": 90, "e": 95}, {"line": 100, "s": 97, "e": 102}, {"line": 100, "s": 108, "e": 113}, {"line": 100, "s": 120, "e": 130}, {"line": 100, "s": 132, "e": 147}, {"line": 100, "s": 163, "e": 173}, {"line": 100, "s": 175, "e": 185}, {"line": 100, "s": 187, "e": 192}, {"line": 100, "s": 194, "e": 199}, {"line": 100, "s": 201, "e": 206}]}, {"node": "macro", "name": "Macros", "bindings": ["&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&kp C_PREV", "&trans", "&kp C_NEXT", "&trans", "&bl BL_OFF", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&mail", "&name", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans"], "spans": [{"line": 106, "s": 0, "e": 6}, {"line": 106, "s": 8, "e": 14}, {"line": 106, "s": 20, "e": 26}, {"line": 106, "s": 28, "e": 34}, {"line": 106, "s": 40, "e": 46}, {"line": 106, "s": 48, "e": 54}, {"line": 106, "s": 60, "e": 66}, {"line": 106, "s": 104, "e": 110}, {"line": 106, "s": 112, "e": 118}, {"line": 106, "s": 120, "e": 126}, {"line": 106, "s": 128, "e": 134}, {"line": 106, "s": 136, "e": 142}, {"line": 106, "s": 144, "e": 150}, {"line": 106, "s": 152, "e": 158}, {"line": 107, "s": 0, "e": 6}, {"line": 107, "s": 8, "e": 18}, {"line": 107, "s": 20, "e": 26}, {"line": 107, "s": 28, "e": 38}, {"line": 107, "s": 40, "e": 46}, {"line": 107, "s": 48, "e": 58}, {"line": 107, "s": 60, "e": 66}, {"line": 107, "s": 104, "e": 110}, {"line": 107, "s": 112, "e": 118}, {"line": 107, "s": 120, "e": 126}, {"line": 107, "s": 128, "e": 134}, {"line": 107, "s": 136, "e": 142}, {"line": 107, "s": 144, "e": 150}, {"line": 107, "s": 152, "e": 158}, {"line": 108, "s": 0, "e": 6}, {"line": 108, "s": 8, "e": 13}, {"line": 108, "s": 20, "e": 25}, {"line": 108, "s": 28, "e": 34}, {"line": 108, "s": 40, "e": 46}, {"line": 108, "s": 48, "e": 54}, {"line": 108, "s": 60, "e": 66}, {"line": 108, "s": 68, "e": 74}, {"line": 108, "s": 76, "e": 82}, {"line": 108, "s": 88, "e": 94}, {"line": 108, "s": 96, "e": 102}, {"line": 108, "s": 104, "e": 110}, {"line": 108, "s": 112, "e": 118}, {"line": 108, "s": 120, "e": 126}, {"line": 108, "s": 128, "e": 134}, {"line": 108, "s": 136, "e": 142}, {"line": 108, "s": 144, "e": 150}, {"line": 108, "s": 152, "e": 158}, {"line": 109, "s": 0, "e": 6}, {"line": 109, "s": 8, "e": 14}, {"line": 109, "s": 20, "e": 26}, {"line": 109, "s": 28, "e": 34}, {"line": 109, "s": 40, "e": 46}, {"line": 109, "s": 48, "e": 54}, {"line": 109, "s": 76, "e": 82}, {"line": 109, "s": 88, "e": 94}, {"line": 109, "s": 112, "e": 118}, {"line": 109, "s": 120, "e": 126}, {"line": 109, "s": 128, "e": 134}, {"line": 109, "s": 136, "e": 142}, {"line": 109, "s": 144, "e": 150}, {"line": 109, "s": 152, "e": 158}, {"line": 110, "s": 0, "e": 6}, {"line": 110, "s": 8, "e": 14}, {"line": 110, "s": 20, "e": 26}, {"line": 110, "s": 28, "e": 34}, {"line": 110, "s": 40, "e": 46}, {"line": 110, "s": 60, "e": 66}, {"line": 110, "s": 68, "e": 74}, {"line": 110, "s": 76, "e": 82}, {"line": 110, "s": 88, "e": 94}, {"line": 110, "s": 96, "e": 102}, {"line": 110, "s": 104, "e": 110}, {"line": 110, "s": 120, "e": 126}, {"line": 110, "s": 128, "e": 134}, {"line": 110, "s": 136, "e": 142}, {"line": 110, "s": 144, "e": 150}, {"line": 110, "s": 152, "e": 158}]}], "macros": [{"label": "macro_quotes", "display": null, "bindings": ["&kp SQT", "&kp SQT", "&kp LEFT"], "file": "macros.dtsi", "line": 4}, {"label": "macro_dquotes", "display": null, "bindings": ["&kp DQT", "&kp DQT", "&kp LEFT"], "file": "macros.dtsi", "line": 10}, {"label": "macro_braces", "display": null, "bindings": ["&kp LBRC", "&kp RBRC", "&kp LEFT"], "file": "macros.dtsi", "line": 16}, {"label": "macro_parens", "display": null, "bindings": ["&kp LPAR", "&kp RPAR", "&kp LEFT"], "file": "macros.dtsi", "line": 22}, {"label": "macro_brackets", "display": null, "bindings": ["&kp LBKT", "&kp RBKT", "&kp LEFT"], "file": "macros.dtsi", "line": 28}, {"label": "macro_kinesis", "display": null, "bindings": ["&kp LS(K)", "&kp I", "&kp N", "&kp E", "&kp S", "&kp I", "&kp S"], "file": "macros.dtsi", "line": 34}, {"label": "Win_Cut", "display": "Windows Cut", "bindings": ["&kp LC(X)"], "file": "macros.dtsi", "line": 39}, {"label": "Win_Copy", "display": "Windows Copy", "bindings": ["&kp LC(C)"], "file": "macros.dtsi", "line": 46}, {"label": "Win_Paste", "display": "Windows Paste", "bindings": ["&kp LC(V)"], "file": "macros.dtsi", "line": 53}, {"label": "Win_Select_All", "display": "Windows Select All", "bindings": ["&kp LC(A)"], "file": "macros.dtsi", "line": 60}, {"label": "Win_Undo", "display": "Windows Undo", "bindings": ["&kp LC(Z)"], "file": "macros.dtsi", "line": 67}, {"label": "Win_Desktop", "display": "Windows Desktop", "bindings": ["&kp LG(D)"], "file": "macros.dtsi", "line": 74}, {"label": "Win_File_Explorer", "display": "Windows Explorer", "bindings": ["&kp LG(E)"], "file": "macros.dtsi", "line": 81}, {"label": "Win_Snip_Tool", "display": "Windows Screen Snip", "bindings": ["&kp LS(LG(S))"], "file": "macros.dtsi", "line": 88}, {"label": "Win_Show_All_Windows", "display": "Windows Show All Windows", "bindings": ["&kp LG(TAB)"], "file": "macros.dtsi", "line": 95}, {"label": "Mac_Cut", "display": "Mac Cut", "bindings": ["&kp LG(X)"], "file": "macros.dtsi", "line": 102}, {"label": "Mac_Copy", "display": "Mac Copy", "bindings": ["&kp LG(C)"], "file": "macros.dtsi", "line": 109}, {"label": "Mac_Paste", "display": "Mac Paste", "bindings": ["&kp LG(V)"], "file": "macros.dtsi", "line": 116}, {"label": "Mac_Undo", "display": "Mac Undo", "bindings": ["&kp LG(Z)"], "file": "macros.dtsi", "line": 123}, {"label": "Mac_Select_All", "display": "Mac Select All", "bindings": ["&kp LG(A)"], "file": "macros.dtsi", "line": 130}, {"label": "Mac_Mission_Control", "display": "Mac Show All Windows", "bindings": ["&kp LC(UP_ARROW)"], "file": "macros.dtsi", "line": 137}, {"label": "Mac_Snip_Tool", "display": "Mac Screen Snip", "bindings": ["&kp LC(LG(LS(NUMBER_4)))"], "file": "macros.dtsi", "line": 144}, {"label": "Win_Close_Program", "display": "Windows Close", "bindings": ["&kp LA(F4)"], "file": "macros.dtsi", "line": 151}, {"label": "Win_Settings_Menu", "display": "Windows Settings", "bindings": ["&kp LG(I)"], "file": "macros.dtsi", "line": 158}, {"label": "Win_Lock_PC", "display": "Windows Lock", "bindings": ["&kp LG(L)"], "file": "macros.dtsi", "line": 165}, {"label": "Win_Tile_Left", "display": "Windows Tile Left", "bindings": ["&kp LG(LEFT)"], "file": "macros.dtsi", "line": 172}, {"label": "Win_Tile_Up", "display": "Windows Tile Up", "bindings": ["&kp LG(UP_ARROW)"], "file": "macros.dtsi", "line": 179}, {"label": "Win_Tile_Down", "display": "Windows Tile Down", "bindings": ["&kp LG(DOWN)"], "file": "macros.dtsi", "line": 186}, {"label": "Win_Tile_Right", "display": "Windows Tile Right", "bindings": ["&kp LG(RIGHT)"], "file": "macros.dtsi", "line": 193}, {"label": "Mac_Spotlight_Search", "display": "Mac Spotlight Search", "bindings": ["&kp LG(SPACE)"], "file": "macros.dtsi", "line": 200}, {"label": "Mac_Close_Program", "display": "Mac Close Program", "bindings": ["&kp LG(Q)"], "file": "macros.dtsi", "line": 207}, {"label": "Mac_Strike_Through_Text", "display": "Mac Strikethrough Text", "bindings": ["&kp LG(LS(X))"], "file": "macros.dtsi", "line": 214}, {"label": "Double_Click", "display": "Double Click", "bindings": ["&mkp MB1", "&mkp MB1"], "file": "macros.dtsi", "line": 221}, {"label": "mail", "display": null, "bindings": ["&none", "&kp M", "&kp E", "&kp AT", "&kp A", "&kp L", "&kp J", "&kp U", "&kp F", "&kp A", "&kp I", "&kp R", "&kp I", "&kp DOT", "&kp O", "&kp R", "&kp G"], "file": "adv360.keymap", "line": 34}, {"label": "name", "display": null, "bindings": ["&none", "&kp LS(A)", "&kp L", "&kp I", "&kp SPACE", "&kp LS(R)", "&kp E", "&kp D", "&kp H", "&kp A", "&kp SPACE", "&kp LS(A)", "&kp L", "&kp I", "&kp SPACE", "&kp LS(A)", "&kp B", "&kp D", "&kp U", "&kp L", "&kp L", "&kp A", "&kp SPACE", "&kp LS(A)", "&kp L", "&kp J", "&kp U", "&kp F", "&kp A", "&kp I", "&kp R", "&kp I"], "file": "adv360.keymap", "line": 41}], "hold": {"node": "tpf", "term": 200, "trigger": [1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 27], "termLine": 26, "triggerLine": 25}, "combos": [{"node": "combo_studio_unlock", "bindings": ["&studio_unlock"], "keyPositions": [46, 59], "layers": [0], "studio": true}, {"node": "combo", "bindings": ["&kp K_SCREENSAVER"], "keyPositions": [61], "layers": [0], "studio": false}, {"node": "Dfffsdfa", "bindings": ["&kp D"], "keyPositions": [35, 37], "layers": null, "studio": false}], "keymapLines": ["#include <dt-bindings/zmk/mouse.h>", "#include <behaviors.dtsi>", "#include <dt-bindings/zmk/backlight.h>", "#include <dt-bindings/zmk/bt.h>", "#include <dt-bindings/zmk/keys.h>", "#include <dt-bindings/zmk/rgb.h>", "", "/ {", "    behaviors {", "        #include \"macros.dtsi\"", "      #include \"version.dtsi\"", "      #ifndef VERSION_MACRO", "", "", "", "", "", "        #endif", "", "        tpf: tpf {", "            compatible = \"zmk,behavior-hold-tap\";", "            label = \"TPF\";", "            bindings = <&kp>, <&kp>;", "", "            #binding-cells = <2>;", "            hold-trigger-key-positions = <1 2 3 4 5 8 9 10 11 12 13 27>;", "            tapping-term-ms = <200>;", "        };", "    };", "", "    macros {", "        mail: mail {", "            compatible = \"zmk,behavior-macro\";", "            #binding-cells = <0>;", "            bindings = <&none &kp M &kp E &kp AT &kp A &kp L &kp J &kp U &kp F &kp A &kp I &kp R &kp I &kp DOT &kp O &kp R &kp G>;", "            label = \"MAIL\";", "        };", "", "        name: name {", "            compatible = \"zmk,behavior-macro\";", "            #binding-cells = <0>;", "            bindings = <&none &kp LS(A) &kp L &kp I &kp SPACE &kp LS(R) &kp E &kp D &kp H &kp A &kp SPACE &kp LS(A) &kp L &kp I &kp SPACE &kp LS(A) &kp B &kp D &kp U &kp L &kp L &kp A &kp SPACE &kp LS(A) &kp L &kp J &kp U &kp F &kp A &kp I &kp R &kp I>;", "            label = \"NAME\";", "        };", "    };", "", "    combos {", "        compatible = \"zmk,combos\";", "", "#if defined(CONFIG_ZMK_STUDIO)", "        // Unlock Studio without replacing any existing key assignments.", "        combo_studio_unlock {", "            bindings = <&studio_unlock>;", "            key-positions = <46 59>;", "            timeout-ms = <50>;", "            layers = <0>;", "        };", "#endif", "", "        combo {", "            bindings = <&kp K_SCREENSAVER>;", "            key-positions = <61>;", "            layers = <0>;", "        };", "", "        Dfffsdfa {", "            bindings = <&kp D>;", "            key-positions = <35 37>;", "        };", "    };", "", "    keymap {", "        compatible = \"zmk,keymap\";", "", "        default_layer {", "            bindings = <", "&kp EQUAL  &tpf F1 NUMBER_1  &tpf F2 NUMBER_2  &tpf F3 NUMBER_3      &tpf F4 NUMBER_4  &tpf F5 N5  &kp LG(LC(NUMBER_4))                                                                                          &tog 1                &tpf F6 NUMBER_6  &tpf F7 N7  &tpf F8 NUMBER_8  &tpf F9 N9  &tpf F10 NUMBER_0  &tpf F11 MINUS", "&kp TAB    &kp Q             &tpf LG(LS(W)) W  &kp E                 &kp R             &kp T       &tpf F12 C_MENU                                                                                               &kp C_PLAY_PAUSE      &kp Y             &kp U       &kp I             &kp O       &kp P              &tpf F12 BACKSLASH", "&kp ESC    &kp A             &kp S             &kp D                 &kp F             &kp G       &kp RC(SPACE)         &kp LEFT_ALT  &kp LC(E)             &kp RIGHT_CONTROL  &tpf INT_KATAKANAHIRAGANA COLON  &tpf LC(GRAVE) GRAVE  &kp H             &kp J       &kp K             &kp L       &kp SEMI           &kp SQT", "&kp LSHFT  &kp Z             &kp X             &tpf LS(LG(LA(C))) C  &kp V             &kp B                                           &kp LEFT_CONTROL      &kp RIGHT_ALT                                                             &kp N             &kp M       &kp COMMA         &kp DOT     &kp FSLH           &kp RSHFT", "&mo 1      &kp K_MENU        &kp DELETE        &kp LEFT              &kp RIGHT                     &kp SPACE             &kp CAPSLOCK  &kp LGUI              &kp LGUI           &kp ENTER                        &kp BACKSPACE                           &kp UP      &kp DOWN          &kp LBKT    &kp RBKT           &mo 3", "            >;", "        };", "", "        keypad {", "            bindings = <", "&kp EQUAL  &kp N1     &kp N2    &kp N3    &kp N4     &kp N5  &trans                                                       &tog 0     &kp N6  &kp KP_NUM  &kp KP_EQUAL  &kp KP_DIVIDE  &kp KP_MULTIPLY  &kp MINUS", "&kp TAB    &kp Q      &kp W     &kp E     &kp R      &kp T   &none                                                        &none      &kp Y   &kp KP_N7   &kp KP_N8     &kp KP_N9      &kp KP_MINUS     &kp BSLH", "&kp ESC    &kp A      &kp S     &kp D     &kp F      &kp G   &none     &kp LCTRL  &kp LALT      &kp LGUI   &kp BACKSPACE  &none      &kp H   &kp KP_N4   &kp KP_N5     &kp KP_N6      &kp KP_PLUS      &kp SQT", "&kp LSHFT  &kp Z      &kp X     &kp C     &kp V      &kp B                        &kp HOME      &kp PG_UP                            &kp N   &kp KP_N1   &kp KP_N2     &kp KP_N3      &kp KP_ENTER     &kp RSHFT", "&mo 0      &kp GRAVE  &kp CAPS  &kp LEFT  &kp RIGHT          &kp BSPC  &kp DEL    &kp END       &kp PG_DN  &kp BACKSPACE  &kp KP_N0          &kp UP      &kp DOWN      &kp KP_DOT     &kp RBKT         &mo 0", "            >;", "        };", "", "        mod {", "            bindings = <", "&none  &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4  &none                                                  &trans                  &none  &none       &none       &none  &none  &none", "&none  &none         &none         &none         &kp Z         &none         &bootloader                                            &bootloader             &none  &none       &none       &none  &none  &none", "&none  &macro_ver    &none         &none         &none         &none         &none        &none  &none      &bt BT_CLR  &none       &rgb_ug RGB_MEFS_CMD 5  &none  &none       &none       &none  &none  &none", "&none  &none         &none         &none         &macro_ver    &none                             &none      &none                                           &none  &none       &none       &none  &none  &none", "&none  &none         &none         &none         &none                       &none        &none  &none      &none       &bl BL_TOG  &rgb_ug RGB_TOG                &bl BL_INC  &bl BL_DEC  &none  &none  &none", "            >;", "        };", "", "        macro {", "            bindings = <", "&trans  &trans      &trans  &trans      &trans  &trans      &trans                                      &trans  &trans  &trans  &trans  &trans  &trans  &trans", "&trans  &kp C_PREV  &trans  &kp C_NEXT  &trans  &bl BL_OFF  &trans                                      &trans  &trans  &trans  &trans  &trans  &trans  &trans", "&trans  &mail       &name   &trans      &trans  &trans      &trans  &trans  &trans      &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans", "&trans  &trans      &trans  &trans      &trans  &trans                      &trans      &trans                  &trans  &trans  &trans  &trans  &trans  &trans", "&trans  &trans      &trans  &trans      &trans              &trans  &trans  &trans      &trans  &trans  &trans          &trans  &trans  &trans  &trans  &trans", "            >;", "        };", "    };", "};", ""], "macroLines": ["  macro_quotes: macro_quotes {", "    compatible = \"zmk,behavior-macro\";", "    label = \"macro_quotes\";", "    #binding-cells = <0>;", "    bindings = <&kp SQT>, <&kp SQT>, <&kp LEFT>;", "  };", "  macro_dquotes: macro_dquotes {", "    compatible = \"zmk,behavior-macro\";", "    label = \"macro_dquotes\";", "    #binding-cells = <0>;", "    bindings = <&kp DQT>, <&kp DQT>, <&kp LEFT>;", "  };", "  macro_braces: macro_braces {", "    compatible = \"zmk,behavior-macro\";", "    label = \"macro_braces\";", "    #binding-cells = <0>;", "    bindings = <&kp LBRC>, <&kp RBRC>, <&kp LEFT>;", "  };", "  macro_parens: macro_parens {", "    compatible = \"zmk,behavior-macro\";", "    label = \"macro_parens\";", "    #binding-cells = <0>;", "    bindings = <&kp LPAR>, <&kp RPAR>, <&kp LEFT>;", "  };", "  macro_brackets: macro_brackets {", "    compatible = \"zmk,behavior-macro\";", "    label = \"macro_brackets\";", "    #binding-cells = <0>;", "    bindings = <&kp LBKT>, <&kp RBKT>, <&kp LEFT>;", "  };", "  macro_kinesis: macro_kinesis {", "    compatible = \"zmk,behavior-macro\";", "    label = \"macro_kinesis\";", "    #binding-cells = <0>;", "    bindings = <&kp LS(K)>, <&kp I>, <&kp N>, <&kp E>, <&kp S>, <&kp I>, <&kp S>;", "  };", "  Win_Cut: Windows_Cut {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LC(X)>;", "    display-name = \"Windows Cut\";", "  };", "", "  Win_Copy: Windows_Copy {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LC(C)>;", "    display-name = \"Windows Copy\";", "  };", "", "  Win_Paste: Windows_Paste {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LC(V)>;", "    display-name = \"Windows Paste\";", "  };", "", "  Win_Select_All: Windows_SelectAll {", "      compatible = \"zmk,behavior-macro\";", "      #binding-cells = <0>;", "      bindings = <&kp LC(A)>;", "      display-name = \"Windows Select All\";", "  };", "", "  Win_Undo: Windows_Undo {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LC(Z)>;", "    display-name = \"Windows Undo\";", "  };", "", "  Win_Desktop: Win_Desk {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(D)>;", "    display-name = \"Windows Desktop\";", "  };", "", "  Win_File_Explorer: Win_Explr {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(E)>;", "    display-name = \"Windows Explorer\";", "  };", "", "  Win_Snip_Tool: Win_Snip {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LS(LG(S))>;", "    display-name = \"Windows Screen Snip\";", "  };", "", "  Win_Show_All_Windows: Win_ShowAW {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(TAB)>;", "    display-name = \"Windows Show All Windows\";", "  };", "", "  Mac_Cut: Mac_Cut {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(X)>;", "    display-name = \"Mac Cut\";", "  };", "", "  Mac_Copy: Mac_Copy {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(C)>;", "    display-name = \"Mac Copy\";", "  };", "", "  Mac_Paste: Mac_Paste {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(V)>;", "    display-name = \"Mac Paste\";", "  };", "", "  Mac_Undo: Mac_Undo {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(Z)>;", "    display-name = \"Mac Undo\";", "  };", "", "  Mac_Select_All: Mac_SelAll {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(A)>;", "    display-name = \"Mac Select All\";", "  };", "", "  Mac_Mission_Control: Mac_ShowAW {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LC(UP_ARROW)>;", "    display-name = \"Mac Show All Windows\";", "  };", "", "  Mac_Snip_Tool: Mac_Snip {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LC(LG(LS(NUMBER_4)))>;", "    display-name = \"Mac Screen Snip\";", "  };", "", "  Win_Close_Program: Win_Close_Program {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LA(F4)>;", "    display-name = \"Windows Close\";", "  };", "", "  Win_Settings_Menu: Win_Settings_Menu {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(I)>;", "    display-name = \"Windows Settings\";", "  };", "", "  Win_Lock_PC: Win_Lock_PC {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(L)>;", "    display-name = \"Windows Lock\";", "  };", "", "  Win_Tile_Left: Win_Tile_Left {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(LEFT)>;", "    display-name = \"Windows Tile Left\";", "  };", "", "  Win_Tile_Up: Win_Tile_Up {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(UP_ARROW)>;", "    display-name = \"Windows Tile Up\";", "  };", "", "  Win_Tile_Down: Win_Tile_Down {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(DOWN)>;", "    display-name = \"Windows Tile Down\";", "  };", "", "  Win_Tile_Right: Win_Tile_Right {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(RIGHT)>;", "    display-name = \"Windows Tile Right\";", "  };", "", "  Mac_Spotlight_Search: Mac_Spotlight_Search {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(SPACE)>;", "    display-name = \"Mac Spotlight Search\";", "  };", "", "  Mac_Close_Program: Mac_Close_Program {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(Q)>;", "    display-name = \"Mac Close Program\";", "  };", "", "  Mac_Strike_Through_Text: Mac_Strike_Through_Text {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&kp LG(LS(X))>;", "    display-name = \"Mac Strikethrough Text\";", "  };", "", "  Double_Click: Double_Click {", "    compatible = \"zmk,behavior-macro\";", "    #binding-cells = <0>;", "    bindings = <&mkp MB1 &mkp MB1>;", "    display-name = \"Double Click\";", "  };"]};
+
+/* ---------- tiny helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LAYER_SHORT = ['Base','Numpad','Bluetooth','Macro'];
+const LAYER_LONG  = ['Base layer','Numpad layer','Bluetooth layer','Macro layer'];
+const LAYER_PLAIN = ['Your everyday keys','Number pad and symbols','Bluetooth profiles and the bootloader','Macros and extra keys'];
+const ICON = {
+  key:'<rect x="2.5" y="6.5" width="19" height="11" rx="3"/><path d="M6.5 10.5h.01M10.5 10.5h.01M14.5 10.5h.01M18.5 10.5h.01M7 14h10"/>',
+  fork:'<path d="M12 21V11"/><path d="M12 11L5.5 4.5M12 11l6.5-6.5"/>',
+  lines:'<path d="M4 6h10M4 12h16M4 18h11"/><circle cx="19" cy="6" r="1.4"/>',
+  circles:'<circle cx="9" cy="12" r="5.5"/><circle cx="15" cy="12" r="5.5"/>',
+  alert:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.6v.1"/>',
+  box:'<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
+  shield:'<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  chev:'<path d="M9 6l6 6-6 6"/>',
+  up:'<path d="M12 19V5M6 11l6-6 6 6"/>',
+  down:'<path d="M12 5v14M6 13l6 6 6-6"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  bolt:'<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>',
+};
+const svgIco = (n, cls='ico') => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]||''}</svg>`;
+
+/* ---------- ZMK keycode -> plain English ---------- */
+const MOD = {LC:'Ctrl',LS:'Shift',LA:'Alt',LG:'Win/Cmd',RC:'Ctrl',RS:'Shift',RA:'Alt',RG:'Win/Cmd'};
+const NAMES = {
+  ESC:'Escape',TAB:'Tab',SPACE:'Space',ENTER:'Enter',RET:'Enter',BACKSPACE:'Backspace',BSPC:'Backspace',
+  DELETE:'Delete',DEL:'Delete',CAPSLOCK:'Caps Lock',CAPS:'Caps Lock',LEFT:'Left',RIGHT:'Right',UP:'Up',DOWN:'Down',
+  UP_ARROW:'Up',HOME:'Home',END:'End',PG_UP:'Page Up',PG_DN:'Page Down',K_MENU:'Menu',C_MENU:'Menu',
+  C_PLAY_PAUSE:'Play/Pause',C_PREV:'Previous track',C_NEXT:'Next track',C_MUTE:'Mute',C_VOL_UP:'Volume up',C_VOL_DN:'Volume down',
+  K_SCREENSAVER:'Screensaver',INT_KATAKANAHIRAGANA:'Kana',GRAVE:'`',MINUS:'-',EQUAL:'=',BSLH:'\\',BACKSLASH:'\\',
+  FSLH:'/',SEMI:';',COLON:':',SQT:"'",DQT:'"',COMMA:',',DOT:'.',LBKT:'[',RBKT:']',LBRC:'{',RBRC:'}',LPAR:'(',RPAR:')',AT:'@',
+  LEFT_CONTROL:'Ctrl',LCTRL:'Ctrl',RIGHT_CONTROL:'Ctrl',RCTRL:'Ctrl',LEFT_ALT:'Alt',LALT:'Alt',RIGHT_ALT:'Alt',RALT:'Alt',
+  LSHFT:'Shift',LEFT_SHIFT:'Shift',RSHFT:'Shift',RIGHT_SHIFT:'Shift',LGUI:'Win/Cmd',LEFT_GUI:'Win/Cmd',RGUI:'Win/Cmd',
+  KP_NUM:'Num Lock',KP_EQUAL:'Num =',KP_DIVIDE:'Num /',KP_MULTIPLY:'Num *',KP_MINUS:'Num -',KP_PLUS:'Num +',KP_ENTER:'Num Enter',KP_DOT:'Num .',
+};
+const SHORT = s => s.replace('Caps Lock','Caps').replace('Escape','Esc').replace('Backspace','Bksp').replace('Delete','Del')
+  .replace('Page Up','PgUp').replace('Page Down','PgDn').replace('Win/Cmd','Win').replace('Play/Pause','Play')
+  .replace('Previous track','Prev').replace('Next track','Next').replace('Num Lock','NumLk').replace('Screensaver','Saver')
+  .replace('Volume up','Vol+').replace('Volume down','Vol-').replace('Bluetooth','BT');
+function keyName(c){
+  const m = c.match(/^([LR][CSAG])\((.+)\)$/);
+  if (m) return `${MOD[m[1]]}+${keyName(m[2])}`;
+  if (NAMES[c]) return NAMES[c];
+  let x = c.match(/^(?:N|NUMBER_)(\d)$/); if (x) return x[1];
+  x = c.match(/^KP_N(\d)$/); if (x) return `Num ${x[1]}`;
+  if (/^[A-Z]$/.test(c) || /^F\d+$/.test(c)) return c;
+  return c.toLowerCase().replace(/_/g,' ');
+}
+const LONG = {'&kp LSHFT':'Left Shift','&kp RSHFT':'Right Shift','&kp LEFT_ALT':'Left Alt','&kp RIGHT_ALT':'Right Alt',
+  '&kp LEFT_CONTROL':'Left Ctrl','&kp RIGHT_CONTROL':'Right Ctrl'};
+const BL_NAMES = {BL_TOG:'Backlight on/off',BL_INC:'Backlight brighter',BL_DEC:'Backlight dimmer',BL_OFF:'Backlight off'};
+
+/* describe(raw) -> what a binding means in plain words.
+   t/s = text printed on the keycap, full = summary text, plain = explanation. */
+function describe(raw){
+  const [b, ...a] = raw.split(' ');
+  const R = (kind, t, full, s='', plain='') => ({kind, t, full: full ?? t, s, plain});
+  switch (b) {
+    case '&kp': { const n = keyName(a[0]); return R('key', n, n, '', `Sends ${n} when pressed.`); }
+    case '&tpf': { const h = keyName(a[0]), t = keyName(a[1]);
+      return R('hold', t, `${t} (hold: ${h})`, `${h} hold`, `A quick tap sends ${t}. Holding it past the tapping term sends ${h}.`); }
+    case '&mo': { const n = LAYER_SHORT[+a[0]]; return R('layer', n, `${n} (hold)`, '(hold)', `Hold it to use the ${n} layer. Let go to come back.`); }
+    case '&tog': { const n = LAYER_SHORT[+a[0]]; return R('layer', n, `${n} (toggle)`, '(toggle)', `Press to switch the ${n} layer on. Press again to switch it off.`); }
+    case '&trans': return R('faint', '▽', 'Pass-through', 'below', 'Does whatever the layer below does.');
+    case '&none': return R('faint', '—', 'None', '', 'Does nothing on this layer.');
+    case '&bt': return a[0] === 'BT_CLR'
+      ? R('sys', 'BT clear', 'Clear Bluetooth pairings', '', 'Forgets every paired device.')
+      : R('sys', `BT ${a[1]}`, `Bluetooth profile ${a[1]}`, 'profile', `Switches to Bluetooth profile ${a[1]}.`);
+    case '&bootloader': return R('danger', 'Bootloader', 'Bootloader', 'flash mode', 'Puts the keyboard into firmware-update mode. Only use it when you plan to flash.');
+    case '&bl': return R('sys', BL_NAMES[a[0]] || a[0], BL_NAMES[a[0]] || a[0], '', 'Controls the backlight.');
+    case '&rgb_ug': return a[0] === 'RGB_TOG'
+      ? R('sys', 'RGB on/off', 'RGB on/off', '', 'Turns the underglow lights on or off.')
+      : R('sys', `RGB ${a[1]}`, `RGB effect ${a[1]}`, '', 'Sets the underglow light effect.');
+    case '&studio_unlock': return R('sys', 'Studio', 'Studio unlock', '', 'Unlocks ZMK Studio so it accepts live edits.');
+    default: {
+      const name = b.slice(1);
+      if (name === 'macro_ver') return R('macro', 'macro_ver', 'Version macro', 'macro', 'Runs the version macro from version.dtsi.');
+      const m = DATA.macros.find(x => x.label === name);
+      if (m) { const dn = m.display || m.label; return R('macro', dn, `Macro: ${dn}`, 'macro', `Runs the macro "${dn}".`); }
+      return R('faint', raw, raw, '', 'Kept exactly as written. The editor does not understand this yet.');
+    }
+  }
+}
+const longName = raw => LONG[raw] || (raw.startsWith('&tpf ') ? `${describe(raw).t} (tap-hold)` : describe(raw).full);
+
+/* ---------- keycode list for search ---------- */
+const KEYLIST = (() => {
+  const codes = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  for (let i = 0; i <= 9; i++) codes.push('N' + i);
+  for (let i = 1; i <= 12; i++) codes.push('F' + i);
+  codes.push('ESC','TAB','SPACE','ENTER','BACKSPACE','DELETE','CAPSLOCK','LEFT','RIGHT','UP','DOWN','HOME','END','PG_UP','PG_DN',
+    'MINUS','EQUAL','COMMA','DOT','FSLH','SEMI','SQT','GRAVE','LBKT','RBKT','BSLH','K_MENU','C_PLAY_PAUSE','C_MUTE',
+    'C_VOL_UP','C_VOL_DN','K_SCREENSAVER','LC(C)','LC(V)','LC(X)','LC(Z)','LC(A)','LG(C)','LG(V)','LG(X)','LG(Z)','LG(A)',
+    'LG(SPACE)','LG(L)','LG(D)','LG(E)','LG(TAB)','LA(F4)');
+  const ALIAS = {'LC(C)':'copy','LC(V)':'paste','LC(X)':'cut','LC(Z)':'undo','LC(A)':'select all','LG(C)':'copy mac command',
+    'LG(V)':'paste mac command','LG(X)':'cut mac command','LG(Z)':'undo mac command','LG(A)':'select all mac command',
+    'LG(L)':'lock screen','LG(D)':'desktop show','LG(E)':'file explorer','LG(TAB)':'switch windows','LG(SPACE)':'spotlight search',
+    'LA(F4)':'close window','ESC':'cancel back','BACKSPACE':'backspace erase','DELETE':'forward delete','K_MENU':'context menu',
+    'C_MUTE':'mute sound','C_PLAY_PAUSE':'play pause media','C_VOL_UP':'louder volume up','C_VOL_DN':'quieter volume down',
+    'K_SCREENSAVER':'screensaver lock','LEFT':'arrow left','RIGHT':'arrow right','UP':'arrow up','DOWN':'arrow down'};
+  return codes.map(c => ({c, n: keyName(c), alias: ALIAS[c] || ''}));
+})();
+const HOLDS = [
+  {v:'LSHFT', t:'Shift', s:'Acts like Shift while held'},
+  {v:'LCTRL', t:'Ctrl', s:'Acts like Ctrl while held'},
+  {v:'LALT', t:'Alt', s:'Acts like Alt while held'},
+  {v:'LGUI', t:'Win/Cmd', s:'Acts like the Windows or Command key'},
+];
+const LAYER_CHOICES = [
+  {v:'mo1', t:'Hold: Numpad', s:'Active only while held', raw:'&mo 1'},
+  {v:'mo2', t:'Hold: Bluetooth', s:'Active only while held', raw:'&mo 2'},
+  {v:'mo3', t:'Hold: Macro', s:'Active only while held', raw:'&mo 3'},
+  {v:'tog1', t:'Toggle: Numpad', s:'On with one press, off with the next', raw:'&tog 1'},
+  {v:'tog2', t:'Toggle: Bluetooth', s:'On with one press, off with the next', raw:'&tog 2'},
+  {v:'tog3', t:'Toggle: Macro', s:'On with one press, off with the next', raw:'&tog 3'},
+];
+const BT_CHOICES = [0,1,2,3,4].map(n => ({v:'bt'+n, t:`Profile ${n}`, s:`Switch to Bluetooth slot ${n}`, raw:`&bt BT_SEL ${n}`}))
+  .concat([{v:'clr', t:'Clear pairings', s:'Forget every paired device', raw:'&bt BT_CLR'}]);
+const KINDS = [
+  {v:'key', ic:'key', t:'Key press', s:'Send a key or shortcut, like Escape or Ctrl+C'},
+  {v:'hold', ic:'fork', t:'Hold-tap', s:'One key, two jobs: a tap and a hold'},
+  {v:'layer', ic:'lines', t:'Layer', s:'Switch to another layer while held, or toggle it'},
+  {v:'macro', ic:'lines', t:'Macro', s:'Run a saved sequence of key presses'},
+  {v:'bt', ic:'circles', t:'Bluetooth', s:'Switch or clear a Bluetooth profile'},
+  {v:'trans', ic:'chev', t:'Transparent', s:'Use whatever the layer below does'},
+  {v:'none', ic:'x', t:'None', s:'Do nothing on this layer'},
+];
+const FLAVORS = [
+  {v:'balanced', t:'Balanced', s:'If another key is pressed and released while this one is down, it counts as a hold.', def:true},
+  {v:'hold-preferred', t:'Hold preferred', s:'Holds as soon as any other key is pressed while this one is down. Good for modifiers.'},
+  {v:'tap-preferred', t:'Tap preferred', s:'Quick rolls of other keys stay taps. Only a long press counts as a hold.'},
+  {v:'tap-unless-interrupted', t:'Tap unless interrupted', s:'Becomes a hold only after the term passes. Any other key press makes it a tap.'},
+];
+const CONCEPT = {
+  key:'<h4>Plain words</h4><p><b>Key press</b> sends one key, the same as tapping it. Shortcuts are written with modifiers: <code>LC(C)</code> means Ctrl+C.</p>',
+  hold:'<h4>Plain words</h4><p><b>Hold-tap</b> gives one key two jobs. A quick tap does the first job. Keeping it down past the <b>tapping term</b> (200 ms on your keyboard) does the second.</p>',
+  layer:'<h4>Plain words</h4><p>A <b>layer</b> is a full set of key meanings, like a mode. <b>Hold</b> uses a layer only while your finger is down. <b>Toggle</b> flips it on with one press and off with the next.</p>',
+  macro:'<h4>Plain words</h4><p>A <b>macro</b> plays a short list of key presses from one key, in order. It is a recording, not a shortcut.</p>',
+  bt:'<h4>Plain words</h4><p>The keyboard remembers up to five Bluetooth devices as profiles 0 to 4. Choosing a profile switches to that device.</p>',
+  trans:'<h4>Plain words</h4><p><b>Transparent</b> (▽) falls through to the layer below. It is useful on layers that only change a few keys.</p>',
+  none:'<h4>Plain words</h4><p><b>None</b> turns the key off on this layer. Nothing is sent when you press it.</p>',
+};
+
+/* ---------- state ---------- */
+const S = {
+  theme:'light', view:'home', layer:0, selKey:null,
+  flow:null, pending:[], build:{phase:'idle', branch:'keymap/guided-2026-11-05', msg:'', sha:'', backup:'', jobs:[], logs:[]},
+  hold:{t0:0}, tt:null,
+};
+
+/* ---------- effective bindings (pending changes applied) ---------- */
+function effRaw(L, pos){
+  for (let j = S.pending.length - 1; j >= 0; j--){
+    const p = S.pending[j];
+    if (p.bind && p.bind.L === L && p.bind.pos === pos) return p.bind.raw;
+  }
+  return DATA.layers[L].bindings[pos];
+}
+function usedCount(label){
+  let n = 0;
+  for (let L = 0; L < 4; L++) for (let p = 0; p < 76; p++) if (effRaw(L, p) === '&' + label) n++;
+  return n;
+}
+function reachable(){
+  const seen = new Set([0]), q = [0];
+  while (q.length){
+    const L = q.shift();
+    for (let p = 0; p < 76; p++){
+      const [b, arg] = effRaw(L, p).split(' ');
+      if ((b === '&mo' || b === '&tog') && !seen.has(+arg)){ seen.add(+arg); q.push(+arg); }
+    }
+  }
+  return seen;
+}
+function holdCount(){ return DATA.layers[0].bindings.filter(b => b.startsWith('&tpf ')).length; }
+function problems(){
+  const out = [], r = reachable();
+  if (!r.has(2)) out.push({sev:'error', id:'l2',
+    title:"Your Bluetooth/bootloader layer (layer 2 'mod') can't be reached. No key opens it.",
+    detail:'Keys on that layer, including the Bluetooth profile keys and the bootloader, can never be used until some key switches to it.'});
+  DATA.combos.forEach(c => {
+    if (c.layers === null && !c.studio){
+      out.push({sev:'warn', id:'c-' + c.node,
+        title:`Combo '${c.node}' works on every layer`,
+        detail:`${comboKeys(c)} types ${describe(c.bindings[0]).full} anywhere, even while you type normally. Limit it to Base, or check the name.`});
+    }
+  });
+  const mp = DATA.macros.find(m => m.label === 'macro_parens');
+  if (mp && usedCount('macro_parens') === 0) out.push({sev:'info', id:'m-parens',
+    title:"macro_parens isn't on any key yet",
+    detail:'It is defined in macros.dtsi but nothing triggers it. Create a macro can put it on a key.'});
+  return out;
+}
+const comboKeys = c => c.keyPositions.map(p => longName(DATA.layers[0].bindings[p])).join(' + ');
+const comboAction = c => describe(c.bindings[0]).full;
+
+/* ---------- diff builders (surgical, column-preserving) ---------- */
+function bindingHunks(L, pos, raw){
+  const sp = DATA.layers[L].spans[pos];
+  const old = DATA.keymapLines[sp.line];
+  const nu = old.slice(0, sp.s) + raw.padEnd(sp.e - sp.s) + old.slice(sp.e);
+  return [{file:'adv360.keymap', n: sp.line + 1, minus: old, plus: [nu]}];
+}
+function termHunks(term){
+  const i = DATA.hold.termLine, old = DATA.keymapLines[i];
+  return [{file:'adv360.keymap', n: i + 1, minus: old, plus: [old.replace(/<\d+>/, `<${term}>`)]}];
+}
+function triggerHunks(list){
+  const i = DATA.hold.triggerLine, old = DATA.keymapLines[i];
+  return [{file:'adv360.keymap', n: i + 1, minus: old, plus: [old.replace(/<[\d\s]+>/, `<${list.join(' ')}>`)]}];
+}
+function macroHunks(m, steps){
+  const lines = m.file === 'macros.dtsi' ? DATA.macroLines : DATA.keymapLines;
+  const old = lines[m.line], ind = old.match(/^\s*/)[0];
+  return [{file: m.file, n: m.line + 1, minus: old, plus: [ind + 'bindings = ' + steps.map(s => `<${s}>`).join(', ') + ';']}];
+}
+function sampleEntries(){
+  return [
+    {title:"Key 'Caps Lock' on Base layer: Caps Lock → Escape", note:'Plain key swap.', bind:{L:0,pos:66,raw:'&kp ESC'}, hunks: bindingHunks(0,66,'&kp ESC')},
+    {title:`Hold-tap timing: ${DATA.hold.term} ms → 180 ms (affects ${holdCount()} hold-tap keys)`, note:'Shared setting for every tpf key.', hunks: termHunks(180)},
+  ];
+}
+
+/* ---------- flow entries: what a finished flow will change ---------- */
+function flowEntries(id, d){
+  switch (id){
+    case 'change': {
+      const raw = rawFor(d); if (d.pos == null || !raw) return [];
+      const old = DATA.layers[d.layer].bindings[d.pos], od = describe(old), nd = describe(raw);
+      return [{title:`Key '${od.full}' on ${LAYER_LONG[d.layer]}: ${od.full} → ${nd.full}`, note: nd.plain,
+        bind:{L:d.layer,pos:d.pos,raw}, hunks: bindingHunks(d.layer,d.pos,raw)}];
+    }
+    case 'hold': {
+      if (d.pos == null || !d.tap || !d.hold) return [];
+      const out = [], raw = `&tpf ${d.hold} ${d.tap}`;
+      const od = describe(DATA.layers[d.layer].bindings[d.pos]), nd = describe(raw);
+      out.push({title:`Key '${od.full}' on ${LAYER_LONG[d.layer]}: ${od.full} → ${nd.full}`, note: nd.plain,
+        bind:{L:d.layer,pos:d.pos,raw}, hunks: bindingHunks(d.layer,d.pos,raw)});
+      if (!DATA.hold.trigger.includes(d.pos)){
+        const list = [...DATA.hold.trigger, d.pos].sort((a,b) => a - b);
+        out.push({title:`Add position ${d.pos} to the hold-trigger list`, note:'Without this, holds on this key may not register.', hunks: triggerHunks(list)});
+      }
+      if ((d.term ?? DATA.hold.term) !== DATA.hold.term){
+        out.push({title:`Hold-tap timing: ${DATA.hold.term} ms → ${d.term} ms (affects all ${holdCount()} hold-tap keys)`, note:'Shared setting for every tpf key.', hunks: termHunks(d.term)});
+      }
+      return out;
+    }
+    case 'macro': {
+      if (!d.macro) return [];
+      const m = DATA.macros.find(x => x.label === d.macro), out = [];
+      if (JSON.stringify(d.steps) !== JSON.stringify(m.bindings)){
+        out.push({title:`Macro '${m.label}' now types: ${d.steps.map(s => describe(s).full).join(', ') || 'nothing'}`,
+          note:'Edits the macro definition in macros.dtsi.', hunks: macroHunks(m, d.steps)});
+      }
+      if (d.pos != null){
+        const od = describe(DATA.layers[d.layer].bindings[d.pos]), raw = `&${m.label}`, nd = describe(raw);
+        out.push({title:`Key '${od.full}' on ${LAYER_LONG[d.layer]}: ${od.full} → ${nd.full}`, note: nd.plain,
+          bind:{L:d.layer,pos:d.pos,raw}, hunks: bindingHunks(d.layer,d.pos,raw)});
+      }
+      return out;
+    }
+    case 'combo': {
+      if (!d.pair || d.pair.length !== 2 || !d.key) return [];
+      const names = d.pair.map(p => longName(DATA.layers[0].bindings[p])).join(' + ');
+      const act = describe(`&kp ${d.key}`).full, where = d.layers === 'all' ? 'every layer' : 'Base layer only';
+      const ins = DATA.keymapLines.findIndex(l => l.includes('Dfffsdfa {'));
+      const pos = [...d.pair].sort((x,y) => x - y).join(' ');
+      const plus = ['        combo_guided {', `            bindings = <&kp ${d.key}>;`, `            key-positions = <${pos}>;`,
+        ...(d.layers === 'all' ? [] : ['            layers = <0>;']), '        };', ''];
+      return [{title:`Combo: ${names} → ${act} (${where})`, note:'Adds a combo to the combos block in adv360.keymap.',
+        hunks:[{file:'adv360.keymap', n: ins + 1, minus: null, plus}]}];
+    }
+    case 'fix': {
+      if (!d.fix) return [];
+      const L = d.fix === 'A' ? 0 : 3, pos = d.fix === 'A' ? 61 : 0, raw = '&mo 2';
+      const od = describe(DATA.layers[L].bindings[pos]), nd = describe(raw);
+      const who = od.kind === 'faint' ? `Position ${pos}` : `'${od.full}'`;
+      return [{title:`Key ${who} on ${LAYER_LONG[L]}: ${od.full} → ${nd.full}`, note:'Makes the Bluetooth layer reachable.',
+        bind:{L,pos,raw}, hunks: bindingHunks(L,pos,raw)}];
+    }
+  }
+  return [];
+}
+function rawFor(d){
+  if (d.kind === 'key') return d.key ? `&kp ${d.key}` : null;
+  if (d.kind === 'hold') return d.hold && d.tap ? `&tpf ${d.hold} ${d.tap}` : null;
+  if (d.kind === 'layer') return (LAYER_CHOICES.find(o => o.v === d.layerOpt) || {}).raw || null;
+  if (d.kind === 'macro') return d.macro ? `&${d.macro}` : null;
+  if (d.kind === 'bt') return (BT_CHOICES.find(o => o.v === d.bt) || {}).raw || null;
+  if (d.kind === 'trans') return '&trans';
+  if (d.kind === 'none') return '&none';
+  return null;
+}
+
+/* ---------- diff rendering ---------- */
+function diffHTML(hunks){
+  return hunks.map(h => `<div class="hunk"><div class="hunk-h">${esc(h.file)} · line ${h.n}</div><pre class="diff">${
+    h.minus != null ? `<span class="del">- ${esc(h.minus)}</span>` : ''}${h.plus.map(p => `<span class="add">+ ${esc(p)}</span>`).join('')}</pre></div>`).join('');
+}
+
+/* ---------- board ---------- */
+const VB = (() => {
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const k of DATA.keys){
+    for (const [px, py] of [[k.x,k.y],[k.x+k.w,k.y],[k.x,k.y+k.h],[k.x+k.w,k.y+k.h]]){
+      let X = px, Y = py;
+      if (k.r){
+        const a = k.r * Math.PI / 180, dx = px - k.rx, dy = py - k.ry;
+        X = k.rx + dx * Math.cos(a) - dy * Math.sin(a);
+        Y = k.ry + dx * Math.sin(a) + dy * Math.cos(a);
+      }
+      x0 = Math.min(x0, X); y0 = Math.min(y0, Y); x1 = Math.max(x1, X); y1 = Math.max(y1, Y);
+    }
+  }
+  return [x0 - .35, y0 - .35, x1 - x0 + .7, y1 - y0 + .7];
+})();
+function boardSVG(sel, hl){
+  const L = S.layer;
+  const changed = new Set(S.pending.filter(p => p.bind && p.bind.L === L).map(p => p.bind.pos));
+  const body = DATA.keys.map((k, i) => {
+    const d = describe(effRaw(L, i));
+    const isSel = sel.includes(i), isHl = hl.includes(i);
+    const txt = SHORT(d.t);
+    const fs = Math.min(.36, 1.1 / Math.max(1, txt.length * .6));
+    const cx = k.x + k.w / 2, cy = k.y + k.h / 2;
+    const kind = d.kind === 'raw' ? 'key' : d.kind;
+    return `<g class="k k-${kind}${isSel ? ' is-sel' : ''}${isHl ? ' is-hl' : ''}" data-act="key" data-pos="${i}" tabindex="0" role="button" aria-label="Position ${i}: ${esc(d.full)}"${k.r ? ` transform="rotate(${k.r} ${k.rx} ${k.ry})"` : ''}>` +
+      `<rect class="sh" x="${k.x + .02}" y="${k.y + .08}" width="${k.w - .04}" height="${k.h - .02}" rx=".17"/>` +
+      `<rect class="cap" x="${k.x + .03}" y="${k.y + .02}" width="${k.w - .06}" height="${k.h - .06}" rx=".16"/>` +
+      `<text x="${cx}" y="${cy + (d.s ? -.1 : 0)}" font-size="${fs.toFixed(3)}">${esc(txt)}</text>` +
+      (d.s ? `<text class="sub" x="${cx}" y="${cy + .24}" font-size=".2">${esc(d.s)}</text>` : '') +
+      (d.kind === 'hold' ? `<circle class="hold-dot" cx="${k.x + k.w - .15}" cy="${k.y + .17}" r=".055"/>` : '') +
+      (changed.has(i) ? `<circle class="chg" cx="${k.x + .15}" cy="${k.y + .17}" r=".065"/>` : '') +
+      `</g>`;
+  }).join('');
+  return `<svg viewBox="${VB.map(v => v.toFixed(3)).join(' ')}" role="group" aria-label="Keyboard, ${LAYER_LONG[L]}">${body}</svg>`;
+}
+const LEGEND = [['sw-key','Key press'],['sw-hold','Hold-tap'],['sw-layer','Layer'],['sw-macro','Macro'],['sw-sys','Bluetooth, light, Studio'],['sw-danger','Bootloader'],['sw-faint','Pass-through or none']];
+function boardPanel({sel=[], hl=[], extra=''} = {}){
+  const r = reachable();
+  const warn = (S.layer === 2 && !r.has(2))
+    ? `<div class="callout warn">${svgIco('alert')}<div><b>No key opens this layer.</b> Nothing can switch to it, so its keys can't be used yet. <button class="link" data-act="open-fix">Fix it</button></div></div>` : '';
+  const tabs = LAYER_SHORT.map((n, i) => `<button role="tab" aria-selected="${S.layer === i}" data-act="layer" data-n="${i}">${n}${r.has(i) ? '' : '<i class="dot-warn" aria-label="unreachable"></i>'}</button>`).join('');
+  return `<section class="board-card" aria-label="Keyboard">
+    <div class="board-head"><div><p class="eyebrow">Your keyboard · ${LAYER_PLAIN[S.layer]}</p><h3>${LAYER_LONG[S.layer]}</h3></div>
+      <div class="seg" role="tablist" aria-label="Layers">${tabs}</div></div>
+    ${warn}
+    <div class="board-scroll">${boardSVG(sel, hl)}</div>
+    <div class="legend">${LEGEND.map(([c, t]) => `<span><i class="${c}"></i>${t}</span>`).join('')}<span><i style="background:var(--accent);border-color:transparent;border-radius:50%;width:9px;height:9px"></i>Changed, not built yet</span></div>
+    ${extra}
+  </section>`;
+}
+
+/* ---------- home ---------- */
+function taskCard(id, cls, icon, title, desc, foot, badge=''){
+  return `<button class="task ${cls}" data-act="open" data-id="${id}">
+    <span class="ico-wrap">${svgIco(icon)}</span>
+    <span class="tt"><b>${title}</b><p>${desc}</p></span>
+    <span class="foot"><span>${foot}</span>${badge}</span></button>`;
+}
+function keyDetail(pos){
+  const raw = effRaw(S.layer, pos), d = describe(raw);
+  return `<div class="now" style="flex-direction:column;align-items:flex-start">
+    <span class="pill">Position ${pos} · ${LAYER_LONG[S.layer]}</span>
+    <b>${esc(d.full)}</b>
+    <span class="plain">${esc(d.plain)}</span>
+    <code>${esc(raw)}</code>
+    <button class="btn primary" data-act="start-change">Change this key ${svgIco('chev')}</button>
+  </div>`;
+}
+function homeView(){
+  const probs = problems(), errs = probs.filter(p => p.sev === 'error'), pend = S.pending.length;
+  const fixBadge = errs.length ? `<span class="badge bad">${errs.length} problem</span>` : `<span class="badge good">All clear</span>`;
+  const fixDesc = errs.length
+    ? `Find and fix layers nothing can reach, plus a few things to check.<span class="prob-line">${esc(errs[0].title)}</span>`
+    : 'Checks for unreachable layers, odd combos and unused macros. Nothing needs fixing right now.';
+  const buildBadge = pend ? `<span class="badge info">${pend} waiting</span>` : '';
+  return `
+  <section class="hero">
+    <p class="eyebrow">Advantage360 Pro · your keymap</p>
+    <h1>What would you <em>like</em> to do?</h1>
+    <p class="lede">Every change is a draft until you review it and build. Nothing reaches your keyboard until you decide to flash it.</p>
+  </section>
+  <div class="heads-up">${svgIco('shield')}<div><b>Your keymap file in git is the source of truth.</b> If you also edit with ZMK Studio, those live edits happen on the keyboard and can override the file. Studio unlock is in Add a key combo.</div></div>
+  <div class="home">
+    <div>
+      <div class="tasks">
+        ${taskCard('change','t1','key','Change a key','Make a key do something else, like swapping Caps Lock for Escape.','About 1 minute')}
+        ${taskCard('hold','t2','fork','Make a key do two things','One key, two jobs: a quick tap for one action, a hold for another.','About 2 minutes')}
+        ${taskCard('macro','t3','lines','Create a macro','Record a short sequence, like ( ) and Left, and put it on a key.','About 2 minutes')}
+        ${taskCard('combo','t4','circles','Add a key combo','Press two keys together to trigger something. Your Studio unlock lives here.','About 2 minutes')}
+        <button class="task t5 wide" data-act="open" data-id="fix">
+          <span class="ico-wrap">${svgIco('alert')}</span>
+          <span class="tt"><b>Fix problems</b><p>${fixDesc}</p></span>
+          ${fixBadge}
+        </button>
+        ${taskCard('build','t6','box','Build firmware','Save your changes to a branch and let GitHub build the firmware file.', pend ? `${pend} change${pend>1?'s':''} ready` : 'Builds take a few minutes', buildBadge)}
+      </div>
+      <div class="pathline"><span>1 · Draft in plain words</span><i>→</i><span>2 · Review the real file diff</span><i>→</i><span>3 · Build on a branch</span><i>→</i><span>4 · You flash, on purpose</span></div>
+    </div>
+    <div class="home-board">
+      ${boardPanel({sel: S.selKey == null ? [] : [S.selKey],
+        extra: S.selKey == null
+          ? '<p class="small muted" style="margin:12px 2px 0">Click any key to see what it does. Switch layers with the tabs above the board.</p>'
+          : keyDetail(S.selKey)})}
+    </div>
+  </div>`;
+}
+
+/* ---------- flow definitions ---------- */
+const selPos = d => d.pos != null ? [d.pos] : [];
+const selPair = d => d.pair || [];
+const none = () => [];
+
+function resultsHTML(field, q, act='choose'){
+  const ql = (q || '').toLowerCase().trim();
+  const list = KEYLIST.filter(k => !ql || k.n.toLowerCase().includes(ql) || k.c.toLowerCase().includes(ql) || k.alias.includes(ql)).slice(0, 14);
+  if (!list.length) return '<p class="muted small">No match. Try a shorter word, like "copy" or "F5".</p>';
+  const cur = S.flow ? S.flow.d[field] : null;
+  return `<div class="opts">${list.map(k => `<button class="opt ${cur === k.c ? 'on' : ''}" data-act="${act}" data-f="${field}" data-v="${esc(k.c)}"><b>${esc(k.n)}</b><span>${esc(k.c)}</span></button>`).join('')}</div>`;
+}
+function searchBox(field, act='choose', ph='Search keys, e.g. escape, F5, copy'){
+  const q = S.flow.d['q_' + field] || '';
+  return `<label class="search"><span class="sr">Search keys</span><input type="search" placeholder="${esc(ph)}" value="${esc(q)}" data-in="search" data-field="${field}" data-act-name="${act}" autocomplete="off"></label>
+    <div class="results" id="res-${field}">${resultsHTML(field, q, act)}</div>`;
+}
+function optionGrid(list, field, cur){
+  return `<div class="opts">${list.map(o => `<button class="opt ${cur === o.v ? 'on' : ''}" data-act="choose" data-f="${field}" data-v="${o.v}"><b>${esc(o.t)}</b><span>${esc(o.s || '')}</span></button>`).join('')}</div>`;
+}
+function now(d){
+  if (d.pos == null) return '';
+  const x = describe(effRaw(d.layer, d.pos));
+  return `<div class="now"><span class="pill">${LAYER_LONG[d.layer]} · position ${d.pos}</span><b>${esc(x.full)}</b><span class="plain">${esc(x.plain)}</span></div>`;
+}
+function reviewView(id, d){
+  const es = flowEntries(id, d);
+  if (!es.length) return '<p>Nothing to review yet. Go back and finish the earlier steps.</p>';
+  const extra = (id === 'hold' && es.length > 1)
+    ? '<div class="callout info">The extra lines are needed for this to work. They touch shared settings, so every hold-tap is affected.</div>' : '';
+  return `<p>Here is what will change, in plain words.</p>
+    <ul class="sum">${es.map(e => `<li><b>${esc(e.title)}</b>${e.note ? `<small>${esc(e.note)}</small>` : ''}</li>`).join('')}</ul>
+    ${extra}
+    <details class="raw"><summary>Show the raw file change</summary>${es.map(e => diffHTML(e.hunks)).join('')}</details>
+    <div class="rowbtns"><button class="btn primary big" data-act="save">Add to pending changes</button></div>
+    <p class="muted small" style="margin-top:12px">Nothing is written to git yet. You can remove any change from the Build screen.</p>`;
+}
+const CHANGE_KIND_BODY = {
+  key: d => `<p>Search for the key to send.</p>${searchBox('key')}`,
+  hold: d => `<p>First, the <b>hold</b> job: what happens if you keep the key down.</p>${optionGrid(HOLDS,'hold',d.hold)}
+    <p style="margin-top:16px">Then the <b>tap</b> job: what a quick press sends.</p>${searchBox('tap')}`,
+  layer: d => `<p>Pick a layer and how it works.</p>${optionGrid(LAYER_CHOICES,'layerOpt',d.layerOpt)}`,
+  macro: d => `<p>Pick a saved macro. Macros that aren't on a key yet are marked.</p>${macroOptions(d)}`,
+  bt: d => `<p>Pick a Bluetooth profile slot, or clear all pairings.</p>${optionGrid(BT_CHOICES,'bt',d.bt)}`,
+  trans: () => '<p>Nothing to choose. This key will pass through to the layer below.</p>',
+  none: () => '<p>Nothing to choose. This key will do nothing on this layer.</p>',
+};
+function macroOptions(d){
+  const list = DATA.macros.filter(m => m.file === 'macros.dtsi' && m.label.startsWith('macro_'));
+  return `<div class="opts scroll">${list.map(m => {
+    const used = usedCount(m.label) > 0;
+    return `<button class="opt ${d.macro === m.label ? 'on' : ''}" data-act="choose" data-f="macro" data-v="${m.label}"><b>${esc(m.label)}</b><span>${m.bindings.map(b => describe(b).full).join(' → ')}</span><span>${used ? 'On a key' : 'Not on a key yet'}</span></button>`;
+  }).join('')}</div>`;
+}
+function conceptKind(k){ return CONCEPT[k] || ''; }
+
+/* hold-tap editor (tpf) */
+function tpfEditor(d){
+  const term = d.term ?? DATA.hold.term, flv = d.flavor ?? 'balanced';
+  const sample = DATA.layers[0].bindings[1];
+  const trySample = describe(sample);
+  return `<div class="tpf">
+    <div class="tpf-row"><span>Tapping term</span><span><output id="termVal">${term}</output> <span class="muted small">ms</span></span></div>
+    <input type="range" min="100" max="400" step="10" value="${term}" data-in="term" aria-label="Tapping term in milliseconds">
+    <p class="small muted" style="margin:-4px 0 0">A press only becomes a hold after you have held it this long. Lower means holds start sooner, and accidental holds become more likely.</p>
+    <fieldset class="flav"><legend>Flavor: how taps and holds compete</legend>
+      ${FLAVORS.map(f => `<button class="flav-o ${flv === f.v ? 'on' : ''}" data-act="choose" data-f="flavor" data-v="${f.v}"><b>${f.t}</b><span>${f.s}</span>${f.def ? '<em>ZMK default</em>' : ''}</button>`).join('')}
+    </fieldset>
+    <div class="tryit">
+      <button class="hold-btn" data-hold>Press and hold me</button>
+      <p id="tryRes">Try a quick tap, then a long press. This example is the existing key ${esc(trySample.full)}: tap ${esc(describe(sample).t)}, hold ${esc(trySample.s.replace(' hold',''))}.</p>
+    </div>
+    <p class="warn-line">Hold-taps share one timing setting. Changing it here changes the ${holdCount()} existing tpf keys on your Base layer too.</p>
+    <details class="raw" style="margin-top:0"><summary>What are trigger keys?</summary>
+      <p class="small" style="margin-top:10px">Only these ${DATA.hold.trigger.length} positions can start a hold while a tpf key is pending: ${DATA.hold.trigger.join(', ')}. Any other key counts as a tap. Your file sets this list once for all tpf keys.</p></details>
+  </div>`;
+}
+
+/* macro editor */
+const PREVIEW_CH = {LPAR:'(',RPAR:')',LBKT:'[',RBKT:']',LBRC:'{',RBRC:'}',SQT:"'",DQT:'"',SPACE:' ',COMMA:',',DOT:'.',MINUS:'-',EQUAL:'=',SEMI:';',FSLH:'/',BSLH:'\\',GRAVE:'`'};
+function macroPreview(steps){
+  const buf = []; let c = 0;
+  for (const raw of steps){
+    const code = raw.replace(/^&kp /, '').trim();
+    if (code === 'LEFT'){ c = Math.max(0, c - 1); continue; }
+    if (code === 'RIGHT'){ c = Math.min(buf.length, c + 1); continue; }
+    if (raw === '&trans' || raw === '&none') continue;
+    const ch = PREVIEW_CH[code] ?? (/^[A-Z0-9]$/.test(code) ? code : null);
+    const text = ch ?? `[${keyName(code)}]`;
+    buf.splice(c, 0, text); c++;
+  }
+  const before = buf.slice(0, c).join(''), after = buf.slice(c).join('');
+  return `${esc(before)}<i class="caret"></i>${esc(after)}`;
+}
+function macroEditor(d){
+  const steps = d.steps || [];
+  const rows = steps.map((raw, i) => {
+    const x = describe(raw);
+    return `<li class="step-row"><span class="n">${i + 1}</span><span class="sn"><b>${esc(x.full)}</b><small>${esc(raw)}</small></span>
+      <button class="ib" data-act="mv" data-i="${i}" data-dir="-1" ${i === 0 ? 'disabled' : ''} aria-label="Move step up">${svgIco('up')}</button>
+      <button class="ib" data-act="mv" data-i="${i}" data-dir="1" ${i === steps.length - 1 ? 'disabled' : ''} aria-label="Move step down">${svgIco('down')}</button>
+      <button class="ib" data-act="rm" data-i="${i}" aria-label="Remove step">${svgIco('x')}</button></li>`;
+  }).join('');
+  return `<ol class="steps">${rows || '<li class="muted">No steps yet. Add one below.</li>'}</ol>
+    <div class="preview"><p class="eyebrow">What it types</p><div class="typed">${macroPreview(steps) || '<span class="muted">nothing</span>'}</div>
+    <p class="small muted" style="margin-top:8px">The cursor (|) shows where the text ends up. Reorder steps with the arrows; the file diff updates on the review screen.</p></div>
+    <details><summary style="cursor:pointer;font-weight:650;margin-bottom:10px">Add a step</summary>${searchBox('addq','addstep','Add a key: e.g. left, shift, 9')}</details>`;
+}
+
+const FLOWS = {
+  change: {title:'Change a key', steps:[
+    {t:'Pick the key to change', short:'Pick key', board:'pick', sel:selPos, canNext:d => d.pos != null,
+      body: d => d.pos == null
+        ? `<p>Click a key on the board. The board is showing the <b>${LAYER_LONG[S.layer]}</b>. Use the tabs above it to find a key on another layer.</p>`
+        : `<p>You picked <b>position ${d.pos}</b>. Right now it does this:</p>${now(d)}<p class="small muted" style="margin-top:12px">Not the right key? Click another one on the board.</p>`,
+      concept: '<h4>Plain words</h4><p>Every physical key has a position number from 0 to 75. The editor uses it to know exactly which key you mean, so you never have to remember numbers.</p><p><b>Layers</b> are full sets of key meanings. You use one at a time: Base is your everyday layer, and the others are alternates you reach with special keys.</p>'},
+    {t:'What should it do?', short:'Choose action', sel:selPos, canNext: d => !!d.kind,
+      body: d => `<p>Pick the kind of job this key should do.</p><div class="kinds">${KINDS.map(k => `<button class="kind ${d.kind === k.v ? 'on' : ''}" data-act="choose" data-f="kind" data-v="${k.v}">${svgIco(k.ic)}<b>${k.t}</b><small>${k.s}</small></button>`).join('')}</div>`,
+      concept: '<h4>Plain words</h4><p>What a key does is called its <b>binding</b>. The file writes it as code, such as <code>&amp;kp ESC</code> (send Escape). You never need to write that yourself.</p>'},
+    {t:'Choose the details', short:'Details', sel:selPos, canNext: d => !!rawFor(d),
+      body: d => `${d.kind ? CHANGE_KIND_BODY[d.kind](d) : '<p>Go back and pick an action.</p>'}`,
+      concept: d => conceptKind(d.kind)},
+    {t:'Review changes', short:'Review', final:true, sel:selPos, body: d => reviewView('change', d)},
+  ]},
+  hold: {title:'Make a key do two things', steps:[
+    {t:'Pick the key', short:'Pick key', board:'pick', sel:selPos, canNext: d => d.pos != null,
+      body: d => d.pos == null
+        ? '<p>Pick any key. It keeps its tap job and gets a hold job too.</p>'
+        : `<p>You picked <b>position ${d.pos}</b>. It does this today:</p>${now(d)}`,
+      concept: CONCEPT.hold},
+    {t:'The tap job', short:'Tap', sel:selPos, canNext: d => !!d.tap,
+      body: d => `<p>What does a <b>quick tap</b> send? Search and pick one key.</p>${searchBox('tap')}`,
+      concept: '<h4>Plain words</h4><p>A quick tap is everything you do without holding: press and let go before the tapping term is up.</p>'},
+    {t:'The hold job', short:'Hold', sel:selPos, canNext: d => !!d.hold,
+      body: d => `<p>What should happen if you <b>keep it held</b>? Most people use a modifier here.</p>${optionGrid(HOLDS,'hold',d.hold)}`,
+      concept: '<h4>Plain words</h4><p>A <b>modifier</b> is a key like Shift or Ctrl that changes what other keys do. Holding one of these while you tap a letter produces a capital or a shortcut.</p>'},
+    {t:'Timing and feel', short:'Timing', sel:selPos, body: d => `<p>This is the hold-tap editor for the shared <code>tpf</code> behavior. Try the button below to feel the difference.</p>${tpfEditor(d)}`,
+      concept: '<h4>Plain words</h4><p><b>Hold-tap</b> decides between tap and hold by time and by what other keys do. The <b>tapping term</b> is the time line; the <b>flavor</b> is the rule for other keys.</p>'},
+    {t:'Review changes', short:'Review', final:true, sel:selPos, body: d => reviewView('hold', d)},
+  ]},
+  macro: {title:'Create a macro', steps:[
+    {t:'Start from a macro', short:'Start', canNext: d => !!d.macro,
+      body: d => `<p>A macro is a short recording. Pick one of the macros already in <code>macros.dtsi</code> to start from, then edit it.</p>
+        ${macroOptions(d)}`,
+      concept: CONCEPT.macro},
+    {t:'Edit the steps', short:'Steps', canNext: d => (d.steps || []).length > 0,
+      body: d => `<p>Steps run from top to bottom. Use the arrows to reorder them, or add a key.</p>${macroEditor(d)}`,
+      concept: '<h4>Plain words</h4><p>Order matters. <code>(</code>, <code>)</code>, then Left types two brackets and leaves the cursor between them, which is why this macro exists.</p>'},
+    {t:'Put it on a key', short:'Key', board:'pick', sel:selPos, canNext: d => d.pos != null,
+      body: d => d.pos == null
+        ? '<p>Pick the key that should run this macro. You can change it later.</p>'
+        : `<p>This key will run <b>${esc(d.macro)}</b>.</p>${now(d)}`,
+      concept: '<h4>Plain words</h4><p>The macro itself does not know which key triggers it. The key is a separate binding, so changing one never changes the other.</p>'},
+    {t:'Review changes', short:'Review', final:true, sel:selPos, body: d => reviewView('macro', d)},
+  ]},
+  combo: {title:'Add a key combo', steps:[
+    {t:'Your existing combos', short:'Combos', hl: d => (DATA.combos[d.cSel || 0] || {}).keyPositions || [],
+      body: d => `<p>Combos already on your keyboard. Pick one to light its keys on the board.</p>
+        <ul class="combos">${DATA.combos.map((c, i) => `<li><button class="combo ${(d.cSel || 0) === i ? 'on' : ''}" data-act="cmb" data-i="${i}">
+          <span class="combo-k">${esc(comboKeys(c))}</span><b>→ ${esc(comboAction(c))}</b>
+          <span class="tags">${c.studio ? '<em class="tag info">Studio builds only</em>' : ''}${c.layers ? `<em class="tag">${c.layers.map(l => LAYER_SHORT[l]).join(', ')} layer only</em>` : '<em class="tag warn">Every layer</em>'}</span>
+        </button></li>`).join('')}</ul>
+        ${(DATA.combos[d.cSel || 0] || {}).studio
+          ? `<div class="callout info">${svgIco('shield')}<div><b>The Studio unlock combo only exists in Studio builds.</b> It sits inside <code>#if defined(CONFIG_ZMK_STUDIO)</code>, so normal firmware ignores it. It is an extra combo, not a remapped key, so Left and Right Shift still work as Shift.</div></div>` : ''}`,
+      next: 'Add a new combo',
+      concept: '<h4>Plain words</h4><p>A <b>combo</b> fires when you press several keys together. Shift and Shift together sends one action, while each key still works alone.</p>'},
+    {t:'Pick two keys', short:'Two keys', board:'pair', hl: selPair, sel: none, canNext: d => (d.pair || []).length === 2,
+      body: d => {
+        const p = d.pair || [];
+        const clash = DATA.combos.find(c => p.length === 2 && c.keyPositions.length === 2 && c.keyPositions.every(x => p.includes(x)));
+        return `<p>Click two keys on the board. Click a picked key again to remove it.</p>
+          <div class="ro-list">${p.length ? p.map(x => `<div class="ro"><div><b>${esc(longName(DATA.layers[0].bindings[x]))}</b><small>position ${x}</small></div></div>`).join('') : '<div class="ro muted">No keys picked yet</div>'}</div>
+          ${clash ? `<div class="callout warn">${svgIco('alert')}<div>That pair already has a combo: <b>${esc(comboAction(clash))}</b>. Pick different keys, or edit that one instead.</div></div>` : ''}`;
+      },
+      concept: '<h4>Plain words</h4><p>Choose keys that are easy to press together but rarely pressed together by accident. Keys in the same hand are usually the easiest pair.</p>'},
+    {t:'What should it do?', short:'Action', sel: selPair, canNext: d => !!d.key,
+      body: d => `<p>Search for the key the combo should send, and where it should work.</p>${searchBox('key')}
+        <p style="margin-top:14px"><b>Where?</b></p>${optionGrid([{v:'base',t:'Base layer only',s:'Safest. Other layers keep their normal keys.'},{v:'all',t:'Every layer',s:'Works wherever you are. Can clash with typing.'}],'layers',d.layers || 'base')}`,
+      concept: '<h4>Plain words</h4><p>Limiting a combo to one layer keeps it from firing while you use other layers. That is the safer default.</p>'},
+    {t:'Review changes', short:'Review', final:true, sel: selPair, body: d => reviewView('combo', d)},
+  ]},
+  fix: {title:'Fix problems', steps:[
+    {t:'What the editor found', short:'Found', canNext: () => true,
+      body: () => {
+        const ps = problems();
+        return `<p>These are the checks that run on your keymap. Problems stop a layer or a key from working. Warnings are worth a look.</p>
+          ${ps.length ? ps.map(p => `<div class="prob"><span class="badge ${p.sev === 'error' ? 'bad' : p.sev === 'warn' ? 'warn' : 'info'}">${p.sev === 'error' ? 'Problem' : p.sev === 'warn' ? 'Check' : 'Note'}</span><div><b>${esc(p.title)}</b><small>${esc(p.detail)}</small></div></div>`).join('') : '<p>Nothing to fix. Nice.</p>'}`;
+      },
+      concept: '<h4>Plain words</h4><p><b>Layers are modes.</b> Your Bluetooth keys live on layer 2. Something has to switch to that layer, like holding a key. Right now no key does, so those keys are dead.</p>'},
+    {t:'Choose a fix', short:'Fix', hl: d => d.fix === 'A' ? [61] : d.fix === 'B' ? [0] : [], sel: none, canNext: d => !!d.fix,
+      body: d => `<p>Both options add one key that holds open the Bluetooth layer. Pick the one that suits you.</p>
+        <div class="opts">
+          <button class="opt wide ${d.fix === 'B' ? 'on' : ''}" data-act="choose" data-f="fix" data-v="B"><b>B. Put it on the Macro layer (recommended)</b><span>Holding the Macro key, then this key at position 0, opens Bluetooth. Nothing you use on Base changes.</span></button>
+          <button class="opt wide ${d.fix === 'A' ? 'on' : ''}" data-act="choose" data-f="fix" data-v="A"><b>A. Put it on the Menu key (position 61)</b><span>Holding Menu on the Base layer opens Bluetooth. You lose the Menu key on Base.</span></button>
+        </div>`,
+      concept: '<h4>Plain words</h4><p>A key that <b>holds a layer</b> (<code>&amp;mo 2</code>) only works while held. Putting it on the Macro layer means you hold two keys at once. Both are fine.</p>'},
+    {t:'Review changes', short:'Review', final:true, body: d => reviewView('fix', d), sel: none,
+      hl: d => d.fix === 'A' ? [61] : d.fix === 'B' ? [0] : []},
+  ]},
+  build: {title:'Build firmware', steps:[
+    {t:'Check what you are building', short:'Check', board:false, canNext: () => S.pending.length > 0,
+      body: () => {
+        if (!S.pending.length) return `<p>Nothing is waiting. Make a change first, or load the sample changes to see the whole path.</p>
+          <div class="rowbtns"><button class="btn primary" data-act="load-sample">Load sample changes</button></div>`;
+        return `<p>These will be committed together. Remove anything you do not want.</p>
+          <div class="ro-list">${S.pending.map((p, i) => `<div class="ro"><div><b>${esc(p.title)}</b><small>${esc(p.note || '')}</small></div>
+            <button class="btn small ghost" data-act="drop" data-i="${i}">Remove</button></div>`).join('')}</div>
+          <details class="raw"><summary>Show the raw file changes</summary>${S.pending.map(p => diffHTML(p.hunks)).join('')}</details>`;
+      },
+      concept: '<h4>Plain words</h4><p>A <b>branch</b> is a parallel copy of your config. Committing to a new branch keeps V3.0 untouched, so you can compare or throw the change away.</p>'},
+    {t:'Save to a branch', short:'Branch', board:false, canNext: () => S.build.phase === 'committed',
+      body: () => {
+        const b = S.build, msg = b.msg || defaultMsg();
+        return `<p>Commits your changes to a new branch and pushes it to GitHub. A backup of the current state is made first.</p>
+          <label class="field">Branch name<input data-in="branch" value="${esc(b.branch)}" ${b.phase !== 'idle' ? 'disabled' : ''}></label>
+          <label class="field">Commit message<textarea rows="3" data-in="msg" ${b.phase !== 'idle' ? 'disabled' : ''}>${esc(msg)}</textarea></label>
+          ${b.phase === 'committed' ? `<div class="callout good">${svgIco('check')}<div>Pushed <code>${esc(b.branch)}</code> as commit <code>${b.sha}</code>. Backup: <code>${b.backup}</code>. Your V3.0 branch is unchanged.</div></div>` : ''}
+          <div class="rowbtns"><button class="btn primary" data-act="commit" ${b.phase !== 'idle' ? 'disabled' : ''}>${b.phase === 'committing' ? 'Committing…' : b.phase === 'committed' ? 'Committed' : 'Commit and push'}</button></div>`;
+      },
+      concept: '<h4>Plain words</h4><p>Pushing uploads the branch to GitHub. Nothing is installed on the keyboard at this point.</p>'},
+    {t:'Build the firmware', short:'Build', board:false, canNext: () => S.build.phase === 'done',
+      body: () => {
+        const b = S.build;
+        return `<p>Runs the existing <code>build.yml</code> workflow on GitHub Actions. It takes a few minutes.</p>
+          ${(b.phase === 'idle' || b.phase === 'committed') ? `<div class="rowbtns"><button class="btn primary big" data-act="build-start">Start build</button></div>` : ''}
+          ${b.jobs.length ? `<ul class="jobs">${b.jobs.map(j => `<li class="${j.s}"><span class="st">${j.s === 'done' ? '✓' : ''}</span>${esc(j.n)}</li>`).join('')}</ul>` : ''}
+          ${b.logs.length ? `<div class="logs">${b.logs.map(esc).join('\n')}</div>` : ''}
+          ${b.phase === 'done' ? `<div class="callout good">${svgIco('check')}<div><b>Build finished.</b> Two firmware files are ready to download.</div></div>` : ''}`;
+      },
+      concept: '<h4>Plain words</h4><p>A <b>firmware</b> file is the program the keyboard runs. Building turns your keymap into that file. GitHub does the compiling, so nothing needs to be installed here.</p>'},
+    {t:'Download the files', short:'Download', board:false, final:true,
+      body: () => `<p>Two artifacts from the workflow. Download them and keep them somewhere safe.</p>
+        <div class="dl-cards">
+          <a class="dl" href="#" data-act="dl"><b>firmware-clique</b><span>Artifact from the build.yml run</span><em>Download</em></a>
+          <a class="dl" href="#" data-act="dl"><b>firmware-no-clique</b><span>Artifact from the build.yml run</span><em>Download</em></a>
+        </div>
+        <div class="never">${svgIco('shield')}<div><b>This never flashes your keyboard.</b><p>Flashing copies a firmware file onto the Advantage360. It is a separate step that you approve on purpose, and this editor does not do it for you. Download, check, and flash only when you decide.</p></div></div>`,
+      concept: '<h4>Plain words</h4><p><b>Build</b> makes the file. <b>Flash</b> installs it. The app stops before flashing on purpose, so a mistake can never reach your keyboard without you.</p>'},
+  ]},
+};
+function defaultMsg(){
+  const titles = S.pending.slice(0, 3).map(p => p.title);
+  return 'Keymap: ' + (titles.length ? titles.join('; ') : 'update') + (S.pending.length > 3 ? ` (+${S.pending.length - 3} more)` : '');
+}
+
+/* ---------- flow engine ---------- */
+function curStep(){ return FLOWS[S.flow.id].steps[S.flow.i]; }
+function canNext(){ const st = curStep(); return st.canNext ? !!st.canNext(S.flow.d) : true; }
+function startFlow(id, pre = {}, i = 0){
+  S.view = 'flow';
+  S.flow = {id, i, d: {...pre}};
+  if (id === 'build') S.flow.d = {};
+  if (id === 'fix') S.layer = 0;
+  window.scrollTo(0, 0);
+  render();
+}
+function flowAllowsPick(){ const b = curStep().board; return b === 'pick' || b === 'pair'; }
+function flowPick(pos){
+  const st = curStep(), d = S.flow.d;
+  if (st.board === 'pick'){ d.pos = pos; d.layer = S.layer; }
+  else if (st.board === 'pair'){
+    const p = d.pair || [];
+    d.pair = p.includes(pos) ? p.filter(x => x !== pos) : [...p, pos].slice(-2);
+  }
+}
+function chooseVal(f, v){
+  const d = S.flow.d;
+  if (f === 'macro'){
+    const m = DATA.macros.find(x => x.label === v);
+    d.macro = v; d.steps = m ? [...m.bindings] : [];
+    return;
+  }
+  d[f] = v;
+  if (f === 'fix') S.layer = v === 'B' ? 3 : 0;
+}
+function saveFlow(){
+  const entries = flowEntries(S.flow.id, S.flow.d);
+  if (!entries.length) return;
+  const wasFix = S.flow.id === 'fix';
+  S.pending.push(...entries);
+  S.view = 'home'; S.flow = null;
+  render();
+  toast(wasFix ? (reachable().has(2) ? 'Saved. Layer 2 is reachable now.' : 'Saved to pending changes.') : `Saved: ${entries.length} change${entries.length > 1 ? 's' : ''} waiting to build.`);
+}
+function macroMove(i, dir){
+  const s = S.flow.d.steps, j = i + dir;
+  if (j < 0 || j >= s.length) return;
+  [s[i], s[j]] = [s[j], s[i]];
+}
+
+/* ---------- build simulation ---------- */
+function commitBuild(){
+  const b = S.build;
+  b.phase = 'committing'; render();
+  setTimeout(() => {
+    b.phase = 'committed'; b.sha = '3f9a1c2'; b.backup = 'backup/2026-11-05-1412';
+    render();
+  }, 1000);
+}
+function startBuild(){
+  const b = S.build;
+  b.phase = 'building';
+  b.jobs = [{n:'Queued on GitHub Actions', s:'wait'}, {n:'Build firmware-clique', s:'wait'}, {n:'Build firmware-no-clique', s:'wait'}, {n:'Package artifacts', s:'wait'}];
+  b.logs = [];
+  const script = [
+    [700, ['run queued · build.yml · branch ' + b.branch]],
+    [1600, ['west build -d build/left -b adv360_left -- -DZMK_CONFIG=config', 'Memory region   Used Size', 'FLASH:        ok']],
+    [1400, ['west build -d build/right -b adv360_right -- -DZMK_CONFIG=config', 'Memory region   Used Size', 'FLASH:        ok']],
+    [700, ['uploaded firmware-clique, firmware-no-clique']],
+  ];
+  let i = 0;
+  const tick = () => {
+    if (i > 0) b.jobs[i - 1].s = 'done';
+    if (i < b.jobs.length){
+      b.jobs[i].s = 'run';
+      const [, lines] = script[i];
+      b.logs.push(...lines);
+      render();
+      const delay = script[i][0];
+      i++;
+      setTimeout(tick, delay);
+    } else {
+      b.phase = 'done'; render();
+    }
+  };
+  tick();
+}
+
+/* ---------- actions ---------- */
+function act(name, ds){
+  switch (name){
+    case 'home': S.view = 'home'; S.flow = null; break;
+    case 'theme': {
+      S.theme = S.theme === 'light' ? 'dark' : 'light';
+      document.documentElement.dataset.theme = S.theme;
+      document.querySelector('.theme').setAttribute('aria-pressed', String(S.theme === 'dark'));
+      break;
+    }
+    case 'layer': S.layer = +ds.n; break;
+    case 'key':
+      if (S.view === 'flow'){ if (flowAllowsPick()) flowPick(+ds.pos); }
+      else S.selKey = +ds.pos;
+      break;
+    case 'open': {
+      if (ds.id === 'fix'){ startFlow('fix'); return; }
+      if (ds.id === 'build'){ startFlow('build'); return; }
+      startFlow(ds.id); return;
+    }
+    case 'open-fix': startFlow('fix'); return;
+    case 'start-change': startFlow('change', {pos: S.selKey, layer: S.layer, kind: null}, 1); return;
+    case 'next': if (canNext()) S.flow.i++; break;
+    case 'prev': S.flow.i = Math.max(0, S.flow.i - 1); break;
+    case 'choose': chooseVal(ds.f, ds.v); break;
+    case 'cmb': S.flow.d.cSel = +ds.i; break;
+    case 'addstep': S.flow.d.steps = [...(S.flow.d.steps || []), `&kp ${ds.v}`]; break;
+    case 'mv': macroMove(+ds.i, +ds.dir); break;
+    case 'rm': S.flow.d.steps.splice(+ds.i, 1); break;
+    case 'save': saveFlow(); return;
+    case 'load-sample': S.pending.push(...sampleEntries()); break;
+    case 'drop': S.pending.splice(+ds.i, 1); break;
+    case 'commit': commitBuild(); return;
+    case 'build-start': startBuild(); return;
+    case 'dl': toast('Demo: the download would start here.'); return;
+  }
+  render();
+}
+
+/* ---------- views ---------- */
+function flowView(){
+  const f = FLOWS[S.flow.id], st = curStep(), d = S.flow.d;
+  const last = S.flow.i === f.steps.length - 1;
+  const hasBoard = st.board !== false;
+  const stepper = f.steps.map((s, i) => `<li class="${i === S.flow.i ? 'cur' : i < S.flow.i ? 'done' : ''}"><span>${i + 1}</span>${esc(s.short || s.t)}</li>`).join('');
+  const concept = typeof st.concept === 'function' ? st.concept(d) : st.concept;
+  const body = st.body(d);
+  const side = hasBoard ? boardPanel({sel: st.sel ? st.sel(d) : [], hl: st.hl ? st.hl(d) : []}) : '';
+  return `<section class="flow">
+    <div class="flow-top">
+      <button class="back-link" data-act="home">← All tasks</button>
+      <h1>${f.title}</h1>
+      <ol class="stepper">${stepper}</ol>
+    </div>
+    <div class="flow-grid ${hasBoard ? '' : 'solo'}">
+      <div>
+        <article class="step-card">
+          <p class="eyebrow">Step ${S.flow.i + 1} of ${f.steps.length}</p>
+          <h2>${st.t}</h2>
+          ${body}
+        </article>
+        ${concept ? `<aside class="concept">${concept}</aside>` : ''}
+        <nav class="nav">
+          <button class="btn ghost" data-act="prev" ${S.flow.i === 0 ? 'disabled' : ''}>Back</button>
+          ${last ? '<span></span>' : `<button class="btn primary big" data-act="next" ${canNext() ? '' : 'disabled'}>${st.next || 'Next'} ${svgIco('chev')}</button>`}
+        </nav>
+      </div>
+      ${hasBoard ? `<div class="flow-side">${side}</div>` : ''}
+    </div>
+  </section>`;
+}
+function renderTray(){
+  const n = S.pending.length;
+  $('#tray').innerHTML = n ? `<span>${n} change${n > 1 ? 's' : ''} waiting for a build</span><button class="btn" data-act="open" data-id="build">Build firmware ${svgIco('chev')}</button>` : '';
+}
+function render(){
+  document.body.dataset.view = S.view;
+  $('#app').innerHTML = S.view === 'flow' ? flowView() : homeView();
+  renderTray();
+}
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(S.tt); S.tt = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]');
+  if (!t || t.disabled) return;
+  if (t.tagName === 'A') e.preventDefault();
+  act(t.dataset.act, t.dataset);
+});
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-act][tabindex]')){
+    e.preventDefault();
+    e.target.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+  }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.in === 'search'){
+    const f = t.dataset.field;
+    S.flow.d['q_' + f] = t.value;
+    const res = document.getElementById('res-' + f);
+    if (res) res.innerHTML = resultsHTML(f, t.value, t.dataset.actName);
+  } else if (t.dataset.in === 'term'){
+    S.flow.d.term = +t.value;
+    const out = document.getElementById('termVal');
+    if (out) out.textContent = t.value;
+  } else if (t.dataset.in === 'branch'){
+    S.build.branch = t.value;
+  } else if (t.dataset.in === 'msg'){
+    S.build.msg = t.value;
+  }
+});
+/* press-and-hold demo for the hold-tap editor */
+function holdDown(e){
+  const b = e.target.closest && e.target.closest('[data-hold]');
+  if (!b) return;
+  S.hold.t0 = performance.now();
+  b.classList.add('down');
+  const r = document.getElementById('tryRes'); if (r) r.textContent = 'Holding…';
+}
+function holdUp(){
+  if (!S.hold.t0) return;
+  const dur = performance.now() - S.hold.t0;
+  S.hold.t0 = 0;
+  const b = document.querySelector('[data-hold]'); if (b) b.classList.remove('down');
+  const term = (S.flow && S.flow.d.term) ?? DATA.hold.term;
+  const tap = describe(DATA.layers[0].bindings[1]);
+  const hold = describe(DATA.layers[0].bindings[1]);
+  const r = document.getElementById('tryRes');
+  if (r) r.innerHTML = dur < term
+    ? `<b>Tap.</b> You held for ${Math.round(dur)} ms, under the ${term} ms term. Sends <b>${esc(tap.t)}</b>.`
+    : `<b>Hold.</b> You held for ${Math.round(dur)} ms, past the ${term} ms term. Sends <b>${esc(hold.s.replace(' hold',''))}</b>.`;
+}
+document.addEventListener('pointerdown', holdDown);
+window.addEventListener('pointerup', holdUp);
+window.addEventListener('pointercancel', holdUp);
+
+render();
+</script>
+</body>
+</html>

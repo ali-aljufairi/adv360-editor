@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>adv360 keymap · board-first</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,600&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#f2eee5; --card:#fffdf8; --card-2:#faf6ee; --ink:#1e1b16; --ink-2:#4b463b; --muted:#8b8374;
+  --line:rgba(70,55,25,.14); --line-2:rgba(70,55,25,.07);
+  --spot:rgba(255,255,255,.95); --dot:rgba(96,78,40,.17);
+  --cap-top:#ffffff; --cap-face:#fbf8f1; --cap-side:#d2c9b4; --cap-ink:#24201a; --cap-shadow:rgba(72,52,18,.22);
+  --c0:#3445d3; --c1:#0a8c77; --c2:#d68d12; --c3:#7b47d8;
+  --warn:#d6402c; --ok:#17825a; --combo:#c2407f; --accent:#3445d3;
+  --sans:"Instrument Sans","Helvetica Neue",system-ui,-apple-system,sans-serif;
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --pop-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 30px 60px -18px rgba(50,35,10,.42),0 6px 14px rgba(50,35,10,.1);
+  --float-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 16px 36px -16px rgba(60,40,10,.34),0 2px 6px rgba(60,40,10,.08);
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0e0f13; --card:#171920; --card-2:#1d2029; --ink:#ebe9e3; --ink-2:#b8b5ac; --muted:#7d7b84;
+  --line:rgba(255,255,255,.1); --line-2:rgba(255,255,255,.05);
+  --spot:rgba(80,92,170,.2); --dot:rgba(255,255,255,.07);
+  --cap-top:#3b3e49; --cap-face:#2a2d37; --cap-side:#080910; --cap-ink:#ece9e1; --cap-shadow:rgba(0,0,0,.65);
+  --c0:#8f9eff; --c1:#3fd8b9; --c2:#ffbf4d; --c3:#c39dff;
+  --warn:#ff6a55; --ok:#4fd49a; --combo:#ff8ab9; --accent:#8f9eff;
+  --pop-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 30px 60px -18px rgba(0,0,0,.8);
+  --float-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 36px -16px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+code,pre,.mono{font-family:var(--mono);font-size:12px}
+.muted{color:var(--muted)}
+.fine{font-size:12px;color:var(--muted);margin:8px 0}
+.eyebrow{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+/* top bar */
+.top{height:56px;display:flex;align-items:center;gap:14px;padding:0 20px;position:relative;z-index:50}
+.brand{display:flex;align-items:baseline;gap:8px}
+.brand b{font:italic 600 22px/1 var(--serif);letter-spacing:-.01em}
+.brand-sub{font:500 12px/1 var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.logo{display:inline-flex;gap:3px;align-self:center;margin-right:2px}
+.logo i{width:5px;height:14px;border-radius:2px;background:var(--c0)}
+.logo i:nth-child(2){background:var(--c1);height:18px}
+.logo i:nth-child(3){background:var(--c2)}
+.concept{font:500 11px/1 var(--mono);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 9px}
+.branch{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 11px;font:500 12px var(--mono)}
+.dot-ok{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block}
+.grow{flex:1}
+.ghost-btn{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 13px;font-weight:500}
+
+/* stage */
+.stage{position:relative;min-height:calc(100vh - 56px);display:flex;flex-direction:column;align-items:center;padding:14px 16px 64px;
+  background:
+    radial-gradient(70% 55% at 50% 42%, var(--spot), transparent 70%),
+    radial-gradient(var(--dot) 1px, transparent 1.3px) 0 0/22px 22px,
+    var(--bg);}
+.lb-wrap{position:sticky;top:12px;z-index:30;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
+.layerbar{display:flex;align-items:center;gap:4px;padding:5px;background:var(--card);border:1px solid var(--line);border-radius:999px;box-shadow:var(--float-shadow);max-width:100%;overflow-x:auto}
+.pills{display:flex;gap:3px}
+.pill{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;border-radius:999px;padding:8px 14px 8px 12px;font-weight:600;color:var(--ink-2);white-space:nowrap;transition:background .2s,color .2s,transform .15s}
+.pill:hover{transform:translateY(-1px)}
+.pill .sw{width:9px;height:9px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 3px color-mix(in srgb,var(--pc) 22%,transparent)}
+.pill[aria-pressed="true"]{background:var(--pc);color:#fff;box-shadow:0 6px 16px -6px var(--pc)}
+.pill[aria-pressed="true"] .sw{background:#fff;box-shadow:none}
+.pill[data-l="2"][aria-pressed="true"]{color:#2a1d02}
+.pill[data-l="2"][aria-pressed="true"] .sw{background:#2a1d02}
+.pill.warn .sw{box-shadow:0 0 0 3px color-mix(in srgb,var(--warn) 35%,transparent);animation:blink 1.6s infinite}
+.wmark{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--warn);color:#fff;font:700 11px/1 var(--sans)}
+.cnt{font:600 10px/1 var(--mono);background:var(--ink);color:var(--card);border-radius:999px;padding:3px 6px}
+.sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+.pill-ghost{border:0;background:transparent;border-radius:999px;padding:8px 12px;font-weight:600;color:var(--ink-2);white-space:nowrap}
+.pill-ghost b{font:600 11px var(--mono);background:var(--combo);color:#fff;border-radius:999px;padding:2px 6px;margin-left:2px}
+.pill-ghost[aria-pressed="false"]{opacity:.5}
+.tip{font-size:12.5px;background:var(--ink);color:var(--card);padding:7px 12px;border-radius:12px;max-width:600px;text-align:center;opacity:0;transform:translateY(-4px);transition:.18s;pointer-events:none}
+.tip.on{opacity:1;transform:none}
+.pickbar{margin-top:10px;display:flex;align-items:center;gap:12px;background:color-mix(in srgb,var(--c2) 18%,var(--card));border:1px solid color-mix(in srgb,var(--c2) 50%,transparent);padding:8px 10px 8px 16px;border-radius:999px;font-weight:600;color:var(--ink)}
+.pickbar[hidden]{display:none}
+.hint{margin:14px 0 0;font:500 12px var(--mono);color:var(--muted);letter-spacing:.01em}
+
+/* board */
+.boardwrap{width:100%;overflow-x:auto;overflow-y:visible;padding:18px 6px 0;margin-top:6px}
+.board{position:relative;margin:0 auto;width:calc(var(--bw)*var(--u));height:calc(var(--bh)*var(--u));--hl:var(--c0)}
+.key{position:absolute;left:calc(var(--x)*var(--u));top:calc(var(--y)*var(--u));width:calc(var(--w)*var(--u));height:calc(var(--h)*var(--u));
+  transform:rotate(calc(var(--r)*1deg));transform-origin:0 0;background:none;border:0;padding:0;z-index:2}
+.cap{position:absolute;inset:calc(var(--u)*.065);border-radius:calc(var(--u)*.17);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,var(--cap-top) 0%,var(--cap-face) 62%,color-mix(in srgb,var(--cap-face) 88%,var(--cap-side)) 100%);
+  color:var(--cap-ink);
+  box-shadow:inset 0 calc(var(--u)*.03) 0 rgba(255,255,255,.55),0 calc(var(--u)*.1) 0 var(--cap-side),0 calc(var(--u)*.2) calc(var(--u)*.28) var(--cap-shadow);
+  transition:transform .12s,box-shadow .2s,opacity .25s,filter .2s;padding:0 calc(var(--u)*.05);overflow:hidden}
+.key:hover .cap{transform:translateY(-2px);filter:brightness(1.03)}
+.key:active .cap{transform:translateY(3px);box-shadow:inset 0 calc(var(--u)*.03) 0 rgba(255,255,255,.4),0 calc(var(--u)*.03) 0 var(--cap-side)}
+.key:focus-visible{outline:none}
+.key:focus-visible .cap{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--accent)}
+.legend{font-weight:600;font-size:clamp(9px,calc(var(--u)*.23),15px);line-height:1;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:clip;letter-spacing:-.01em}
+.sub{font:500 clamp(7px,calc(var(--u)*.16),11px)/1 var(--mono);color:var(--muted);margin-bottom:calc(var(--u)*.06);white-space:nowrap}
+.key.kind-trans .cap,.key.kind-none .cap{background:transparent;box-shadow:none;border:1.5px dashed var(--line);color:var(--muted)}
+.key.kind-trans .cap{border-style:dotted}
+.key.kind-none .legend{opacity:.4}
+.key.kind-trans .legend{opacity:.5;font-weight:400}
+.key.kind-layer .cap{box-shadow:inset 0 calc(var(--u)*.03) 0 rgba(255,255,255,.5),0 calc(var(--u)*.1) 0 var(--cap-side),0 0 0 calc(var(--u)*.045) var(--glow),0 0 calc(var(--u)*.6) calc(var(--u)*.02) color-mix(in srgb,var(--glow) 55%,transparent);animation:breathe 3.6s ease-in-out infinite}
+.key.kind-layer .legend{color:var(--glow)}
+.key.kind-layer .sub{color:var(--glow);opacity:.85}
+.key.kind-hold .sub{color:var(--c1);opacity:.95}
+.key.kind-macro .legend{color:var(--c3)}
+.key.kind-macro .cap::before{content:"";position:absolute;left:calc(var(--u)*.14);right:calc(var(--u)*.14);top:calc(var(--u)*.08);height:calc(var(--u)*.05);border-radius:9px;background:var(--c3);opacity:.7}
+.key.kind-danger .legend{color:var(--warn)}
+.key.kind-bt .legend{color:color-mix(in srgb,var(--c0) 80%,var(--ink))}
+.key.dirty .cap::after{content:"";position:absolute;right:calc(var(--u)*.1);top:calc(var(--u)*.1);width:calc(var(--u)*.15);height:calc(var(--u)*.15);border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--card)}
+.key.has-combo .cap::before{content:"⋈";position:absolute;left:calc(var(--u)*.1);top:calc(var(--u)*.06);font:600 calc(var(--u)*.22)/1 var(--mono);color:var(--combo)}
+@keyframes breathe{50%{filter:brightness(1.07)}}
+@keyframes blink{50%{opacity:.35}}
+@keyframes pulse{50%{transform:translateY(-3px)}}
+.board.reaching .key:not(.hl) .cap{opacity:.22;filter:saturate(.2)}
+.board.reaching .key.hl .cap{animation:pulse 1.1s ease-in-out infinite;box-shadow:inset 0 calc(var(--u)*.03) 0 rgba(255,255,255,.5),0 calc(var(--u)*.1) 0 var(--cap-side),0 0 0 calc(var(--u)*.06) var(--hl),0 0 calc(var(--u)*.8) calc(var(--u)*.05) var(--hl)}
+.board.picking .key .cap{cursor:crosshair}
+.board.picking .key:hover .cap{box-shadow:0 0 0 calc(var(--u)*.05) var(--c2),0 calc(var(--u)*.1) 0 var(--cap-side)}
+
+.arcs{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:4}
+.arc{fill:none;stroke:var(--combo);stroke-width:.075;stroke-linecap:round;opacity:.92}
+.arc.studio{stroke-dasharray:.24 .16}
+.arc-hit{fill:none;stroke:transparent;stroke-width:.7;pointer-events:stroke;cursor:pointer}
+.ctag{position:absolute;left:calc(var(--tx)*var(--u));top:calc(var(--ty)*var(--u));transform:translate(-50%,-50%);z-index:5;
+  font:600 calc(var(--u)*.2)/1 var(--sans);white-space:nowrap;color:var(--combo);background:var(--card);border:1px solid color-mix(in srgb,var(--combo) 40%,transparent);
+  border-radius:999px;padding:calc(var(--u)*.07) calc(var(--u)*.2);box-shadow:var(--float-shadow)}
+.ctag.studio{color:var(--ink);border-color:var(--combo);border-style:dashed}
+.ctag.studio em{font-style:normal;color:var(--combo);font-weight:700}
+.nocombos .arcs,.nocombos .ctag{display:none}
+
+/* mini board */
+.board.mini .legend,.board.mini .sub{display:none}
+.board.mini .key .cap{box-shadow:inset 0 calc(var(--u)*.03) 0 rgba(255,255,255,.5),0 calc(var(--u)*.08) 0 var(--cap-side)}
+.board.mini .key.on .cap{background:linear-gradient(180deg,color-mix(in srgb,var(--c1) 70%,#fff),var(--c1));box-shadow:0 0 0 calc(var(--u)*.06) color-mix(in srgb,var(--c1) 40%,transparent)}
+.board.mini .key{cursor:pointer}
+
+/* floating validator */
+.card-float{position:absolute;left:28px;bottom:70px;width:318px;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--float-shadow);padding:14px 15px;z-index:20}
+.card-float.warn{border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
+.v-head{display:flex;gap:10px;align-items:flex-start}
+.v-head b{font-weight:600;line-height:1.35}
+.v-ico{flex:none;width:22px;height:22px;border-radius:50%;background:var(--warn);color:#fff;display:grid;place-items:center;font:700 13px/1 var(--sans);margin-top:1px}
+.v-ico.ok{background:var(--ok)}
+.card-float p{margin:8px 0 10px 32px;color:var(--ink-2);font-size:13px}
+.v-act{display:flex;gap:8px;margin-left:32px;flex-wrap:wrap}
+.v-info{margin:10px 0 0 32px;font-size:12px;color:var(--muted)}
+.foot-note{margin:14px 0 0;text-align:center;font-size:12px;color:var(--muted)}
+.foot-note code{font-size:11.5px}
+
+/* buttons */
+.btn{border:1px solid var(--line);background:var(--card-2);border-radius:999px;padding:8px 14px;font-weight:600;font-size:13px;transition:transform .1s,background .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary{background:var(--accent);color:#fff;border-color:transparent;box-shadow:0 8px 18px -8px var(--accent)}
+.btn.primary:disabled{box-shadow:none}
+.btn.ghost{background:transparent}
+.btn.wide{width:100%}
+.link{background:none;border:0;padding:6px 0;color:var(--accent);font-weight:600;text-align:left}
+.icon{border:0;background:transparent;width:30px;height:30px;border-radius:50%;font-size:18px;line-height:1;display:grid;place-items:center;color:var(--muted)}
+.icon:hover{background:var(--line-2)}
+
+/* changes pill */
+.changes{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:45;display:flex;align-items:center;gap:10px;background:var(--ink);color:var(--card);border:0;border-radius:999px;padding:12px 20px 12px 16px;font-weight:600;box-shadow:0 18px 40px -14px rgba(0,0,0,.45);transition:transform .2s}
+.changes:hover{transform:translateX(-50%) translateY(-2px)}
+.changes span{opacity:.7;font-weight:500}
+.changes .dot-accent{width:9px;height:9px;border-radius:50%;background:var(--c2);box-shadow:0 0 0 4px color-mix(in srgb,var(--c2) 30%,transparent)}
+.spin{width:12px;height:12px;border-radius:50%;border:2px solid color-mix(in srgb,var(--card) 30%,transparent);border-top-color:var(--card);animation:rot .8s linear infinite;display:inline-block}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* sheet */
+.sheet{position:fixed;top:68px;right:20px;bottom:92px;width:min(468px,calc(100vw - 40px));background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--pop-shadow);z-index:55;display:flex;flex-direction:column;overflow:hidden;transform:translateX(calc(100% + 40px));transition:transform .38s cubic-bezier(.2,.8,.2,1)}
+.sheet.open{transform:none}
+.sh-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 20px 6px}
+.sh-head h2{margin:6px 0 0;font:italic 600 24px/1.1 var(--serif);letter-spacing:-.01em}
+.tabs{display:flex;gap:4px;padding:10px 16px 0;border-bottom:1px solid var(--line)}
+.tabs button{border:0;background:none;padding:9px 12px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.sh-body{flex:1;overflow:auto;padding:16px 20px}
+.sh-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid var(--line);background:var(--card-2)}
+.file{font:600 12px var(--mono);color:var(--ink-2);margin:4px 0 8px;display:flex;justify-content:space-between}
+.hunk{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.hh{background:var(--card-2);padding:7px 10px;font:500 11.5px var(--mono);color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.hh b{font-family:var(--sans);color:var(--ink);font-weight:600}
+.dl{font:12px/1.55 var(--mono);padding:3px 10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.dl.minus{background:color-mix(in srgb,var(--warn) 12%,transparent);color:color-mix(in srgb,var(--warn) 85%,var(--ink))}
+.dl.plus{background:color-mix(in srgb,var(--ok) 13%,transparent);color:color-mix(in srgb,var(--ok) 80%,var(--ink))}
+.okbar{display:flex;gap:10px;align-items:flex-start;background:color-mix(in srgb,var(--ok) 11%,transparent);border-radius:12px;padding:10px 12px;font-size:12.5px;margin-top:6px}
+.okbar b{color:var(--ok)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.chip{font:500 11px var(--mono);border:1px solid var(--line);border-radius:999px;padding:4px 9px;color:var(--ink-2)}
+.field{display:block;margin:12px 0}
+.field>span{display:block;font-weight:600;margin-bottom:6px;font-size:12.5px}
+input[type=text],input:not([type]),textarea,select{width:100%;font:inherit;color:var(--ink);background:var(--card-2);border:1px solid var(--line);border-radius:12px;padding:9px 11px;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 20%,transparent)}
+textarea{min-height:70px;resize:vertical;font-family:var(--mono);font-size:12.5px}
+.check{display:flex;gap:8px;align-items:center;margin:12px 0;font-size:13px}
+.build-step{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:12px 0;border-bottom:1px dashed var(--line)}
+.bs-ico{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 12px var(--sans);background:var(--card-2);border:1px solid var(--line);color:var(--muted)}
+.bs-ico.done{background:var(--ok);border-color:var(--ok);color:#fff}
+.bs-ico.run{border-color:var(--c0);border-top-color:transparent;animation:rot .8s linear infinite}
+.bar{height:6px;background:var(--line-2);border-radius:999px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--c0),var(--c1));border-radius:999px;transition:width .15s}
+.art{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.lock{display:flex;gap:10px;margin-top:14px;background:var(--card-2);border:1px solid var(--line);border-radius:14px;padding:12px;font-size:12.5px;color:var(--ink-2)}
+.lock b{color:var(--ink)}
+
+/* popover */
+.pop{position:fixed;width:356px;max-height:calc(100vh - 110px);display:none;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--pop-shadow);z-index:60;overflow:hidden}
+.pop.open{display:flex;animation:popin .2s cubic-bezier(.2,.8,.2,1)}
+@keyframes popin{from{opacity:0;transform:translateY(6px) scale(.98)}}
+.pop-head{padding:14px 16px 10px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.pop-head h3{margin:6px 0 0;font:italic 600 20px/1.1 var(--serif)}
+.pop-now{font:500 11.5px var(--mono);color:var(--ink-2);background:var(--card-2);border:1px solid var(--line);border-radius:9px;padding:5px 8px;margin-top:8px;display:inline-block}
+.seg{display:flex;flex-wrap:wrap;gap:4px;padding:0 14px 10px}
+.seg button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:600;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.pop-body{overflow:auto;padding:4px 14px 12px;flex:1;min-height:0}
+.search{margin-bottom:8px}
+.mods{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.mods button{border:1px solid var(--line);background:var(--card-2);border-radius:9px;padding:5px 9px;font-size:12px;font-weight:600}
+.mods button[aria-pressed="true"]{background:var(--c1);color:#fff;border-color:transparent}
+.kg-h{font:500 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:10px 0 6px}
+.kgrid{display:flex;flex-wrap:wrap;gap:5px}
+.kc{min-width:34px;height:30px;border-radius:9px;border:1px solid var(--line);background:var(--card-2);padding:0 8px;font:600 12px var(--sans);box-shadow:0 2px 0 var(--cap-side)}
+.kc:hover{border-color:var(--accent)}
+.kc[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:transparent}
+.fieldsel{display:flex;gap:8px;margin-bottom:8px}
+.fieldsel button{flex:1;text-align:left;border:1px solid var(--line);background:var(--card-2);border-radius:12px;padding:8px 10px}
+.fieldsel button small{display:block;font:500 10.5px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.fieldsel button b{font-size:15px}
+.fieldsel button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+.lcards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.lc{border:1px solid var(--line);background:var(--card-2);border-radius:14px;padding:10px 12px;text-align:left;font-weight:600;position:relative}
+.lc i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--pc);margin-right:7px}
+.lc small{display:block;font-weight:500;color:var(--muted);font-size:11.5px;margin-top:3px}
+.lc[aria-pressed="true"]{border-color:var(--pc);box-shadow:0 0 0 2px var(--pc) inset}
+.lmode{display:flex;gap:6px;margin-bottom:8px}
+.lmode button{flex:1;border:1px solid var(--line);background:var(--card-2);border-radius:10px;padding:8px;font-weight:600;font-size:12.5px}
+.lmode button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+.list{display:flex;flex-direction:column;gap:4px;max-height:230px;overflow:auto}
+.li{display:flex;justify-content:space-between;gap:8px;text-align:left;border:1px solid transparent;background:var(--card-2);border-radius:10px;padding:8px 10px}
+.li[aria-pressed="true"]{border-color:var(--accent)}
+.li code{color:var(--muted)}
+.pop-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:var(--card-2)}
+.preview{font:500 11.5px var(--mono);color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.preview b{color:var(--accent)}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(18,15,10,.36);backdrop-filter:blur(4px);z-index:70;display:none;place-items:center;padding:16px}
+.modal-bg.open{display:grid;animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.modal{width:min(820px,100%);max-height:88vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:var(--pop-shadow)}
+.m-head{display:flex;justify-content:space-between;gap:12px;padding:20px 22px 8px}
+.m-head h2{margin:6px 0 0;font:italic 600 28px/1.05 var(--serif)}
+.m-body{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding:8px 22px 16px}
+@media (max-width:720px){.m-body{grid-template-columns:1fr}}
+.sec-title{font:600 13px var(--sans);margin:4px 0 10px;display:flex;justify-content:space-between;align-items:baseline}
+.sec-title span{font:500 11px var(--mono);color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.step{display:grid;grid-template-columns:auto auto 1fr auto auto;align-items:center;gap:10px;background:var(--card-2);border:1px solid var(--line);border-radius:14px;padding:8px 8px 8px 10px;cursor:grab}
+.step.dragging{opacity:.4}
+.step.over{border-color:var(--accent)}
+.grip{color:var(--muted);font-size:15px;letter-spacing:-2px}
+.idx{font:600 11px var(--mono);color:var(--muted);width:14px}
+.chip-k{font-weight:700;background:var(--cap-face);border:1px solid var(--line);box-shadow:0 2px 0 var(--cap-side);color:var(--cap-ink);border-radius:9px;min-width:38px;text-align:center;padding:5px 8px;font-size:13px}
+.step .code{font:500 11.5px var(--mono);color:var(--muted)}
+.sx{display:flex;gap:2px}
+.sx button{border:0;background:transparent;width:26px;height:26px;border-radius:8px;color:var(--muted)}
+.sx button:hover:not(:disabled){background:var(--line-2);color:var(--ink)}
+.addrow{display:flex;gap:8px;margin-top:10px}
+.addrow select{flex:1}
+.preview-box{font:500 22px/1 var(--mono);background:var(--cap-face);border:1px solid var(--line);border-radius:16px;padding:22px 16px;text-align:center;min-height:76px;display:flex;align-items:center;justify-content:center}
+.caret{display:inline-block;width:2px;height:24px;background:var(--accent);margin:0 1px;animation:blink 1s steps(1) infinite}
+.raw{background:var(--card-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;white-space:pre-wrap;word-break:break-all;margin:6px 0 0;font-size:11.5px;line-height:1.6}
+.raw .m{color:var(--warn)}
+.raw .p{color:var(--ok)}
+.m-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:14px 22px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
+.m-foot .fine{margin-right:auto}
+.slider-row{display:flex;gap:12px;align-items:center}
+.slider-row input{flex:1;accent-color:var(--accent)}
+.slider-row output{font:600 18px var(--mono);min-width:72px;text-align:right}
+.ticks{display:flex;justify-content:space-between;font:500 10.5px var(--mono);color:var(--muted);margin:2px 0 12px}
+.mini-wrap{background:var(--card-2);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;justify-content:center;overflow:auto}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 12px}
+.pair div{background:var(--card-2);border:1px solid var(--line);border-radius:12px;padding:10px}
+.pair small{display:block;font:500 10.5px var(--mono);color:var(--muted);text-transform:uppercase}
+.pair b{font-size:18px}
+.pad{width:100%;height:110px;border-radius:20px;border:1px solid var(--line);background:linear-gradient(180deg,var(--cap-top),var(--cap-face));box-shadow:0 5px 0 var(--cap-side),0 14px 24px -12px var(--cap-shadow);font-weight:600;color:var(--cap-ink);margin-top:8px;touch-action:none;user-select:none}
+.pad.down{transform:translateY(4px);box-shadow:0 1px 0 var(--cap-side)}
+.pad-bar{height:6px;border-radius:999px;background:var(--line-2);overflow:hidden;margin-top:10px}
+.pad-bar i{display:block;height:100%;width:0;background:var(--c1)}
+.pad-out{font:500 12.5px var(--mono);margin-top:8px;min-height:20px;color:var(--ink-2)}
+.pad-out b{color:var(--ink)}
+.seg-flavor{font-size:12.5px;color:var(--muted);margin:6px 0 12px}
+
+/* toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translate(-50%,10px);background:var(--ink);color:var(--card);padding:10px 16px;border-radius:999px;font-weight:600;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:90;white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* mobile */
+@media (max-width:720px){
+  .top{padding:0 14px;gap:10px}
+  .concept,.branch{display:none}
+  .stage{padding:10px 10px 90px}
+  .layerbar{width:100%;justify-content:flex-start}
+  .pill{padding:7px 10px}
+  .hint{text-align:center;font-size:11px}
+  .boardwrap{padding-top:12px}
+  .card-float{position:static;width:100%;margin-top:18px}
+  .stage{align-items:stretch}
+  .board{margin:0}
+  .foot-note{position:static;margin-top:14px}
+  .sheet{left:0;right:0;top:auto;bottom:0;width:auto;max-height:84vh;border-radius:22px 22px 0 0;transform:translateY(105%)}
+  .sheet.open{transform:none}
+  .pop{left:0!important;right:0;top:auto!important;bottom:0;width:auto;max-height:80vh;border-radius:22px 22px 0 0}
+  .modal-bg{align-items:end;padding:0}
+  .modal{border-radius:22px 22px 0 0;max-height:92vh}
+  .changes{bottom:12px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo" aria-hidden="true"><i></i><i></i><i></i></span><b>adv360</b><span class="brand-sub">keymap</span></div>
+  <span class="concept">Concept · Board-first</span>
+  <span class="branch"><span class="dot-ok"></span>V3.0<span class="muted">· e46bd74</span></span>
+  <span class="grow"></span>
+  <button id="theme" class="ghost-btn" type="button">Dark</button>
+</header>
+
+<main class="stage" id="stage">
+  <div class="lb-wrap">
+    <nav class="layerbar" aria-label="Layers">
+      <div class="pills" id="pills"></div>
+      <span class="sep"></span>
+      <button class="pill-ghost" id="combosBtn" type="button" aria-pressed="true">⋈ Combos <b id="comboCount">3</b></button>
+    </nav>
+    <div class="tip" id="tip"></div>
+  </div>
+  <div class="pickbar" id="pickbar" hidden><span id="pickText"></span><button class="link" id="pickCancel" type="button">Cancel · Esc</button></div>
+  <p class="hint">Click a key to rebind it · hover a layer to see what reaches it · keys 1–4 switch layers</p>
+  <div class="boardwrap" id="boardwrap">
+    <div class="board" id="board" role="group" aria-label="Kinesis Advantage360 Pro, layer keys"></div>
+  </div>
+  <section class="card-float" id="validator" aria-live="polite"></section>
+  <p class="foot-note">Source of truth is <code>adv360.keymap</code> in git. ZMK Studio edits made on the keyboard can override it.</p>
+</main>
+
+<button class="changes" id="changes" type="button"></button>
+<aside class="sheet" id="sheet" aria-label="Review changes"></aside>
+<div class="pop" id="pop" role="dialog"></div>
+<div class="modal-bg" id="modalbg"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>window.DATA = {"info": [{"label": "=", "row": 0, "col": 0, "x": 0, "y": 0.25, "w": 1.25}, {"label": "1", "row": 0, "col": 1, "x": 1.25, "y": 0.25}, {"label": "2", "row": 0, "col": 2, "x": 2.25, "y": 0}, {"label": "3", "row": 0, "col": 3, "x": 3.25, "y": 0}, {"label": "4", "row": 0, "col": 4, "x": 4.25, "y": 0}, {"label": "5", "row": 0, "col": 5, "x": 5.25, "y": 0}, {"label": "mod1", "row": 0, "col": 6, "x": 6.25, "y": 0}, {"label": "mod2", "row": 0, "col": 13, "x": 10.75, "y": 0}, {"label": "6", "row": 0, "col": 14, "x": 11.75, "y": 0}, {"label": "7", "row": 0, "col": 15, "x": 12.75, "y": 0}, {"label": "8", "row": 0, "col": 16, "x": 13.75, "y": 0}, {"label": "9", "row": 0, "col": 17, "x": 14.75, "y": 0}, {"label": "0", "row": 0, "col": 18, "x": 15.75, "y": 0.25}, {"label": "-", "row": 0, "col": 19, "x": 16.75, "y": 0.25, "w": 1.25}, {"label": "Tab", "row": 1, "col": 0, "x": 0, "y": 1.25, "w": 1.25}, {"label": "Q", "row": 1, "col": 1, "x": 1.25, "y": 1.25}, {"label": "W", "row": 1, "col": 2, "x": 2.25, "y": 1}, {"label": "E", "row": 1, "col": 3, "x": 3.25, "y": 1}, {"label": "R", "row": 1, "col": 4, "x": 4.25, "y": 1}, {"label": "T", "row": 1, "col": 5, "x": 5.25, "y": 1}, {"label": "mod3", "row": 1, "col": 6, "x": 6.25, "y": 1}, {"label": "mod4", "row": 1, "col": 13, "x": 10.75, "y": 1}, {"label": "Y", "row": 1, "col": 14, "x": 11.75, "y": 1}, {"label": "U", "row": 1, "col": 15, "x": 12.75, "y": 1}, {"label": "I", "row": 1, "col": 16, "x": 13.75, "y": 1}, {"label": "O", "row": 1, "col": 17, "x": 14.75, "y": 1}, {"label": "P", "row": 1, "col": 18, "x": 15.75, "y": 1.25}, {"label": "\\", "row": 1, "col": 19, "x": 16.75, "y": 1.25, "w": 1.25}, {"label": "Caps", "row": 2, "col": 0, "x": 0, "y": 2.25, "w": 1.25}, {"label": "A", "row": 2, "col": 1, "x": 1.25, "y": 2.25}, {"label": "S", "row": 2, "col": 2, "x": 2.25, "y": 2}, {"label": "D", "row": 2, "col": 3, "x": 3.25, "y": 2}, {"label": "F", "row": 2, "col": 4, "x": 4.25, "y": 2}, {"label": "G", "row": 2, "col": 5, "x": 5.25, "y": 2}, {"label": "mod5", "row": 2, "col": 6, "x": 6.25, "y": 2}, {"label": "LCtrl", "row": 2, "col": 7, "x": 6.75, "y": 4, "r": 15, "rx": 5.25, "ry": 4}, {"label": "LAlt", "row": 2, "col": 8, "x": 7.75, "y": 4, "r": 15, "rx": 5.25, "ry": 4}, {"label": "LGui", "row": 2, "col": 11, "x": 9.25, "y": 4, "r": -15, "rx": 12.75, "ry": 4}, {"label": "RCtrl", "row": 2, "col": 12, "x": 10.25, "y": 4, "r": -15, "rx": 12.75, "ry": 4}, {"label": "mod6", "row": 2, "col": 13, "x": 10.75, "y": 2}, {"label": "H", "row": 2, "col": 14, "x": 11.75, "y": 2}, {"label": "J", "row": 2, "col": 15, "x": 12.75, "y": 2}, {"label": "K", "row": 2, "col": 16, "x": 13.75, "y": 2}, {"label": "L", "row": 2, "col": 17, "x": 14.75, "y": 2}, {"label": ";", "row": 2, "col": 18, "x": 15.75, "y": 2.25}, {"label": "'", "row": 2, "col": 19, "x": 16.75, "y": 2.25, "w": 1.25}, {"label": "LShift", "row": 3, "col": 0, "x": 0, "y": 3.25, "w": 1.25}, {"label": "Z", "row": 3, "col": 1, "x": 1.25, "y": 3.25}, {"label": "X", "row": 3, "col": 2, "x": 2.25, "y": 3}, {"label": "C", "row": 3, "col": 3, "x": 3.25, "y": 3}, {"label": "V", "row": 3, "col": 4, "x": 4.25, "y": 3}, {"label": "B", "row": 3, "col": 5, "x": 5.25, "y": 3}, {"label": "Home", "row": 3, "col": 8, "x": 7.75, "y": 5, "r": 15, "rx": 5.25, "ry": 4}, {"label": "PgUp", "row": 3, "col": 11, "x": 9.25, "y": 5, "r": -15, "rx": 12.75, "ry": 4}, {"label": "N", "row": 3, "col": 14, "x": 11.75, "y": 3}, {"label": "M", "row": 3, "col": 15, "x": 12.75, "y": 3}, {"label": ",", "row": 3, "col": 16, "x": 13.75, "y": 3}, {"label": ".", "row": 3, "col": 17, "x": 14.75, "y": 3}, {"label": "/", "row": 3, "col": 18, "x": 15.75, "y": 3.25}, {"label": "RShift", "row": 3, "col": 19, "x": 16.75, "y": 3.25, "w": 1.25}, {"label": "mod7", "row": 4, "col": 0, "x": 0, "y": 4.25, "w": 1.25}, {"label": "`", "row": 4, "col": 1, "x": 1.25, "y": 4.25}, {"label": "Caps", "row": 4, "col": 2, "x": 2.25, "y": 4}, {"label": "Left", "row": 4, "col": 3, "x": 3.25, "y": 4}, {"label": "Right", "row": 4, "col": 4, "x": 4.25, "y": 4}, {"label": "Bksp", "row": 4, "col": 6, "x": 5.75, "y": 5, "r": 15, "rx": 5.25, "ry": 4, "h": 2}, {"label": "Del", "row": 4, "col": 7, "x": 6.75, "y": 5, "r": 15, "rx": 5.25, "ry": 4, "h": 2}, {"label": "End", "row": 4, "col": 8, "x": 7.75, "y": 6, "r": 15, "rx": 5.25, "ry": 4}, {"label": "PgDn", "row": 4, "col": 11, "x": 9.25, "y": 6, "r": -15, "rx": 12.75, "ry": 4}, {"label": "RET", "row": 4, "col": 12, "x": 10.25, "y": 5, "r": -15, "rx": 12.75, "ry": 4, "h": 2}, {"label": "SPC", "row": 4, "col": 13, "x": 11.25, "y": 5, "r": -15, "rx": 12.75, "ry": 4, "h": 2}, {"label": "Up", "row": 4, "col": 15, "x": 12.75, "y": 4}, {"label": "Down", "row": 4, "col": 16, "x": 13.75, "y": 4}, {"label": ",", "row": 4, "col": 17, "x": 14.75, "y": 4}, {"label": ".", "row": 4, "col": 18, "x": 15.75, "y": 4.25}, {"label": "mod8", "row": 4, "col": 19, "x": 16.75, "y": 4.25, "w": 1.25}], "layers": [{"name": "default_layer", "keys": [{"raw": "&kp EQUAL", "line": 77, "start": 0, "end": 9}, {"raw": "&tpf F1 NUMBER_1", "line": 77, "start": 11, "end": 27}, {"raw": "&tpf F2 NUMBER_2", "line": 77, "start": 29, "end": 45}, {"raw": "&tpf F3 NUMBER_3", "line": 77, "start": 47, "end": 63}, {"raw": "&tpf F4 NUMBER_4", "line": 77, "start": 69, "end": 85}, {"raw": "&tpf F5 N5", "line": 77, "start": 87, "end": 97}, {"raw": "&kp LG(LC(NUMBER_4))", "line": 77, "start": 99, "end": 119}, {"raw": "&tog 1", "line": 77, "start": 209, "end": 215}, {"raw": "&tpf F6 NUMBER_6", "line": 77, "start": 231, "end": 247}, {"raw": "&tpf F7 N7", "line": 77, "start": 249, "end": 259}, {"raw": "&tpf F8 NUMBER_8", "line": 77, "start": 261, "end": 277}, {"raw": "&tpf F9 N9", "line": 77, "start": 279, "end": 289}, {"raw": "&tpf F10 NUMBER_0", "line": 77, "start": 291, "end": 308}, {"raw": "&tpf F11 MINUS", "line": 77, "start": 310, "end": 324}, {"raw": "&kp TAB", "line": 78, "start": 0, "end": 7}, {"raw": "&kp Q", "line": 78, "start": 11, "end": 16}, {"raw": "&tpf LG(LS(W)) W", "line": 78, "start": 29, "end": 45}, {"raw": "&kp E", "line": 78, "start": 47, "end": 52}, {"raw": "&kp R", "line": 78, "start": 69, "end": 74}, {"raw": "&kp T", "line": 78, "start": 87, "end": 92}, {"raw": "&tpf F12 C_MENU", "line": 78, "start": 99, "end": 114}, {"raw": "&kp C_PLAY_PAUSE", "line": 78, "start": 209, "end": 225}, {"raw": "&kp Y", "line": 78, "start": 231, "end": 236}, {"raw": "&kp U", "line": 78, "start": 249, "end": 254}, {"raw": "&kp I", "line": 78, "start": 261, "end": 266}, {"raw": "&kp O", "line": 78, "start": 279, "end": 284}, {"raw": "&kp P", "line": 78, "start": 291, "end": 296}, {"raw": "&tpf F12 BACKSLASH", "line": 78, "start": 310, "end": 328}, {"raw": "&kp ESC", "line": 79, "start": 0, "end": 7}, {"raw": "&kp A", "line": 79, "start": 11, "end": 16}, {"raw": "&kp S", "line": 79, "start": 29, "end": 34}, {"raw": "&kp D", "line": 79, "start": 47, "end": 52}, {"raw": "&kp F", "line": 79, "start": 69, "end": 74}, {"raw": "&kp G", "line": 79, "start": 87, "end": 92}, {"raw": "&kp RC(SPACE)", "line": 79, "start": 99, "end": 112}, {"raw": "&kp LEFT_ALT", "line": 79, "start": 121, "end": 133}, {"raw": "&kp LC(E)", "line": 79, "start": 135, "end": 144}, {"raw": "&kp RIGHT_CONTROL", "line": 79, "start": 157, "end": 174}, {"raw": "&tpf INT_KATAKANAHIRAGANA COLON", "line": 79, "start": 176, "end": 207}, {"raw": "&tpf LC(GRAVE) GRAVE", "line": 79, "start": 209, "end": 229}, {"raw": "&kp H", "line": 79, "start": 231, "end": 236}, {"raw": "&kp J", "line": 79, "start": 249, "end": 254}, {"raw": "&kp K", "line": 79, "start": 261, "end": 266}, {"raw": "&kp L", "line": 79, "start": 279, "end": 284}, {"raw": "&kp SEMI", "line": 79, "start": 291, "end": 299}, {"raw": "&kp SQT", "line": 79, "start": 310, "end": 317}, {"raw": "&kp LSHFT", "line": 80, "start": 0, "end": 9}, {"raw": "&kp Z", "line": 80, "start": 11, "end": 16}, {"raw": "&kp X", "line": 80, "start": 29, "end": 34}, {"raw": "&tpf LS(LG(LA(C))) C", "line": 80, "start": 47, "end": 67}, {"raw": "&kp V", "line": 80, "start": 69, "end": 74}, {"raw": "&kp B", "line": 80, "start": 87, "end": 92}, {"raw": "&kp LEFT_CONTROL", "line": 80, "start": 135, "end": 151}, {"raw": "&kp RIGHT_ALT", "line": 80, "start": 157, "end": 170}, {"raw": "&kp N", "line": 80, "start": 231, "end": 236}, {"raw": "&kp M", "line": 80, "start": 249, "end": 254}, {"raw": "&kp COMMA", "line": 80, "start": 261, "end": 270}, {"raw": "&kp DOT", "line": 80, "start": 279, "end": 286}, {"raw": "&kp FSLH", "line": 80, "start": 291, "end": 299}, {"raw": "&kp RSHFT", "line": 80, "start": 310, "end": 319}, {"raw": "&mo 1", "line": 81, "start": 0, "end": 5}, {"raw": "&kp K_MENU", "line": 81, "start": 11, "end": 21}, {"raw": "&kp DELETE", "line": 81, "start": 29, "end": 39}, {"raw": "&kp LEFT", "line": 81, "start": 47, "end": 55}, {"raw": "&kp RIGHT", "line": 81, "start": 69, "end": 78}, {"raw": "&kp SPACE", "line": 81, "start": 99, "end": 108}, {"raw": "&kp CAPSLOCK", "line": 81, "start": 121, "end": 133}, {"raw": "&kp LGUI", "line": 81, "start": 135, "end": 143}, {"raw": "&kp LGUI", "line": 81, "start": 157, "end": 165}, {"raw": "&kp ENTER", "line": 81, "start": 176, "end": 185}, {"raw": "&kp BACKSPACE", "line": 81, "start": 209, "end": 222}, {"raw": "&kp UP", "line": 81, "start": 249, "end": 255}, {"raw": "&kp DOWN", "line": 81, "start": 261, "end": 269}, {"raw": "&kp LBKT", "line": 81, "start": 279, "end": 287}, {"raw": "&kp RBKT", "line": 81, "start": 291, "end": 299}, {"raw": "&mo 3", "line": 81, "start": 310, "end": 315}]}, {"name": "keypad", "keys": [{"raw": "&kp EQUAL", "line": 87, "start": 0, "end": 9}, {"raw": "&kp N1", "line": 87, "start": 11, "end": 17}, {"raw": "&kp N2", "line": 87, "start": 22, "end": 28}, {"raw": "&kp N3", "line": 87, "start": 32, "end": 38}, {"raw": "&kp N4", "line": 87, "start": 42, "end": 48}, {"raw": "&kp N5", "line": 87, "start": 53, "end": 59}, {"raw": "&trans", "line": 87, "start": 61, "end": 67}, {"raw": "&tog 0", "line": 87, "start": 122, "end": 128}, {"raw": "&kp N6", "line": 87, "start": 133, "end": 139}, {"raw": "&kp KP_NUM", "line": 87, "start": 141, "end": 151}, {"raw": "&kp KP_EQUAL", "line": 87, "start": 153, "end": 165}, {"raw": "&kp KP_DIVIDE", "line": 87, "start": 167, "end": 180}, {"raw": "&kp KP_MULTIPLY", "line": 87, "start": 182, "end": 197}, {"raw": "&kp MINUS", "line": 87, "start": 199, "end": 208}, {"raw": "&kp TAB", "line": 88, "start": 0, "end": 7}, {"raw": "&kp Q", "line": 88, "start": 11, "end": 16}, {"raw": "&kp W", "line": 88, "start": 22, "end": 27}, {"raw": "&kp E", "line": 88, "start": 32, "end": 37}, {"raw": "&kp R", "line": 88, "start": 42, "end": 47}, {"raw": "&kp T", "line": 88, "start": 53, "end": 58}, {"raw": "&none", "line": 88, "start": 61, "end": 66}, {"raw": "&none", "line": 88, "start": 122, "end": 127}, {"raw": "&kp Y", "line": 88, "start": 133, "end": 138}, {"raw": "&kp KP_N7", "line": 88, "start": 141, "end": 150}, {"raw": "&kp KP_N8", "line": 88, "start": 153, "end": 162}, {"raw": "&kp KP_N9", "line": 88, "start": 167, "end": 176}, {"raw": "&kp KP_MINUS", "line": 88, "start": 182, "end": 194}, {"raw": "&kp BSLH", "line": 88, "start": 199, "end": 207}, {"raw": "&kp ESC", "line": 89, "start": 0, "end": 7}, {"raw": "&kp A", "line": 89, "start": 11, "end": 16}, {"raw": "&kp S", "line": 89, "start": 22, "end": 27}, {"raw": "&kp D", "line": 89, "start": 32, "end": 37}, {"raw": "&kp F", "line": 89, "start": 42, "end": 47}, {"raw": "&kp G", "line": 89, "start": 53, "end": 58}, {"raw": "&none", "line": 89, "start": 61, "end": 66}, {"raw": "&kp LCTRL", "line": 89, "start": 71, "end": 80}, {"raw": "&kp LALT", "line": 89, "start": 82, "end": 90}, {"raw": "&kp LGUI", "line": 89, "start": 96, "end": 104}, {"raw": "&kp BACKSPACE", "line": 89, "start": 107, "end": 120}, {"raw": "&none", "line": 89, "start": 122, "end": 127}, {"raw": "&kp H", "line": 89, "start": 133, "end": 138}, {"raw": "&kp KP_N4", "line": 89, "start": 141, "end": 150}, {"raw": "&kp KP_N5", "line": 89, "start": 153, "end": 162}, {"raw": "&kp KP_N6", "line": 89, "start": 167, "end": 176}, {"raw": "&kp KP_PLUS", "line": 89, "start": 182, "end": 193}, {"raw": "&kp SQT", "line": 89, "start": 199, "end": 206}, {"raw": "&kp LSHFT", "line": 90, "start": 0, "end": 9}, {"raw": "&kp Z", "line": 90, "start": 11, "end": 16}, {"raw": "&kp X", "line": 90, "start": 22, "end": 27}, {"raw": "&kp C", "line": 90, "start": 32, "end": 37}, {"raw": "&kp V", "line": 90, "start": 42, "end": 47}, {"raw": "&kp B", "line": 90, "start": 53, "end": 58}, {"raw": "&kp HOME", "line": 90, "start": 82, "end": 90}, {"raw": "&kp PG_UP", "line": 90, "start": 96, "end": 105}, {"raw": "&kp N", "line": 90, "start": 133, "end": 138}, {"raw": "&kp KP_N1", "line": 90, "start": 141, "end": 150}, {"raw": "&kp KP_N2", "line": 90, "start": 153, "end": 162}, {"raw": "&kp KP_N3", "line": 90, "start": 167, "end": 176}, {"raw": "&kp KP_ENTER", "line": 90, "start": 182, "end": 194}, {"raw": "&kp RSHFT", "line": 90, "start": 199, "end": 208}, {"raw": "&mo 0", "line": 91, "start": 0, "end": 5}, {"raw": "&kp GRAVE", "line": 91, "start": 11, "end": 20}, {"raw": "&kp CAPS", "line": 91, "start": 22, "end": 30}, {"raw": "&kp LEFT", "line": 91, "start": 32, "end": 40}, {"raw": "&kp RIGHT", "line": 91, "start": 42, "end": 51}, {"raw": "&kp BSPC", "line": 91, "start": 61, "end": 69}, {"raw": "&kp DEL", "line": 91, "start": 71, "end": 78}, {"raw": "&kp END", "line": 91, "start": 82, "end": 89}, {"raw": "&kp PG_DN", "line": 91, "start": 96, "end": 105}, {"raw": "&kp BACKSPACE", "line": 91, "start": 107, "end": 120}, {"raw": "&kp KP_N0", "line": 91, "start": 122, "end": 131}, {"raw": "&kp UP", "line": 91, "start": 141, "end": 147}, {"raw": "&kp DOWN", "line": 91, "start": 153, "end": 161}, {"raw": "&kp KP_DOT", "line": 91, "start": 167, "end": 177}, {"raw": "&kp RBKT", "line": 91, "start": 182, "end": 190}, {"raw": "&mo 0", "line": 91, "start": 199, "end": 204}]}, {"name": "mod", "keys": [{"raw": "&none", "line": 97, "start": 0, "end": 5}, {"raw": "&bt BT_SEL 0", "line": 97, "start": 7, "end": 19}, {"raw": "&bt BT_SEL 1", "line": 97, "start": 21, "end": 33}, {"raw": "&bt BT_SEL 2", "line": 97, "start": 35, "end": 47}, {"raw": "&bt BT_SEL 3", "line": 97, "start": 49, "end": 61}, {"raw": "&bt BT_SEL 4", "line": 97, "start": 63, "end": 75}, {"raw": "&none", "line": 97, "start": 77, "end": 82}, {"raw": "&trans", "line": 97, "start": 132, "end": 138}, {"raw": "&none", "line": 97, "start": 156, "end": 161}, {"raw": "&none", "line": 97, "start": 163, "end": 168}, {"raw": "&none", "line": 97, "start": 175, "end": 180}, {"raw": "&none", "line": 97, "start": 187, "end": 192}, {"raw": "&none", "line": 97, "start": 194, "end": 199}, {"raw": "&none", "line": 97, "start": 201, "end": 206}, {"raw": "&none", "line": 98, "start": 0, "end": 5}, {"raw": "&none", "line": 98, "start": 7, "end": 12}, {"raw": "&none", "line": 98, "start": 21, "end": 26}, {"raw": "&none", "line": 98, "start": 35, "end": 40}, {"raw": "&kp Z", "line": 98, "start": 49, "end": 54}, {"raw": "&none", "line": 98, "start": 63, "end": 68}, {"raw": "&bootloader", "line": 98, "start": 77, "end": 88}, {"raw": "&bootloader", "line": 98, "start": 132, "end": 143}, {"raw": "&none", "line": 98, "start": 156, "end": 161}, {"raw": "&none", "line": 98, "start": 163, "end": 168}, {"raw": "&none", "line": 98, "start": 175, "end": 180}, {"raw": "&none", "line": 98, "start": 187, "end": 192}, {"raw": "&none", "line": 98, "start": 194, "end": 199}, {"raw": "&none", "line": 98, "start": 201, "end": 206}, {"raw": "&none", "line": 99, "start": 0, "end": 5}, {"raw": "&macro_ver", "line": 99, "start": 7, "end": 17}, {"raw": "&none", "line": 99, "start": 21, "end": 26}, {"raw": "&none", "line": 99, "start": 35, "end": 40}, {"raw": "&none", "line": 99, "start": 49, "end": 54}, {"raw": "&none", "line": 99, "start": 63, "end": 68}, {"raw": "&none", "line": 99, "start": 77, "end": 82}, {"raw": "&none", "line": 99, "start": 90, "end": 95}, {"raw": "&none", "line": 99, "start": 97, "end": 102}, {"raw": "&bt BT_CLR", "line": 99, "start": 108, "end": 118}, {"raw": "&none", "line": 99, "start": 120, "end": 125}, {"raw": "&rgb_ug RGB_MEFS_CMD 5", "line": 99, "start": 132, "end": 154}, {"raw": "&none", "line": 99, "start": 156, "end": 161}, {"raw": "&none", "line": 99, "start": 163, "end": 168}, {"raw": "&none", "line": 99, "start": 175, "end": 180}, {"raw": "&none", "line": 99, "start": 187, "end": 192}, {"raw": "&none", "line": 99, "start": 194, "end": 199}, {"raw": "&none", "line": 99, "start": 201, "end": 206}, {"raw": "&none", "line": 100, "start": 0, "end": 5}, {"raw": "&none", "line": 100, "start": 7, "end": 12}, {"raw": "&none", "line": 100, "start": 21, "end": 26}, {"raw": "&none", "line": 100, "start": 35, "end": 40}, {"raw": "&macro_ver", "line": 100, "start": 49, "end": 59}, {"raw": "&none", "line": 100, "start": 63, "end": 68}, {"raw": "&none", "line": 100, "start": 97, "end": 102}, {"raw": "&none", "line": 100, "start": 108, "end": 113}, {"raw": "&none", "line": 100, "start": 156, "end": 161}, {"raw": "&none", "line": 100, "start": 163, "end": 168}, {"raw": "&none", "line": 100, "start": 175, "end": 180}, {"raw": "&none", "line": 100, "start": 187, "end": 192}, {"raw": "&none", "line": 100, "start": 194, "end": 199}, {"raw": "&none", "line": 100, "start": 201, "end": 206}, {"raw": "&none", "line": 101, "start": 0, "end": 5}, {"raw": "&none", "line": 101, "start": 7, "end": 12}, {"raw": "&none", "line": 101, "start": 21, "end": 26}, {"raw": "&none", "line": 101, "start": 35, "end": 40}, {"raw": "&none", "line": 101, "start": 49, "end": 54}, {"raw": "&none", "line": 101, "start": 77, "end": 82}, {"raw": "&none", "line": 101, "start": 90, "end": 95}, {"raw": "&none", "line": 101, "start": 97, "end": 102}, {"raw": "&none", "line": 101, "start": 108, "end": 113}, {"raw": "&bl BL_TOG", "line": 101, "start": 120, "end": 130}, {"raw": "&rgb_ug RGB_TOG", "line": 101, "start": 132, "end": 147}, {"raw": "&bl BL_INC", "line": 101, "start": 163, "end": 173}, {"raw": "&bl BL_DEC", "line": 101, "start": 175, "end": 185}, {"raw": "&none", "line": 101, "start": 187, "end": 192}, {"raw": "&none", "line": 101, "start": 194, "end": 199}, {"raw": "&none", "line": 101, "start": 201, "end": 206}]}, {"name": "macro", "keys": [{"raw": "&trans", "line": 107, "start": 0, "end": 6}, {"raw": "&trans", "line": 107, "start": 8, "end": 14}, {"raw": "&trans", "line": 107, "start": 20, "end": 26}, {"raw": "&trans", "line": 107, "start": 28, "end": 34}, {"raw": "&trans", "line": 107, "start": 40, "end": 46}, {"raw": "&trans", "line": 107, "start": 48, "end": 54}, {"raw": "&trans", "line": 107, "start": 60, "end": 66}, {"raw": "&trans", "line": 107, "start": 104, "end": 110}, {"raw": "&trans", "line": 107, "start": 112, "end": 118}, {"raw": "&trans", "line": 107, "start": 120, "end": 126}, {"raw": "&trans", "line": 107, "start": 128, "end": 134}, {"raw": "&trans", "line": 107, "start": 136, "end": 142}, {"raw": "&trans", "line": 107, "start": 144, "end": 150}, {"raw": "&trans", "line": 107, "start": 152, "end": 158}, {"raw": "&trans", "line": 108, "start": 0, "end": 6}, {"raw": "&kp C_PREV", "line": 108, "start": 8, "end": 18}, {"raw": "&trans", "line": 108, "start": 20, "end": 26}, {"raw": "&kp C_NEXT", "line": 108, "start": 28, "end": 38}, {"raw": "&trans", "line": 108, "start": 40, "end": 46}, {"raw": "&bl BL_OFF", "line": 108, "start": 48, "end": 58}, {"raw": "&trans", "line": 108, "start": 60, "end": 66}, {"raw": "&trans", "line": 108, "start": 104, "end": 110}, {"raw": "&trans", "line": 108, "start": 112, "end": 118}, {"raw": "&trans", "line": 108, "start": 120, "end": 126}, {"raw": "&trans", "line": 108, "start": 128, "end": 134}, {"raw": "&trans", "line": 108, "start": 136, "end": 142}, {"raw": "&trans", "line": 108, "start": 144, "end": 150}, {"raw": "&trans", "line": 108, "start": 152, "end": 158}, {"raw": "&trans", "line": 109, "start": 0, "end": 6}, {"raw": "&mail", "line": 109, "start": 8, "end": 13}, {"raw": "&name", "line": 109, "start": 20, "end": 25}, {"raw": "&trans", "line": 109, "start": 28, "end": 34}, {"raw": "&trans", "line": 109, "start": 40, "end": 46}, {"raw": "&trans", "line": 109, "start": 48, "end": 54}, {"raw": "&trans", "line": 109, "start": 60, "end": 66}, {"raw": "&trans", "line": 109, "start": 68, "end": 74}, {"raw": "&trans", "line": 109, "start": 76, "end": 82}, {"raw": "&trans", "line": 109, "start": 88, "end": 94}, {"raw": "&trans", "line": 109, "start": 96, "end": 102}, {"raw": "&trans", "line": 109, "start": 104, "end": 110}, {"raw": "&trans", "line": 109, "start": 112, "end": 118}, {"raw": "&trans", "line": 109, "start": 120, "end": 126}, {"raw": "&trans", "line": 109, "start": 128, "end": 134}, {"raw": "&trans", "line": 109, "start": 136, "end": 142}, {"raw": "&trans", "line": 109, "start": 144, "end": 150}, {"raw": "&trans", "line": 109, "start": 152, "end": 158}, {"raw": "&trans", "line": 110, "start": 0, "end": 6}, {"raw": "&trans", "line": 110, "start": 8, "end": 14}, {"raw": "&trans", "line": 110, "start": 20, "end": 26}, {"raw": "&trans", "line": 110, "start": 28, "end": 34}, {"raw": "&trans", "line": 110, "start": 40, "end": 46}, {"raw": "&trans", "line": 110, "start": 48, "end": 54}, {"raw": "&trans", "line": 110, "start": 76, "end": 82}, {"raw": "&trans", "line": 110, "start": 88, "end": 94}, {"raw": "&trans", "line": 110, "start": 112, "end": 118}, {"raw": "&trans", "line": 110, "start": 120, "end": 126}, {"raw": "&trans", "line": 110, "start": 128, "end": 134}, {"raw": "&trans", "line": 110, "start": 136, "end": 142}, {"raw": "&trans", "line": 110, "start": 144, "end": 150}, {"raw": "&trans", "line": 110, "start": 152, "end": 158}, {"raw": "&trans", "line": 111, "start": 0, "end": 6}, {"raw": "&trans", "line": 111, "start": 8, "end": 14}, {"raw": "&trans", "line": 111, "start": 20, "end": 26}, {"raw": "&trans", "line": 111, "start": 28, "end": 34}, {"raw": "&trans", "line": 111, "start": 40, "end": 46}, {"raw": "&trans", "line": 111, "start": 60, "end": 66}, {"raw": "&trans", "line": 111, "start": 68, "end": 74}, {"raw": "&trans", "line": 111, "start": 76, "end": 82}, {"raw": "&trans", "line": 111, "start": 88, "end": 94}, {"raw": "&trans", "line": 111, "start": 96, "end": 102}, {"raw": "&trans", "line": 111, "start": 104, "end": 110}, {"raw": "&trans", "line": 111, "start": 120, "end": 126}, {"raw": "&trans", "line": 111, "start": 128, "end": 134}, {"raw": "&trans", "line": 111, "start": 136, "end": 142}, {"raw": "&trans", "line": 111, "start": 144, "end": 150}, {"raw": "&trans", "line": 111, "start": 152, "end": 158}]}], "macros": [{"id": "mail", "label": "MAIL", "display": "MAIL", "file": "adv360.keymap", "line": 35, "steps": ["&none", "&kp M", "&kp E", "&kp AT", "&kp A", "&kp L", "&kp J", "&kp U", "&kp F", "&kp A", "&kp I", "&kp R", "&kp I", "&kp DOT", "&kp O", "&kp R", "&kp G"]}, {"id": "name", "label": "NAME", "display": "NAME", "file": "adv360.keymap", "line": 42, "steps": ["&none", "&kp LS(A)", "&kp L", "&kp I", "&kp SPACE", "&kp LS(R)", "&kp E", "&kp D", "&kp H", "&kp A", "&kp SPACE", "&kp LS(A)", "&kp L", "&kp I", "&kp SPACE", "&kp LS(A)", "&kp B", "&kp D", "&kp U", "&kp L", "&kp L", "&kp A", "&kp SPACE", "&kp LS(A)", "&kp L", "&kp J", "&kp U", "&kp F", "&kp A", "&kp I", "&kp R", "&kp I"]}, {"id": "macro_quotes", "label": "macro_quotes", "display": "macro_quotes", "file": "macros.dtsi", "line": 5, "steps": ["&kp SQT", "&kp SQT", "&kp LEFT"]}, {"id": "macro_dquotes", "label": "macro_dquotes", "display": "macro_dquotes", "file": "macros.dtsi", "line": 11, "steps": ["&kp DQT", "&kp DQT", "&kp LEFT"]}, {"id": "macro_braces", "label": "macro_braces", "display": "macro_braces", "file": "macros.dtsi", "line": 17, "steps": ["&kp LBRC", "&kp RBRC", "&kp LEFT"]}, {"id": "macro_parens", "label": "macro_parens", "display": "macro_parens", "file": "macros.dtsi", "line": 23, "steps": ["&kp LPAR", "&kp RPAR", "&kp LEFT"]}, {"id": "macro_brackets", "label": "macro_brackets", "display": "macro_brackets", "file": "macros.dtsi", "line": 29, "steps": ["&kp LBKT", "&kp RBKT", "&kp LEFT"]}, {"id": "macro_kinesis", "label": "macro_kinesis", "display": "macro_kinesis", "file": "macros.dtsi", "line": 35, "steps": ["&kp LS(K)", "&kp I", "&kp N", "&kp E", "&kp S", "&kp I", "&kp S"]}, {"id": "Win_Cut", "label": "Win_Cut", "display": "Windows Cut", "file": "macros.dtsi", "line": 40, "steps": ["&kp LC(X)"]}, {"id": "Win_Copy", "label": "Win_Copy", "display": "Windows Copy", "file": "macros.dtsi", "line": 47, "steps": ["&kp LC(C)"]}, {"id": "Win_Paste", "label": "Win_Paste", "display": "Windows Paste", "file": "macros.dtsi", "line": 54, "steps": ["&kp LC(V)"]}, {"id": "Win_Select_All", "label": "Win_Select_All", "display": "Windows Select All", "file": "macros.dtsi", "line": 61, "steps": ["&kp LC(A)"]}, {"id": "Win_Undo", "label": "Win_Undo", "display": "Windows Undo", "file": "macros.dtsi", "line": 68, "steps": ["&kp LC(Z)"]}, {"id": "Win_Desktop", "label": "Win_Desktop", "display": "Windows Desktop", "file": "macros.dtsi", "line": 75, "steps": ["&kp LG(D)"]}, {"id": "Win_File_Explorer", "label": "Win_File_Explorer", "display": "Windows Explorer", "file": "macros.dtsi", "line": 82, "steps": ["&kp LG(E)"]}, {"id": "Win_Snip_Tool", "label": "Win_Snip_Tool", "display": "Windows Screen Snip", "file": "macros.dtsi", "line": 89, "steps": ["&kp LS(LG(S))"]}, {"id": "Win_Show_All_Windows", "label": "Win_Show_All_Windows", "display": "Windows Show All Windows", "file": "macros.dtsi", "line": 96, "steps": ["&kp LG(TAB)"]}, {"id": "Mac_Cut", "label": "Mac_Cut", "display": "Mac Cut", "file": "macros.dtsi", "line": 103, "steps": ["&kp LG(X)"]}, {"id": "Mac_Copy", "label": "Mac_Copy", "display": "Mac Copy", "file": "macros.dtsi", "line": 110, "steps": ["&kp LG(C)"]}, {"id": "Mac_Paste", "label": "Mac_Paste", "display": "Mac Paste", "file": "macros.dtsi", "line": 117, "steps": ["&kp LG(V)"]}, {"id": "Mac_Undo", "label": "Mac_Undo", "display": "Mac Undo", "file": "macros.dtsi", "line": 124, "steps": ["&kp LG(Z)"]}, {"id": "Mac_Select_All", "label": "Mac_Select_All", "display": "Mac Select All", "file": "macros.dtsi", "line": 131, "steps": ["&kp LG(A)"]}, {"id": "Mac_Mission_Control", "label": "Mac_Mission_Control", "display": "Mac Show All Windows", "file": "macros.dtsi", "line": 138, "steps": ["&kp LC(UP_ARROW)"]}, {"id": "Mac_Snip_Tool", "label": "Mac_Snip_Tool", "display": "Mac Screen Snip", "file": "macros.dtsi", "line": 145, "steps": ["&kp LC(LG(LS(NUMBER_4)))"]}, {"id": "Win_Close_Program", "label": "Win_Close_Program", "display": "Windows Close", "file": "macros.dtsi", "line": 152, "steps": ["&kp LA(F4)"]}, {"id": "Win_Settings_Menu", "label": "Win_Settings_Menu", "display": "Windows Settings", "file": "macros.dtsi", "line": 159, "steps": ["&kp LG(I)"]}, {"id": "Win_Lock_PC", "label": "Win_Lock_PC", "display": "Windows Lock", "file": "macros.dtsi", "line": 166, "steps": ["&kp LG(L)"]}, {"id": "Win_Tile_Left", "label": "Win_Tile_Left", "display": "Windows Tile Left", "file": "macros.dtsi", "line": 173, "steps": ["&kp LG(LEFT)"]}, {"id": "Win_Tile_Up", "label": "Win_Tile_Up", "display": "Windows Tile Up", "file": "macros.dtsi", "line": 180, "steps": ["&kp LG(UP_ARROW)"]}, {"id": "Win_Tile_Down", "label": "Win_Tile_Down", "display": "Windows Tile Down", "file": "macros.dtsi", "line": 187, "steps": ["&kp LG(DOWN)"]}, {"id": "Win_Tile_Right", "label": "Win_Tile_Right", "display": "Windows Tile Right", "file": "macros.dtsi", "line": 194, "steps": ["&kp LG(RIGHT)"]}, {"id": "Mac_Spotlight_Search", "label": "Mac_Spotlight_Search", "display": "Mac Spotlight Search", "file": "macros.dtsi", "line": 201, "steps": ["&kp LG(SPACE)"]}, {"id": "Mac_Close_Program", "label": "Mac_Close_Program", "display": "Mac Close Program", "file": "macros.dtsi", "line": 208, "steps": ["&kp LG(Q)"]}, {"id": "Mac_Strike_Through_Text", "label": "Mac_Strike_Through_Text", "display": "Mac Strikethrough Text", "file": "macros.dtsi", "line": 215, "steps": ["&kp LG(LS(X))"]}, {"id": "Double_Click", "label": "Double_Click", "display": "Double Click", "file": "macros.dtsi", "line": 222, "steps": ["&mkp MB1", "&mkp MB1"]}], "combos": [{"name": "combo_studio_unlock", "bindings": "&studio_unlock", "positions": [46, 59], "layers": [0], "timeout": 50, "studio": true, "line": 52}, {"name": "combo", "bindings": "&kp K_SCREENSAVER", "positions": [61], "layers": [0], "timeout": null, "studio": false, "line": 60}, {"name": "Dfffsdfa", "bindings": "&kp D", "positions": [35, 37], "layers": null, "timeout": null, "studio": false, "line": 66}], "tpf": {"term": 200, "termLine": 27, "hold": [1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 27], "holdLine": 26, "flavor": "balanced", "flavorLine": null}, "lastSha": "e46bd74", "lastRun": 214, "files": {"adv360.keymap": "#include <dt-bindings/zmk/mouse.h>\n#include <behaviors.dtsi>\n#include <dt-bindings/zmk/backlight.h>\n#include <dt-bindings/zmk/bt.h>\n#include <dt-bindings/zmk/keys.h>\n#include <dt-bindings/zmk/rgb.h>\n\n/ {\n    behaviors {\n        #include \"macros.dtsi\"\n      #include \"version.dtsi\"\n      #ifndef VERSION_MACRO\n\n\n\n\n\n        #endif\n\n        tpf: tpf {\n            compatible = \"zmk,behavior-hold-tap\";\n            label = \"TPF\";\n            bindings = <&kp>, <&kp>;\n\n            #binding-cells = <2>;\n            hold-trigger-key-positions = <1 2 3 4 5 8 9 10 11 12 13 27>;\n            tapping-term-ms = <200>;\n        };\n    };\n\n    macros {\n        mail: mail {\n            compatible = \"zmk,behavior-macro\";\n            #binding-cells = <0>;\n            bindings = <&none &kp M &kp E &kp AT &kp A &kp L &kp J &kp U &kp F &kp A &kp I &kp R &kp I &kp DOT &kp O &kp R &kp G>;\n            label = \"MAIL\";\n        };\n\n        name: name {\n            compatible = \"zmk,behavior-macro\";\n            #binding-cells = <0>;\n            bindings = <&none &kp LS(A) &kp L &kp I &kp SPACE &kp LS(R) &kp E &kp D &kp H &kp A &kp SPACE &kp LS(A) &kp L &kp I &kp SPACE &kp LS(A) &kp B &kp D &kp U &kp L &kp L &kp A &kp SPACE &kp LS(A) &kp L &kp J &kp U &kp F &kp A &kp I &kp R &kp I>;\n            label = \"NAME\";\n        };\n    };\n\n    combos {\n        compatible = \"zmk,combos\";\n\n#if defined(CONFIG_ZMK_STUDIO)\n        // Unlock Studio without replacing any existing key assignments.\n        combo_studio_unlock {\n            bindings = <&studio_unlock>;\n            key-positions = <46 59>;\n            timeout-ms = <50>;\n            layers = <0>;\n        };\n#endif\n\n        combo {\n            bindings = <&kp K_SCREENSAVER>;\n            key-positions = <61>;\n            layers = <0>;\n        };\n\n        Dfffsdfa {\n            bindings = <&kp D>;\n            key-positions = <35 37>;\n        };\n    };\n\n    keymap {\n        compatible = \"zmk,keymap\";\n\n        default_layer {\n            bindings = <\n&kp EQUAL  &tpf F1 NUMBER_1  &tpf F2 NUMBER_2  &tpf F3 NUMBER_3      &tpf F4 NUMBER_4  &tpf F5 N5  &kp LG(LC(NUMBER_4))                                                                                          &tog 1                &tpf F6 NUMBER_6  &tpf F7 N7  &tpf F8 NUMBER_8  &tpf F9 N9  &tpf F10 NUMBER_0  &tpf F11 MINUS\n&kp TAB    &kp Q             &tpf LG(LS(W)) W  &kp E                 &kp R             &kp T       &tpf F12 C_MENU                                                                                               &kp C_PLAY_PAUSE      &kp Y             &kp U       &kp I             &kp O       &kp P              &tpf F12 BACKSLASH\n&kp ESC    &kp A             &kp S             &kp D                 &kp F             &kp G       &kp RC(SPACE)         &kp LEFT_ALT  &kp LC(E)             &kp RIGHT_CONTROL  &tpf INT_KATAKANAHIRAGANA COLON  &tpf LC(GRAVE) GRAVE  &kp H             &kp J       &kp K             &kp L       &kp SEMI           &kp SQT\n&kp LSHFT  &kp Z             &kp X             &tpf LS(LG(LA(C))) C  &kp V             &kp B                                           &kp LEFT_CONTROL      &kp RIGHT_ALT                                                             &kp N             &kp M       &kp COMMA         &kp DOT     &kp FSLH           &kp RSHFT\n&mo 1      &kp K_MENU        &kp DELETE        &kp LEFT              &kp RIGHT                     &kp SPACE             &kp CAPSLOCK  &kp LGUI              &kp LGUI           &kp ENTER                        &kp BACKSPACE                           &kp UP      &kp DOWN          &kp LBKT    &kp RBKT           &mo 3\n            >;\n        };\n\n        keypad {\n            bindings = <\n&kp EQUAL  &kp N1     &kp N2    &kp N3    &kp N4     &kp N5  &trans                                                       &tog 0     &kp N6  &kp KP_NUM  &kp KP_EQUAL  &kp KP_DIVIDE  &kp KP_MULTIPLY  &kp MINUS\n&kp TAB    &kp Q      &kp W     &kp E     &kp R      &kp T   &none                                                        &none      &kp Y   &kp KP_N7   &kp KP_N8     &kp KP_N9      &kp KP_MINUS     &kp BSLH\n&kp ESC    &kp A      &kp S     &kp D     &kp F      &kp G   &none     &kp LCTRL  &kp LALT      &kp LGUI   &kp BACKSPACE  &none      &kp H   &kp KP_N4   &kp KP_N5     &kp KP_N6      &kp KP_PLUS      &kp SQT\n&kp LSHFT  &kp Z      &kp X     &kp C     &kp V      &kp B                        &kp HOME      &kp PG_UP                            &kp N   &kp KP_N1   &kp KP_N2     &kp KP_N3      &kp KP_ENTER     &kp RSHFT\n&mo 0      &kp GRAVE  &kp CAPS  &kp LEFT  &kp RIGHT          &kp BSPC  &kp DEL    &kp END       &kp PG_DN  &kp BACKSPACE  &kp KP_N0          &kp UP      &kp DOWN      &kp KP_DOT     &kp RBKT         &mo 0\n            >;\n        };\n\n        mod {\n            bindings = <\n&none  &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4  &none                                                  &trans                  &none  &none       &none       &none  &none  &none\n&none  &none         &none         &none         &kp Z         &none         &bootloader                                            &bootloader             &none  &none       &none       &none  &none  &none\n&none  &macro_ver    &none         &none         &none         &none         &none        &none  &none      &bt BT_CLR  &none       &rgb_ug RGB_MEFS_CMD 5  &none  &none       &none       &none  &none  &none\n&none  &none         &none         &none         &macro_ver    &none                             &none      &none                                           &none  &none       &none       &none  &none  &none\n&none  &none         &none         &none         &none                       &none        &none  &none      &none       &bl BL_TOG  &rgb_ug RGB_TOG                &bl BL_INC  &bl BL_DEC  &none  &none  &none\n            >;\n        };\n\n        macro {\n            bindings = <\n&trans  &trans      &trans  &trans      &trans  &trans      &trans                                      &trans  &trans  &trans  &trans  &trans  &trans  &trans\n&trans  &kp C_PREV  &trans  &kp C_NEXT  &trans  &bl BL_OFF  &trans                                      &trans  &trans  &trans  &trans  &trans  &trans  &trans\n&trans  &mail       &name   &trans      &trans  &trans      &trans  &trans  &trans      &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans\n&trans  &trans      &trans  &trans      &trans  &trans                      &trans      &trans                  &trans  &trans  &trans  &trans  &trans  &trans\n&trans  &trans      &trans  &trans      &trans              &trans  &trans  &trans      &trans  &trans  &trans          &trans  &trans  &trans  &trans  &trans\n            >;\n        };\n    };\n};\n", "macros.dtsi": "  macro_quotes: macro_quotes {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_quotes\";\n    #binding-cells = <0>;\n    bindings = <&kp SQT>, <&kp SQT>, <&kp LEFT>;\n  };\n  macro_dquotes: macro_dquotes {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_dquotes\";\n    #binding-cells = <0>;\n    bindings = <&kp DQT>, <&kp DQT>, <&kp LEFT>;\n  };\n  macro_braces: macro_braces {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_braces\";\n    #binding-cells = <0>;\n    bindings = <&kp LBRC>, <&kp RBRC>, <&kp LEFT>;\n  };\n  macro_parens: macro_parens {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_parens\";\n    #binding-cells = <0>;\n    bindings = <&kp LPAR>, <&kp RPAR>, <&kp LEFT>;\n  };\n  macro_brackets: macro_brackets {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_brackets\";\n    #binding-cells = <0>;\n    bindings = <&kp LBKT>, <&kp RBKT>, <&kp LEFT>;\n  };\n  macro_kinesis: macro_kinesis {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_kinesis\";\n    #binding-cells = <0>;\n    bindings = <&kp LS(K)>, <&kp I>, <&kp N>, <&kp E>, <&kp S>, <&kp I>, <&kp S>;\n  };\n  Win_Cut: Windows_Cut {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(X)>;\n    display-name = \"Windows Cut\";\n  };\n\n  Win_Copy: Windows_Copy {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(C)>;\n    display-name = \"Windows Copy\";\n  };\n\n  Win_Paste: Windows_Paste {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(V)>;\n    display-name = \"Windows Paste\";\n  };\n\n  Win_Select_All: Windows_SelectAll {\n      compatible = \"zmk,behavior-macro\";\n      #binding-cells = <0>;\n      bindings = <&kp LC(A)>;\n      display-name = \"Windows Select All\";\n  };\n\n  Win_Undo: Windows_Undo {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(Z)>;\n    display-name = \"Windows Undo\";\n  };\n\n  Win_Desktop: Win_Desk {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(D)>;\n    display-name = \"Windows Desktop\";\n  };\n\n  Win_File_Explorer: Win_Explr {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(E)>;\n    display-name = \"Windows Explorer\";\n  };\n\n  Win_Snip_Tool: Win_Snip {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LS(LG(S))>;\n    display-name = \"Windows Screen Snip\";\n  };\n\n  Win_Show_All_Windows: Win_ShowAW {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(TAB)>;\n    display-name = \"Windows Show All Windows\";\n  };\n\n  Mac_Cut: Mac_Cut {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(X)>;\n    display-name = \"Mac Cut\";\n  };\n\n  Mac_Copy: Mac_Copy {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(C)>;\n    display-name = \"Mac Copy\";\n  };\n\n  Mac_Paste: Mac_Paste {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(V)>;\n    display-name = \"Mac Paste\";\n  };\n\n  Mac_Undo: Mac_Undo {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(Z)>;\n    display-name = \"Mac Undo\";\n  };\n\n  Mac_Select_All: Mac_SelAll {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(A)>;\n    display-name = \"Mac Select All\";\n  };\n\n  Mac_Mission_Control: Mac_ShowAW {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(UP_ARROW)>;\n    display-name = \"Mac Show All Windows\";\n  };\n\n  Mac_Snip_Tool: Mac_Snip {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(LG(LS(NUMBER_4)))>;\n    display-name = \"Mac Screen Snip\";\n  };\n\n  Win_Close_Program: Win_Close_Program {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LA(F4)>;\n    display-name = \"Windows Close\";\n  };\n\n  Win_Settings_Menu: Win_Settings_Menu {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(I)>;\n    display-name = \"Windows Settings\";\n  };\n\n  Win_Lock_PC: Win_Lock_PC {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(L)>;\n    display-name = \"Windows Lock\";\n  };\n\n  Win_Tile_Left: Win_Tile_Left {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(LEFT)>;\n    display-name = \"Windows Tile Left\";\n  };\n\n  Win_Tile_Up: Win_Tile_Up {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(UP_ARROW)>;\n    display-name = \"Windows Tile Up\";\n  };\n\n  Win_Tile_Down: Win_Tile_Down {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(DOWN)>;\n    display-name = \"Windows Tile Down\";\n  };\n\n  Win_Tile_Right: Win_Tile_Right {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(RIGHT)>;\n    display-name = \"Windows Tile Right\";\n  };\n\n  Mac_Spotlight_Search: Mac_Spotlight_Search {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(SPACE)>;\n    display-name = \"Mac Spotlight Search\";\n  };\n\n  Mac_Close_Program: Mac_Close_Program {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(Q)>;\n    display-name = \"Mac Close Program\";\n  };\n\n  Mac_Strike_Through_Text: Mac_Strike_Through_Text {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(LS(X))>;\n    display-name = \"Mac Strikethrough Text\";\n  };\n\n  Double_Click: Double_Click {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&mkp MB1 &mkp MB1>;\n    display-name = \"Double Click\";\n  };"}};</script>
+<script>
+(() => {
+'use strict';
+const D = window.DATA;
+const KF = 'adv360.keymap';
+const FILES = {};
+Object.keys(D.files).forEach(k => FILES[k] = D.files[k].split('\n'));
+const TOKRE = /&\S+(?:[ \t]+(?!&)\S+)*/g;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LN = ['Default', 'Keypad', 'Mod', 'Macro'];
+const MODS = {LG:'⌘',RG:'⌘',LC:'⌃',RC:'⌃',LS:'⇧',RS:'⇧',LA:'⌥',RA:'⌥'};
+const MOD_NAME = {LG:'⌘ Cmd', LC:'⌃ Ctrl', LS:'⇧ Shift', LA:'⌥ Alt'};
+const KC = {EQUAL:'=',MINUS:'-',TAB:'Tab',ESC:'Esc',SPACE:'Space',ENTER:'Enter',RET:'Enter',BSPC:'⌫',BACKSPACE:'Bksp',DEL:'Del',DELETE:'Del',INS:'Ins',HOME:'Home',END:'End',PG_UP:'PgUp',PG_DN:'PgDn',LEFT:'←',RIGHT:'→',UP:'↑',DOWN:'↓',UP_ARROW:'↑',DOWN_ARROW:'↓',CAPS:'Caps',CAPSLOCK:'Caps',LSHFT:'Shift',RSHFT:'Shift',LSHIFT:'Shift',RSHIFT:'Shift',LCTRL:'Ctrl',RCTRL:'Ctrl',LEFT_CONTROL:'Ctrl',RIGHT_CONTROL:'Ctrl',LALT:'Alt',RALT:'Alt',LEFT_ALT:'Alt',RIGHT_ALT:'Alt',LGUI:'Cmd',RGUI:'Cmd',COMMA:',',DOT:'.',FSLH:'/',SEMI:';',SQT:"'",DQT:'"',LBKT:'[',RBKT:']',LBRC:'{',RBRC:'}',LPAR:'(',RPAR:')',BSLH:'\\',BACKSLASH:'\\',GRAVE:'`',COLON:':',AT:'@',K_MENU:'Menu',C_MENU:'Menu',C_PLAY_PAUSE:'Play',C_PREV:'Prev',C_NEXT:'Next',C_MUTE:'Mute',C_VOL_UP:'Vol+',C_VOL_DN:'Vol−',K_SCREENSAVER:'Screen',PSCRN:'PrtSc',INT_KATAKANAHIRAGANA:'かな',KP_NUM:'Num',KP_EQUAL:'=',KP_DIVIDE:'÷',KP_MULTIPLY:'×',KP_MINUS:'−',KP_PLUS:'+',KP_ENTER:'Enter',KP_DOT:'.'};
+const KEY_GROUPS = [
+  {name:'Letters', codes:'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')},
+  {name:'Numbers', codes:['NUMBER_1','NUMBER_2','NUMBER_3','NUMBER_4','NUMBER_5','NUMBER_6','NUMBER_7','NUMBER_8','NUMBER_9','NUMBER_0']},
+  {name:'Symbols', codes:['EQUAL','MINUS','LBKT','RBKT','BSLH','SEMI','SQT','COMMA','DOT','FSLH','GRAVE','LPAR','RPAR','LBRC','RBRC','DQT','COLON']},
+  {name:'Edit & nav', codes:['TAB','ESC','SPACE','ENTER','BSPC','DEL','INS','HOME','END','PG_UP','PG_DN','LEFT','RIGHT','UP','DOWN','CAPS']},
+  {name:'Modifiers', codes:['LSHFT','RSHFT','LCTRL','RCTRL','LALT','RALT','LGUI','RGUI']},
+  {name:'Function', codes:Array.from({length:12},(_,n)=>'F'+(n+1))},
+  {name:'Media & system', codes:['C_PLAY_PAUSE','C_PREV','C_NEXT','C_MUTE','C_VOL_UP','C_VOL_DN','K_MENU','K_SCREENSAVER','PSCRN']}
+];
+
+/* ---------- keycode + binding parsing ---------- */
+function kcLabel(c) {
+  if (!c) return '';
+  let m = /^(LG|RG|LC|RC|LS|RS|LA|RA)\((.*)\)$/.exec(c);
+  if (m) return MODS[m[1]] + kcLabel(m[2]);
+  if (Object.prototype.hasOwnProperty.call(KC, c)) return KC[c];
+  if (/^[A-Z]$/.test(c)) return c;
+  if ((m = /^(?:KP_)?N(?:UMBER_)?(\d)$/.exec(c))) return m[1];
+  if (/^F\d+$/.test(c)) return c;
+  return c.toLowerCase().replace(/_/g, ' ');
+}
+function wrapMods(code, mods) { return mods.slice().reverse().reduce((acc, m) => `${m}(${acc})`, code); }
+function parse(raw) {
+  const p = String(raw || '&none').trim().split(/\s+/);
+  const beh = p[0].replace(/^&/, '');
+  const a = p.slice(1);
+  const base = {beh, args: a, raw: p.join(' ')};
+  switch (beh) {
+    case 'kp': {
+      let c = a[0] || 'NONE', mods = [], m;
+      while ((m = /^(LG|RG|LC|RC|LS|RS|LA|RA)\((.*)\)$/.exec(c))) { mods.push(m[1].replace(/^R/, 'L')); c = m[2]; }
+      return {...base, kind:'kp', code:c, mods, label: kcLabel(a[0])};
+    }
+    case 'tpf': return {...base, kind:'hold', hold:a[0], tap:a[1], label:kcLabel(a[1]), sub: kcLabel(a[0]) + ' hold'};
+    case 'mo': case 'tog': {
+      const t = +a[0];
+      return {...base, kind:'layer', target:t, mode:beh, label: LN[t], sub: beh === 'mo' ? '(hold)' : 'toggle'};
+    }
+    case 'trans': return {...base, kind:'trans', label:'▽'};
+    case 'none': return {...base, kind:'none', label:''};
+    case 'bt': {
+      const c = a[0];
+      if (c === 'BT_SEL') return {...base, kind:'bt', bt:'BT_SEL ' + a[1], label:'BT ' + a[1], sub:'select'};
+      if (c === 'BT_CLR') return {...base, kind:'bt', bt:'BT_CLR', label:'BT', sub:'clear'};
+      return {...base, kind:'bt', bt:c, label:'BT', sub:c.replace('BT_','').toLowerCase()};
+    }
+    case 'bl': return {...base, kind:'other', label:'BL', sub:(a[0]||'').replace('BL_','').toLowerCase()};
+    case 'rgb_ug': return {...base, kind:'other', label:'RGB', sub:a.join(' ').replace('RGB_','').toLowerCase()};
+    case 'bootloader': return {...base, kind:'danger', label:'Boot', sub:'bootloader'};
+    case 'studio_unlock': return {...base, kind:'other', label:'Studio', sub:'unlock'};
+    default:
+      if (D.macros.some(m => m.id === beh) || beh.startsWith('macro_')) {
+        return {...base, kind:'macro', macro:beh, label: beh.replace(/^macro_/, '').replace(/_/g,' ').replace(/^./, c => c.toUpperCase()), sub:'macro'};
+      }
+      return {...base, kind:'other', label:beh, sub:''};
+  }
+}
+
+/* ---------- state ---------- */
+const S = {
+  layer: 0,
+  edits: {},                                       // "l:i" -> raw
+  tpf: {term: 180, flavor: D.tpf.flavor, hold: D.tpf.hold.slice()}, // seeded: term 200 -> 180 pending
+  macros: {},                                      // id -> steps draft
+  pick: null, pop: null, mdl: null,
+  sheet: false, sheetTab: 'diff',
+  branch: 'keymap/layer-tweaks', backup: true, msg: '',
+  build: {stage: 'idle'}, showCombos: true
+};
+const curRaw = (l, i) => (S.edits[l + ':' + i] !== undefined ? S.edits[l + ':' + i] : D.layers[l].keys[i].raw);
+const macroById = id => D.macros.find(m => m.id === id);
+
+/* ---------- geometry (KLE-style rotation, tented halves) ---------- */
+const SPLAY = 8, CTR = [9.1, 2.6], PAD = 0.45, BULGE = {combo_studio_unlock: 8.2, Dfffsdfa: -1.5};
+const rad = d => d * Math.PI / 180;
+const rotPt = ([x, y], [cx, cy], deg) => { const t = rad(deg), c = Math.cos(t), s = Math.sin(t), dx = x - cx, dy = y - cy; return [cx + dx * c - dy * s, cy + dx * s + dy * c]; };
+const G = D.info.map((k, i) => {
+  let p = [k.x, k.y];
+  const r = k.r || 0;
+  if (r) p = rotPt(p, [k.rx, k.ry], r);
+  const hang = k.col <= 8 ? SPLAY : -SPLAY;
+  p = rotPt(p, CTR, hang);
+  return {i, x: p[0], y: p[1], w: k.w || 1, h: k.h || 1, rot: r + hang, row: k.row, col: k.col};
+});
+const corners = g => { const t = rad(g.rot), c = Math.cos(t), s = Math.sin(t); return [[0,0],[g.w,0],[g.w,g.h],[0,g.h]].map(([u,v]) => [g.x + u*c - v*s, g.y + u*s + v*c]); };
+const center = g => { const t = rad(g.rot), c = Math.cos(t), s = Math.sin(t); return [g.x + (g.w/2)*c - (g.h/2)*s, g.y + (g.w/2)*s + (g.h/2)*c]; };
+let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+const grow = (x, y) => { minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); };
+G.forEach(g => corners(g).forEach(([x, y]) => grow(x, y)));
+const hasCombo = new Set();
+let ARCS = D.combos.map((c, n) => {
+  const single = c.positions.length < 2;
+  const A = center(G[c.positions[0]]);
+  const B = single ? A : center(G[c.positions[1]]);
+  const bulge = single ? 0 : (BULGE[c.name] ?? 1.2);
+  const mid = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2];
+  const peak = single ? [A[0], A[1] - 0.8] : [mid[0], mid[1] + bulge / 2];
+  if (single) hasCombo.add(c.positions[0]);
+  grow(peak[0], peak[1] + (single ? 0 : 0.7));
+  return {n, c, A, B, mid, bulge, peak, single, studio: c.studio, name: c.studio ? 'Studio unlock · Studio builds only' : (parse(c.bindings).label + (c.positions.length ? '' : ''))};
+});
+const ox = PAD - minX, oy = PAD - minY;
+const BW = (maxX - minX) + 2 * PAD, BH = (maxY - minY) + 2 * PAD;
+G.forEach(g => { g.x += ox; g.y += oy; });
+const sh = p => [p[0] + ox, p[1] + oy];
+ARCS.forEach(a => { a.A = sh(a.A); a.B = sh(a.B); a.mid = sh(a.mid); a.peak = sh(a.peak); });
+
+/* ---------- reachability + validation ---------- */
+function reach(t) {
+  const out = [];
+  for (let l = 0; l < 4; l++) D.layers[l].keys.forEach((K, i) => {
+    const p = parse(curRaw(l, i));
+    if (p.kind === 'layer' && p.target === t) out.push({l, i, p});
+  });
+  return out;
+}
+function unreachable() { return [1, 2, 3].filter(t => reach(t).length === 0); }
+
+/* ---------- changes + diff ---------- */
+function changes() {
+  const out = [];
+  Object.keys(S.edits).forEach(k => {
+    const [l, i] = k.split(':').map(Number);
+    if (S.edits[k] !== D.layers[l].keys[i].raw) out.push({t:'key', l, i});
+  });
+  if (S.tpf.term !== D.tpf.term) out.push({t:'term'});
+  if (S.tpf.flavor !== D.tpf.flavor) out.push({t:'flavor'});
+  if (S.tpf.hold.slice().sort((a,b)=>a-b).join() !== D.tpf.hold.slice().sort((a,b)=>a-b).join()) out.push({t:'hold'});
+  Object.keys(S.macros).forEach(id => {
+    const m = macroById(id);
+    if (S.macros[id].join('|') !== m.steps.join('|')) out.push({t:'macro', id});
+  });
+  return out;
+}
+const macroLine = (text, steps) => text.replace(/bindings = .*;/, 'bindings = ' + steps.map(s => `<${s}>`).join(', ') + ';');
+function hunks() {
+  const H = [], lines = new Set(), ch = changes();
+  const groups = {};
+  ch.filter(c => c.t === 'key').forEach(c => {
+    const K = D.layers[c.l].keys[c.i];
+    (groups[K.line] ||= []).push({c, K});
+  });
+  Object.keys(groups).forEach(ln => {
+    const items = groups[ln].slice().sort((a, b) => b.K.start - a.K.start);
+    const orig = FILES[KF][ln - 1];
+    let text = orig;
+    items.forEach(({c, K}) => { text = text.slice(0, K.start) + S.edits[c.l + ':' + c.i] + text.slice(K.end); });
+    const title = items.slice().reverse().map(({c, K}) => `${LN[c.l]} #${c.i} ${parse(K.raw).label} → ${parse(S.edits[c.l + ':' + c.i]).label}`).join(' · ');
+    H.push({file: KF, ln: +ln, title, minus: [orig], plus: [text]});
+    lines.add(KF + ':' + ln);
+  });
+  ch.filter(c => c.t === 'term').forEach(() => {
+    const o = FILES[KF][D.tpf.termLine - 1];
+    H.push({file: KF, ln: D.tpf.termLine, title: 'tpf · tapping-term-ms', minus: [o], plus: [o.replace(/<\d+>/, `<${S.tpf.term}>`)]});
+    lines.add(KF + ':' + D.tpf.termLine);
+  });
+  ch.filter(c => c.t === 'flavor').forEach(() => {
+    const ind = FILES[KF][D.tpf.termLine - 1].match(/^\s*/)[0];
+    const line = ind + `flavor = "${S.tpf.flavor}";`;
+    if (D.tpf.flavorLine == null) H.push({file: KF, ln: D.tpf.termLine, title: 'tpf · flavor (new line)', minus: [], plus: [line]});
+    else H.push({file: KF, ln: D.tpf.flavorLine, title: 'tpf · flavor', minus: [FILES[KF][D.tpf.flavorLine - 1]], plus: [line]});
+    lines.add(KF + ':flavor');
+  });
+  ch.filter(c => c.t === 'hold').forEach(() => {
+    const o = FILES[KF][D.tpf.holdLine - 1];
+    const list = S.tpf.hold.slice().sort((a,b)=>a-b).join(' ');
+    H.push({file: KF, ln: D.tpf.holdLine, title: 'tpf · hold-trigger-key-positions', minus: [o], plus: [o.replace(/=\s*<[^>]*>/, `= <${list}>`)]});
+    lines.add(KF + ':' + D.tpf.holdLine);
+  });
+  ch.filter(c => c.t === 'macro').forEach(c => {
+    const m = macroById(c.id);
+    const o = FILES[m.file][m.line - 1];
+    H.push({file: m.file, ln: m.line, title: `macro · ${c.id}`, minus: [o], plus: [macroLine(o, S.macros[c.id])]});
+    lines.add(m.file + ':' + m.line);
+  });
+  return {H, lines: lines.size};
+}
+
+/* ---------- bake (commit) ---------- */
+function bake() {
+  const byLine = {};
+  Object.keys(S.edits).forEach(k => {
+    const [l, i] = k.split(':').map(Number);
+    const K = D.layers[l].keys[i];
+    if (S.edits[k] !== K.raw) (byLine[K.line] ||= []).push({K, raw: S.edits[k]});
+  });
+  const kf = FILES[KF];
+  Object.keys(byLine).forEach(ln => {
+    const items = byLine[ln].slice().sort((a, b) => b.K.start - a.K.start);
+    let text = kf[ln - 1];
+    items.forEach(it => { text = text.slice(0, it.K.start) + it.raw + text.slice(it.K.end); });
+    kf[ln - 1] = text;
+    const toks = [...text.matchAll(TOKRE)];
+    const all = [];
+    D.layers.forEach(L => L.keys.forEach(K => { if (K.line === +ln) all.push(K); }));
+    all.forEach((K, idx) => { const t = toks[idx]; K.raw = t[0]; K.start = t.index; K.end = t.index + t[0].length; });
+  });
+  if (S.tpf.term !== D.tpf.term) {
+    kf[D.tpf.termLine - 1] = kf[D.tpf.termLine - 1].replace(/<\d+>/, `<${S.tpf.term}>`);
+    D.tpf.term = S.tpf.term;
+  }
+  const holdSorted = S.tpf.hold.slice().sort((a,b)=>a-b);
+  if (holdSorted.join() !== D.tpf.hold.slice().sort((a,b)=>a-b).join()) {
+    kf[D.tpf.holdLine - 1] = kf[D.tpf.holdLine - 1].replace(/=\s*<[^>]*>/, `= <${holdSorted.join(' ')}>`);
+    D.tpf.hold = holdSorted;
+  }
+  if (S.tpf.flavor !== D.tpf.flavor) {
+    const ind = kf[D.tpf.termLine - 1].match(/^\s*/)[0];
+    const line = ind + `flavor = "${S.tpf.flavor}";`;
+    if (D.tpf.flavorLine == null) {
+      const at = D.tpf.termLine;
+      kf.splice(at, 0, line);
+      D.layers.forEach(L => L.keys.forEach(K => { if (K.line > at) K.line++; }));
+      D.macros.forEach(m => { if (m.file === KF && m.line > at) m.line++; });
+      if (D.tpf.holdLine > at) D.tpf.holdLine++;
+      D.tpf.flavorLine = at + 1;
+    } else kf[D.tpf.flavorLine - 1] = line;
+    D.tpf.flavor = S.tpf.flavor;
+  }
+  Object.keys(S.macros).forEach(id => {
+    const m = macroById(id), steps = S.macros[id];
+    if (steps.join('|') === m.steps.join('|')) return;
+    FILES[m.file][m.line - 1] = macroLine(FILES[m.file][m.line - 1], steps);
+    m.steps = steps.slice();
+  });
+  S.edits = {}; S.macros = {};
+}
+
+/* ---------- rendering: pills, board, validator, changes ---------- */
+function renderPills() {
+  const un = new Set(unreachable());
+  $('#pills').innerHTML = [0,1,2,3].map(t => {
+    const warn = un.has(t);
+    const n = Object.keys(S.edits).filter(k => k.startsWith(t + ':')).length;
+    return `<button class="pill${warn ? ' warn' : ''}" type="button" data-l="${t}" aria-pressed="${S.layer === t}" style="--pc:var(--c${t})">` +
+      `<i class="sw"></i>${LN[t]}${warn ? '<b class="wmark" title="unreachable">!</b>' : ''}${n ? `<span class="cnt">${n}</span>` : ''}</button>`;
+  }).join('');
+  $('#comboCount').textContent = D.combos.length;
+  $('#combosBtn').setAttribute('aria-pressed', String(S.showCombos));
+  $('#board').classList.toggle('nocombos', !S.showCombos);
+}
+function renderBoard() {
+  const L = S.layer, board = $('#board');
+  let h = '';
+  G.forEach(g => {
+    const raw = curRaw(L, g.i), p = parse(raw), dirty = S.edits[L + ':' + g.i] !== undefined;
+    const cls = ['key', 'kind-' + p.kind, dirty ? 'dirty' : '', hasCombo.has(g.i) ? 'has-combo' : ''].join(' ');
+    const glow = p.kind === 'layer' ? `--glow:var(--c${p.target});` : '';
+    h += `<button type="button" class="${cls}" data-i="${g.i}" title="#${g.i}  ${esc(raw)}" aria-label="${esc(LN[L] + ' #' + g.i + ': ' + p.label + ' ' + p.sub)}" ` +
+      `style="--x:${g.x.toFixed(3)};--y:${g.y.toFixed(3)};--w:${g.w};--h:${g.h};--r:${g.rot.toFixed(3)};${glow}">` +
+      `<span class="cap">${p.sub ? `<span class="sub">${esc(p.sub)}</span>` : ''}<span class="legend">${esc(p.label)}</span></span></button>`;
+  });
+  h += `<svg class="arcs" viewBox="0 0 ${BW.toFixed(3)} ${BH.toFixed(3)}">`;
+  ARCS.forEach(a => {
+    if (a.single) return;
+    const d = `M${a.A[0].toFixed(3)} ${a.A[1].toFixed(3)} Q${a.mid[0].toFixed(3)} ${(a.mid[1] + a.bulge).toFixed(3)} ${a.B[0].toFixed(3)} ${a.B[1].toFixed(3)}`;
+    h += `<path class="arc${a.studio ? ' studio' : ''}" d="${d}"/><path class="arc-hit" data-combo="${a.n}" d="${d}"/>`;
+  });
+  h += '</svg>';
+  ARCS.forEach(a => {
+    const label = a.studio ? `⋈ Studio unlock <em>· Studio builds only</em>` : `⋈ ${esc(parse(a.c.bindings).label)}`;
+    h += `<button type="button" class="ctag${a.studio ? ' studio' : ''}" data-combo="${a.n}" style="--tx:${a.peak[0].toFixed(3)};--ty:${a.peak[1].toFixed(3)}">${label}</button>`;
+  });
+  board.innerHTML = h;
+  board.style.setProperty('--bw', BW.toFixed(3));
+  board.style.setProperty('--bh', BH.toFixed(3));
+  board.classList.toggle('picking', !!S.pick);
+  layoutBoard();
+}
+function layoutBoard() {
+  const wrap = $('#boardwrap'), board = $('#board');
+  const avail = wrap.clientWidth - 12;
+  const byH = (innerHeight - 250) / BH;
+  let U = Math.min(avail / BW, 62, Math.max(byH, 30));
+  U = Math.max(U, window.innerWidth <= 720 ? 30 : 40);
+  board.style.setProperty('--u', U.toFixed(1) + 'px');
+}
+function tipFor(t) {
+  const r = reach(t);
+  if (!r.length) return `Nothing reaches ${LN[t]}: no key on any layer switches to it.`;
+  return `Reached from ${r.map(x => `${LN[x.l]} #${x.i} (${x.p.label}${x.p.sub ? ' ' + x.p.sub : ''})`).join(' · ')}`;
+}
+function highlightReach(t) {
+  const board = $('#board');
+  if (t == null) {
+    board.classList.remove('reaching');
+    $$('.key', board).forEach(k => k.classList.remove('hl'));
+    $('#tip').classList.remove('on');
+    return;
+  }
+  board.style.setProperty('--hl', `var(--c${t})`);
+  const set = new Set(reach(t).filter(x => x.l === S.layer).map(x => x.i));
+  board.classList.add('reaching');
+  $$('.key', board).forEach(k => k.classList.toggle('hl', set.has(+k.dataset.i)));
+  const tip = $('#tip');
+  tip.textContent = tipFor(t);
+  tip.classList.add('on');
+}
+function renderValidator() {
+  const bad = unreachable().filter(t => t === 2);
+  const el = $('#validator');
+  if (bad.length) {
+    el.className = 'card-float warn';
+    el.innerHTML = `<div class="v-head"><span class="v-ico">!</span><b>Layer 2 'mod' (Bluetooth, bootloader) is unreachable — no key activates it</b></div>` +
+      `<p>Nothing on Default, Keypad or Macro switches to Mod, so its Bluetooth and bootloader keys can't be reached from the board.</p>` +
+      `<div class="v-act"><button class="btn primary" type="button" data-act="fix">Fix: assign a key…</button></div>` +
+      `<div class="v-info">ⓘ Combo ⋈ 46+59 (Studio unlock) only exists in Studio builds.</div>`;
+  } else {
+    el.className = 'card-float';
+    el.innerHTML = `<div class="v-head"><span class="v-ico ok">✓</span><b>All 4 layers reachable</b></div>` +
+      `<div class="v-info">ⓘ Combo ⋈ 46+59 (Studio unlock) only exists in Studio builds.</div>`;
+  }
+  $('#pickbar').hidden = !S.pick;
+  if (S.pick) $('#pickText').textContent = `Pick a key on Default to switch to ${LN[S.pick.target]} (${S.pick.target === 2 ? 'Bluetooth, bootloader' : ''})`;
+}
+function renderChanges() {
+  const n = changes().length, b = S.build, el = $('#changes');
+  let html;
+  if (b.stage && b.stage !== 'idle' && b.stage !== 'done') {
+    html = `<i class="spin"></i>Build #${b.run} <span>· ${b.stage === 'building' ? b.pct + '%' : b.stage}</span>`;
+  } else if (n) {
+    html = `<i class="dot-accent"></i><b>${n} change${n > 1 ? 's' : ''}</b><span>Review & commit</span>`;
+  } else {
+    html = `<i class="dot-ok"></i><b>No pending changes</b><span>· ${D.lastSha}</span>`;
+  }
+  el.innerHTML = html;
+}
+function renderAll() {
+  renderPills(); renderBoard(); renderValidator(); renderChanges();
+  if (S.sheet) renderSheet();
+}
+function setLayer(t) {
+  S.layer = t; S.pick = null; closePop(); highlightReach(null); renderAll();
+}
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast._h); toast._h = setTimeout(() => t.classList.remove('on'), 2200);
+}
+
+/* ---------- key popover ---------- */
+const TABS = [['kp','Key press'],['hold','Hold-tap'],['layer','Layer'],['macro','Macro'],['bt','Bluetooth'],['trans','Transparent'],['none','None']];
+function draftFrom(l, i) {
+  const p = parse(curRaw(l, i));
+  const d = {tab: p.kind === 'kp' ? 'kp' : p.kind === 'hold' ? 'hold' : p.kind === 'layer' ? 'layer' : p.kind === 'macro' ? 'macro' : p.kind === 'bt' ? 'bt' : p.kind === 'trans' ? 'trans' : p.kind === 'none' ? 'none' : 'kp',
+    kpCode: p.kind === 'kp' ? p.code : 'A', mods: p.kind === 'kp' ? p.mods.slice() : [],
+    hold: p.kind === 'hold' ? p.hold : 'F1', tap: p.kind === 'hold' ? p.tap : 'A', field: 'tap',
+    layerT: p.kind === 'layer' ? p.target : 1, layerMode: p.kind === 'layer' && p.mode === 'tog' ? 'tog' : 'mo',
+    macroId: p.kind === 'macro' ? p.macro : (D.macros[0] || {}).id, bt: p.kind === 'bt' ? p.bt : 'BT_SEL 0',
+    search: '', touched: false};
+  return d;
+}
+function buildRaw(d) {
+  switch (d.tab) {
+    case 'kp': return '&kp ' + wrapMods(d.kpCode, d.mods);
+    case 'hold': return `&tpf ${d.hold} ${d.tap}`;
+    case 'layer': return d.layerMode === 'mo' ? `&mo ${d.layerT}` : `&tog ${d.layerT}`;
+    case 'macro': return '&' + d.macroId;
+    case 'bt': return '&bt ' + d.bt;
+    case 'trans': return '&trans';
+    default: return '&none';
+  }
+}
+function keyGrid(d) {
+  const q = d.search.trim().toLowerCase();
+  const target = d.tab === 'hold' ? d[d.field] : d.kpCode;
+  return KEY_GROUPS.map(g => {
+    const codes = g.codes.filter(c => !q || c.toLowerCase().includes(q) || kcLabel(c).toLowerCase().includes(q));
+    if (!codes.length) return '';
+    return `<div class="kg-h">${g.name}</div><div class="kgrid">` + codes.map(c =>
+      `<button type="button" class="kc" data-kc="${c}" aria-pressed="${c === target}" title="${c}">${esc(kcLabel(c))}</button>`).join('') + '</div>';
+  }).join('') || '<p class="fine">No matching keys. Try a shorter search.</p>';
+}
+function popBody(P) {
+  const d = P.d;
+  switch (d.tab) {
+    case 'kp': return `<input class="search" type="search" placeholder="Search keys, e.g. ctrl, F5, bspc" value="${esc(d.search)}" data-role="search">
+      <div class="mods">${MODS_LIST.map(m => `<button type="button" data-mod="${m}" aria-pressed="${d.mods.includes(m)}">${MOD_NAME[m]}</button>`).join('')}</div>
+      <div id="keygrid">${keyGrid(d)}</div>`;
+    case 'hold': return `<div class="fieldsel">
+        <button type="button" data-field="hold" aria-pressed="${d.field === 'hold'}"><small>Hold</small><b>${esc(kcLabel(d.hold))}</b></button>
+        <button type="button" data-field="tap" aria-pressed="${d.field === 'tap'}"><small>Tap</small><b>${esc(kcLabel(d.tap))}</b></button></div>
+      <input class="search" type="search" placeholder="Search keys for ${d.field}" value="${esc(d.search)}" data-role="search">
+      <div id="keygrid">${keyGrid(d)}</div>
+      <button class="link" type="button" data-act="open-tpf">Hold-tap settings: timing, flavor, positions →</button>`;
+    case 'layer': return `<div class="lcards">${[0,1,2,3].map(t => `<button type="button" class="lc" style="--pc:var(--c${t})" data-lt="${t}" aria-pressed="${d.layerT === t}"><i></i>${LN[t]}<small>${t === 2 ? 'Bluetooth, bootloader' : t === 0 ? 'base layer' : ''}</small></button>`).join('')}</div>
+      <div class="lmode"><button type="button" data-lm="mo" aria-pressed="${d.layerMode === 'mo'}">Hold (momentary)</button><button type="button" data-lm="tog" aria-pressed="${d.layerMode === 'tog'}">Toggle</button></div>
+      <p class="fine">Layer keys glow in the target layer's color on the board. Momentary keys return to the previous layer on release.</p>`;
+    case 'macro': {
+      const q = d.search.trim().toLowerCase();
+      const ms = D.macros.filter(m => !q || m.id.toLowerCase().includes(q) || m.display.toLowerCase().includes(q));
+      return `<input class="search" type="search" placeholder="Search macros" value="${esc(d.search)}" data-role="search">
+        <div class="list">${ms.map(m => `<button type="button" class="li" data-mac="${m.id}" aria-pressed="${d.macroId === m.id}"><span>${esc(m.display)}</span><code>&amp;${m.id}</code></button>`).join('')}</div>
+        <button class="link" type="button" data-act="open-macro">Edit steps of ${esc(d.macroId)} →</button>`;
+    }
+    case 'bt': {
+      const opts = ['BT_SEL 0','BT_SEL 1','BT_SEL 2','BT_SEL 3','BT_SEL 4','BT_NXT','BT_PRV','BT_CLR'];
+      return `<div class="kgrid" style="margin-top:4px">${opts.map(o => `<button type="button" class="kc" style="min-width:64px" data-bt="${o}" aria-pressed="${d.bt === o}">${o.replace('BT_','').replace('SEL ', 'Profile ')}</button>`).join('')}</div>
+        <p class="fine">Bluetooth controls live on Mod in this keymap. Those keys are unreachable until a key switches to Mod.</p>`;
+    }
+    case 'trans': return `<p class="fine" style="font-size:13px;color:var(--ink-2)">Transparent passes the key through to the layer below. Use it on Keypad and Macro, where most keys fall through to Default.</p>`;
+    default: return `<p class="fine" style="font-size:13px;color:var(--ink-2)">None disables the key. It does nothing on this layer and does not pass through.</p>`;
+  }
+}
+const MODS_LIST = ['LG','LC','LS','LA'];
+function renderPop() {
+  const P = S.pop, el = $('#pop');
+  if (P.mode === 'combo') {
+    const c = D.combos[P.idx];
+    el.innerHTML = `<div class="pop-head"><div><div class="eyebrow">Combo ${c.name}</div><h3>${c.studio ? 'Studio unlock' : esc(parse(c.bindings).label)}</h3>` +
+      `<div class="pop-now">positions ${c.positions.join(' + ')} · ${esc(c.bindings)}</div></div><button class="icon" type="button" data-act="close">×</button></div>` +
+      `<div class="pop-body"><p class="fine" style="font-size:13px;color:var(--ink-2);margin-top:0">Presses of ${c.positions.map(p => '#' + p).join(' and ')} within ${c.timeout || 30} ms trigger ${esc(c.bindings)}.</p>` +
+      `<p class="fine" style="font-size:13px;color:var(--ink-2)">Layers: ${c.layers ? c.layers.map(x => LN[x]).join(', ') : 'all'}</p>` +
+      (c.studio ? `<div class="okbar"><span>ⓘ</span><span>Lives inside <code>#if defined(CONFIG_ZMK_STUDIO)</code>. It only exists in Studio builds, so a plain build has no unlock combo.</span></div>` : '') +
+      `</div><div class="pop-foot"><span class="preview">read-only in this concept</span><button class="btn" type="button" data-act="close">Done</button></div>`;
+    el.classList.add('open');
+    return;
+  }
+  const d = P.d, cur = curRaw(P.l, P.i), info = D.info[P.i];
+  const nowLabel = parse(cur).label;
+  el.innerHTML = `<div class="pop-head"><div><div class="eyebrow">#${P.i} · ${LN[P.l]} · row ${info.row} col ${info.col}${P.assign ? ' · assign' : ''}</div>` +
+    `<h3>${esc(nowLabel)}</h3><div class="pop-now">${esc(cur)}</div></div><button class="icon" type="button" data-act="close">×</button></div>` +
+    `<div class="seg">${TABS.map(([id, label]) => `<button type="button" data-tab="${id}" aria-pressed="${d.tab === id}">${label}</button>`).join('')}</div>` +
+    `<div class="pop-body" id="popBody">${popBody(P)}</div>` +
+    `<div class="pop-foot"><span class="preview">→ <b>${esc(buildRaw(d))}</b></span><span style="display:flex;gap:6px"><button class="btn ghost" type="button" data-act="reset">Reset</button><button class="btn primary" type="button" data-act="apply">Apply</button></span></div>`;
+  el.classList.add('open');
+}
+function placePop(anchor) {
+  const el = $('#pop');
+  const mobile = window.innerWidth <= 720;
+  el.classList.toggle('m', mobile);
+  if (mobile || !anchor) return;
+  const r = anchor.getBoundingClientRect(), pw = 356, ph = el.offsetHeight;
+  let x = r.right + 16;
+  if (x + pw > innerWidth - 12) x = r.left - pw - 16;
+  if (x < 12) x = Math.max(12, (innerWidth - pw) / 2);
+  const y = Math.min(Math.max(r.top + r.height / 2 - ph / 2, 70), innerHeight - ph - 12);
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+}
+function openKey(l, i, anchor, preset) {
+  S.pop = {mode: 'key', l, i, d: draftFrom(l, i), assign: !!(preset && preset.assign)};
+  if (preset) Object.assign(S.pop.d, preset.draft, {touched: true, tab: 'layer'});
+  renderPop(); placePop(anchor);
+}
+function openCombo(idx, anchor) {
+  S.pop = {mode: 'combo', idx}; renderPop(); placePop(anchor);
+}
+function closePop() { S.pop = null; $('#pop').classList.remove('open'); }
+function applyPop() {
+  const P = S.pop, d = P.d;
+  if (!d.touched && !P.assign) return closePop();
+  const raw = buildRaw(d), orig = D.layers[P.l].keys[P.i].raw, key = P.l + ':' + P.i;
+  if (raw === orig) delete S.edits[key]; else S.edits[key] = raw;
+  const label = parse(raw).label;
+  if (S.pick && P.assign) {
+    S.pick = null;
+    toast(`Layer 2 'mod' is reachable again via #${P.i} on Default`);
+  } else toast(`#${P.i} on ${LN[P.l]} → ${label}`);
+  closePop(); renderAll();
+}
+
+/* ---------- sheet: diff / commit / build ---------- */
+function renderSheet() {
+  const ch = changes(), sheet = $('#sheet'), t = S.sheetTab, b = S.build;
+  const title = ch.length ? `${ch.length} pending change${ch.length > 1 ? 's' : ''}` : 'Nothing pending';
+  let body = '', foot = '';
+  if (t === 'diff') {
+    const {H, lines} = hunks();
+    body = H.length ? H.map(h => `<div class="file"><span>${h.file}</span><span class="muted">line ${h.ln}</span></div>
+        <div class="hunk"><div class="hh"><b>${esc(h.title)}</b><span>@@ ${h.ln} @@</span></div>
+        ${h.minus.map(x => `<div class="dl minus">- ${esc(x)}</div>`).join('')}${h.plus.map(x => `<div class="dl plus">+ ${esc(x)}</div>`).join('')}</div>`).join('') +
+        `<div class="okbar"><span>✓</span><span><b>Round-trip safe.</b> Only ${lines} line${lines > 1 ? 's' : ''} of ${FILES[KF].length} changed. Comments, <code>#include</code>, <code>#if/#endif</code> and column alignment elsewhere are byte-identical.</span></div>`
+      : `<p class="fine" style="font-size:13px">The board matches the committed keymap. Edit a key to see its patch here.</p>` +
+        `<div class="okbar"><span>✓</span><span><b>Round-trip safe.</b> Parse and serialize with no edits give back the same bytes.</span></div>`;
+    body += `<div class="chips"><span class="chip">raw, read-only: #include "version.dtsi"</span><span class="chip">raw: #ifndef VERSION_MACRO</span></div>`;
+    foot = `<button class="btn ghost" type="button" data-act="discard" ${ch.length ? '' : 'disabled'}>Discard</button>` +
+      `<button class="btn primary" type="button" data-tab="commit" ${ch.length ? '' : 'disabled'}>Continue to commit →</button>`;
+  } else if (t === 'commit') {
+    if (!S.msg) S.msg = `keymap: ${ch.filter(c => c.t === 'key').length} key edit${ch.filter(c => c.t === 'key').length === 1 ? '' : 's'}${ch.some(c => c.t !== 'key') ? ', tpf tuning' : ''}`;
+    body = `<label class="field"><span>Branch</span><input type="text" data-role="branch" value="${esc(S.branch)}"></label>
+      <label class="field"><span>Commit message</span><textarea data-role="msg">${esc(S.msg)}</textarea></label>
+      <label class="check"><input type="checkbox" data-role="backup" ${S.backup ? 'checked' : ''}> Create backup branch <code>backup/V3.0-${D.lastSha}</code> first</label>
+      <p class="fine">Base <code>V3.0</code> · author Ali Aljufairi · ${ch.length} change${ch.length === 1 ? '' : 's'} to <code>adv360.keymap</code>${ch.some(c => c.t === 'macro') ? ' and <code>macros.dtsi</code>' : ''}</p>
+      <button class="btn primary wide" type="button" data-act="commit" ${ch.length ? '' : 'disabled'}>Commit and push to ${esc(S.branch)}</button>
+      <p class="fine">Pushing starts <code>build.yml</code>. It never flashes your keyboard.</p>`;
+  } else {
+    const done = b.stage === 'done';
+    const committed = b.stage && b.stage !== 'idle';
+    const pushed = committed && b.stage !== 'committing';
+    const built = b.stage === 'done';
+    const step = (ico, title, sub, extra = '') => `<div class="build-step"><span class="bs-ico ${ico}">${ico === 'done' ? '✓' : ico === 'run' ? '' : '·'}</span><div><b>${title}</b><div class="fine" style="margin:2px 0 0">${sub}</div>${extra}</div></div>`;
+    if (!committed) {
+      body = `<p class="fine" style="font-size:13px">Last build: <b>run #${D.lastRun}</b> · success · V3.0 <code>${D.lastSha}</code></p>` +
+        step('', 'Commit', 'Commit your changes to a branch to start a build.') +
+        step('', 'Build', 'GitHub Actions <code>build.yml</code> compiles both halves: <code>firmware-clique</code> and <code>firmware-no-clique</code>.') +
+        lockNote();
+    } else {
+      body = step(committed ? 'done' : 'run', 'Committed', `<code>${b.sha}</code> on <code>${esc(b.branch)}</code>`) +
+        step(pushed ? 'done' : 'run', 'Pushed', `to <code>origin/${esc(b.branch)}</code>`) +
+        step(built ? 'done' : pushed ? 'run' : '', `Build #${b.run} · build.yml`, built ? 'success · 3m 12s' : `running · ${b.pct || 0}%`,
+          pushed ? `<div class="bar"><i style="width:${built ? 100 : b.pct || 0}%"></i></div>` : '') +
+        (built ? `<div class="art"><button class="btn" type="button">firmware-clique ↓</button><button class="btn" type="button">firmware-no-clique ↓</button></div>` : '') +
+        (built ? `<p class="fine">Artifacts link to the run. Download the .uf2 and flash it yourself.</p>` : '') +
+        lockNote();
+    }
+    foot = `<span class="fine" style="margin:0">Last sync: GitHub App · ali-aljufairi only</span>`;
+  }
+  sheet.innerHTML = `<header class="sh-head"><div><div class="eyebrow">adv360.keymap · ${esc(S.branch)}</div><h2>${title}</h2></div><button class="icon" type="button" data-act="close-sheet" aria-label="Close">×</button></header>
+    <nav class="tabs" role="tablist">${[['diff','Diff'],['commit','Commit'],['build','Build']].map(([id, l]) => `<button type="button" role="tab" data-tab="${id}" aria-selected="${t === id}">${l}</button>`).join('')}</nav>
+    <div class="sh-body">${body}</div>${foot ? `<footer class="sh-foot">${foot}</footer>` : ''}`;
+  sheet.classList.toggle('open', S.sheet);
+}
+function lockNote() {
+  return `<div class="lock"><span>🔒</span><span><b>Never flashes your keyboard.</b> Flashing is a separate step you do yourself: put the keyboard in bootloader, copy the .uf2 over. ZMK Studio edits on the keyboard can override this build until you flash.</span></div>`;
+}
+let buildTimer = null;
+function commit() {
+  if (!changes().length) return;
+  const sha = 'b71d4e2';
+  bake();
+  S.build = {stage: 'committing', sha, branch: S.branch, run: D.lastRun + 1, pct: 0};
+  S.msg = '';
+  S.sheetTab = 'build';
+  renderAll();
+  setTimeout(() => { S.build.stage = 'pushing'; renderAll(); }, 650);
+  setTimeout(() => {
+    S.build.stage = 'building'; renderAll();
+    clearInterval(buildTimer);
+    buildTimer = setInterval(() => {
+      S.build.pct = Math.min(100, S.build.pct + 4);
+      if (S.build.pct >= 100) { clearInterval(buildTimer); S.build.stage = 'done'; toast('Build succeeded · artifacts ready. Nothing was flashed.'); }
+      renderAll();
+    }, 120);
+  }, 1500);
+}
+function discard() {
+  S.edits = {}; S.tpf = {term: D.tpf.term, flavor: D.tpf.flavor, hold: D.tpf.hold.slice()}; S.macros = {};
+  toast('Discarded pending changes');
+  renderAll();
+}
+
+/* ---------- modal: macro + hold-tap ---------- */
+const KEY_OPTS = () => KEY_GROUPS.map(g => `<optgroup label="${g.name}">` + g.codes.map(c => `<option value="${c}">${esc(kcLabel(c))}  (${c})</option>`).join('') + '</optgroup>').join('');
+function simulate(steps) {
+  let buf = '', caret = 0;
+  const CH = {LPAR:'(',RPAR:')',LBKT:'[',RBKT:']',LBRC:'{',RBRC:'}',SQT:"'",DQT:'"',SPACE:' ',COMMA:',',DOT:'.',EQUAL:'=',MINUS:'-',FSLH:'/',SEMI:';',GRAVE:'`',BSLH:'\\'};
+  steps.forEach(s => {
+    const code = s.replace(/^&kp\s+/, '');
+    if (code === 'LEFT') { caret = Math.max(0, caret - 1); return; }
+    if (code === 'RIGHT') { caret = Math.min(buf.length, caret + 1); return; }
+    if (code === 'BSPC') { if (caret > 0) { buf = buf.slice(0, caret - 1) + buf.slice(caret); caret--; } return; }
+    let ch = null;
+    if (CH[code] !== undefined) ch = CH[code];
+    else if (/^[A-Z]$/.test(code)) ch = code.toLowerCase();
+    else if (/^NUMBER_\d$/.test(code)) ch = code.slice(7);
+    if (ch !== null) { buf = buf.slice(0, caret) + ch + buf.slice(caret); caret += ch.length; }
+  });
+  return [buf.slice(0, caret), buf.slice(caret)];
+}
+function openMacro(id) {
+  const m = macroById(id);
+  if (!m) return;
+  S.pop = null; closePop();
+  S.mdl = {type: 'macro', id, steps: (S.macros[id] || m.steps).slice()};
+  renderModal(); showModal(true);
+}
+function openTpf() {
+  S.mdl = {type: 'tpf', term: S.tpf.term, flavor: S.tpf.flavor, hold: S.tpf.hold.slice(), padPos: 15, tap: 0, t0: 0};
+  closePop(); renderModal(); showModal(true);
+}
+function showModal(on) { $('#modalbg').classList.toggle('open', on); if (!on) S.mdl = null; }
+const FLAVOR_DESC = {
+  'balanced': 'ZMK default. A hold is decided by timing, and a tap is decided when another key is pressed.',
+  'hold-preferred': 'Holds win as soon as another key is pressed while this key is down.',
+  'tap-preferred': 'Taps win if another key is pressed before the term expires. Good for home-row mods.',
+  'tap-unless-interrupted': 'Taps win unless another key is pressed while this key is held. The strictest tap default.'
+};
+function macroModalHTML(M) {
+  const m = macroById(M.id);
+  const [before, after] = simulate(M.steps);
+  const origLine = FILES[m.file][m.line - 1];
+  const newLine = macroLine(origLine, M.steps);
+  const changed = M.steps.join('|') !== m.steps.join('|');
+  return `<div class="m-head"><div><div class="eyebrow">Macro · zmk,behavior-macro · ${m.file} line ${m.line}</div><h2>${esc(m.display)}</h2>` +
+    `<code class="muted">&amp;${esc(M.id)} · ${M.steps.length} steps</code></div><button class="icon" type="button" data-m="close" aria-label="Close">×</button></div>
+    <div class="m-body">
+      <section>
+        <div class="sec-title">Steps <span>taps in order, top to bottom</span></div>
+        <ol class="steps">${M.steps.map((s, idx) => {
+          const code = s.replace(/^&kp\s+/, '');
+          const lab = s.startsWith('&kp ') ? kcLabel(code) : s.replace('&', '');
+          return `<li class="step" draggable="true" data-si="${idx}"><span class="grip">⠿</span><span class="idx">${idx + 1}</span>` +
+            `<span style="display:flex;align-items:center;gap:8px"><span class="chip-k">${esc(lab)}</span><span class="code">${esc(s)}</span></span>` +
+            `<span class="sx"><button type="button" data-m="up" data-si="${idx}" ${idx === 0 ? 'disabled' : ''} aria-label="Move up">↑</button><button type="button" data-m="down" data-si="${idx}" ${idx === M.steps.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button></span>` +
+            `<span class="sx"><button type="button" data-m="del" data-si="${idx}" aria-label="Remove">×</button></span></li>`;
+        }).join('')}</ol>
+        <div class="addrow"><select id="addSel">${KEY_OPTS()}</select><button class="btn" type="button" data-m="add">+ Add tap</button></div>
+      </section>
+      <section>
+        <div class="sec-title">Result preview</div>
+        <div class="preview-box"><span>${esc(before)}</span><i class="caret"></i><span>${esc(after)}</span></div>
+        <p class="fine">Simulated in a plain text field. Reorder the steps and the result changes, so the order is part of the macro.</p>
+        <div class="sec-title">Raw diff <span>${changed ? 'pending' : 'no change'}</span></div>
+        <pre class="raw">${changed ? `<span class="m">- ${esc(origLine)}</span>\n<span class="p">+ ${esc(newLine)}</span>` : `  ${esc(origLine)}`}</pre>
+      </section>
+    </div>
+    <div class="m-foot"><span class="fine">Saved into <code>${m.file}</code>. Nothing is flashed.</span><button class="btn ghost" type="button" data-m="close">Cancel</button><button class="btn primary" type="button" data-m="save-macro" ${changed ? '' : 'disabled'}>Save macro</button></div>`;
+}
+function tpfModalHTML(M) {
+  const used = D.layers.reduce((n, L) => n + L.keys.filter(K => parse(K.raw).kind === 'hold').length, 0);
+  const origTerm = FILES[KF][D.tpf.termLine - 1];
+  const newTerm = origTerm.replace(/<\d+>/, `<${M.term}>`);
+  return `<div class="m-head"><div><div class="eyebrow">Hold-tap · zmk,behavior-hold-tap · ${KF} line ${D.tpf.termLine}</div><h2>tpf</h2>` +
+    `<code class="muted">&amp;tpf · ${used} keys use it across layers</code></div><button class="icon" type="button" data-m="close" aria-label="Close">×</button></div>
+    <div class="m-body">
+      <section>
+        <div class="sec-title">Timing</div>
+        <div class="slider-row"><input type="range" id="term" min="100" max="400" step="5" value="${M.term}"><output id="termOut">${M.term} ms</output></div>
+        <div class="ticks"><span>100</span><span>ZMK default 200</span><span>400</span></div>
+        <label class="field" style="margin-top:4px"><span>Flavor</span><select id="flavor">${Object.keys(FLAVOR_DESC).map(f => `<option value="${f}" ${M.flavor === f ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
+        <p class="seg-flavor" id="flavorDesc">${FLAVOR_DESC[M.flavor]}</p>
+        <div class="sec-title">Hold-trigger positions <span id="holdCount">${M.hold.length} keys</span></div>
+        <div class="mini-wrap" id="mini">${miniBoard(M.hold)}</div>
+        <p class="fine">Tap a key to toggle whether a press on it can become a hold. Keys outside the set always tap.</p>
+      </section>
+      <section>
+        <div class="sec-title">Try it <span>simulated</span></div>
+        <div class="pair"><div><small>Hold</small><b>per key</b></div><div><small>Tap</small><b>per key</b></div></div>
+        <p class="fine" style="margin-top:-4px">Each <code>&amp;tpf</code> key sets its own hold and tap, e.g. <code>&amp;tpf F1 NUMBER_1</code>.</p>
+        <label class="field" style="margin-top:6px"><span>Simulated press on</span><select id="padPos">${G.map(g => `<option value="${g.i}" ${M.padPos === g.i ? 'selected' : ''}>#${g.i} ${esc(parse(curRaw(0, g.i)).label)}</option>`).join('')}</select></label>
+        <button class="pad" id="pad" type="button">Press and hold</button>
+        <div class="pad-bar"><i id="padFill"></i></div>
+        <div class="pad-out" id="padOut">Press and release quickly for a tap, or hold past the term.</div>
+        <div class="sec-title" style="margin-top:14px">Raw diff</div>
+        <pre class="raw" id="rawTpf">${M.term !== D.tpf.term ? `<span class="m">- ${esc(origTerm)}</span>\n<span class="p">+ ${esc(newTerm)}</span>` : `  ${esc(origTerm)}`}</pre>
+      </section>
+    </div>
+    <div class="m-foot"><span class="fine">Global to every <code>&amp;tpf</code> key. Nothing is flashed.</span><button class="btn ghost" type="button" data-m="close">Cancel</button><button class="btn primary" type="button" data-m="save-tpf">Save hold-tap</button></div>`;
+}
+function miniBoard(holdSet) {
+  let h = `<div class="board mini" style="--bw:${BW.toFixed(3)};--bh:${BH.toFixed(3)};--u:19px;width:calc(var(--bw)*var(--u));height:calc(var(--bh)*var(--u));margin:0 auto">`;
+  G.forEach(g => {
+    h += `<button type="button" class="key${holdSet.includes(g.i) ? ' on' : ''}" data-pos="${g.i}" aria-label="position ${g.i}" aria-pressed="${holdSet.includes(g.i)}" style="--x:${g.x.toFixed(3)};--y:${g.y.toFixed(3)};--w:${g.w};--h:${g.h};--r:${g.rot.toFixed(3)}"><span class="cap"><span class="legend"></span></span></button>`;
+  });
+  return h + '</div>';
+}
+function renderModal() {
+  const M = S.mdl;
+  if (!M) return;
+  $('#modal').innerHTML = M.type === 'macro' ? macroModalHTML(M) : tpfModalHTML(M);
+}
+function padTick() {
+  const M = S.mdl; if (!M || !M.down) return;
+  const el = performance.now() - M.t0;
+  $('#padFill').style.width = Math.min(100, el / M.term * 100) + '%';
+  $('#padOut').innerHTML = `${Math.round(el)} ms`;
+  M.raf = requestAnimationFrame(padTick);
+}
+function padResult() {
+  const M = S.mdl, el = performance.now() - M.t0;
+  const p = parse(curRaw(0, M.padPos));
+  const isHold = M.hold.includes(M.padPos) && el >= M.term && p.kind === 'hold';
+  const isTpf = p.kind === 'hold';
+  if (!isTpf) return `<b>Not a hold-tap key.</b> #${M.padPos} on Default is ${esc(p.label)}, so it just sends its key.`;
+  return isHold ? `<b>Hold</b> after ${Math.round(el)} ms → <code>&amp;kp ${esc(p.hold)}</code>` : `<b>Tap</b> after ${Math.round(el)} ms → <code>&amp;kp ${esc(p.tap)}</code>`;
+}
+
+/* ---------- events ---------- */
+const board = $('#board');
+board.addEventListener('click', e => {
+  const k = e.target.closest('.key');
+  if (k) {
+    const i = +k.dataset.i;
+    if (S.pick) { openKey(S.layer, i, k, {assign: true, draft: {tab: 'layer', layerT: S.pick.target, layerMode: 'mo'}}); return; }
+    openKey(S.layer, i, k); return;
+  }
+  const c = e.target.closest('[data-combo]');
+  if (c) { openCombo(+c.dataset.combo, c); }
+});
+$('#pills').addEventListener('click', e => {
+  const b = e.target.closest('[data-l]'); if (b) setLayer(+b.dataset.l);
+});
+$('#pills').addEventListener('pointerover', e => {
+  const b = e.target.closest('[data-l]'); if (b) highlightReach(+b.dataset.l);
+});
+$('#pills').addEventListener('pointerleave', () => highlightReach(null));
+$('#combosBtn').addEventListener('click', () => { S.showCombos = !S.showCombos; renderPills(); });
+$('#pickCancel').addEventListener('click', () => { S.pick = null; renderAll(); });
+$('#validator').addEventListener('click', e => {
+  if (e.target.closest('[data-act="fix"]')) { S.layer = 0; S.pick = {target: 2}; closePop(); renderAll(); toast('Pick any key on Default'); }
+});
+$('#changes').addEventListener('click', () => { S.sheet = !S.sheet; if (S.sheet) renderSheet(); else $('#sheet').classList.remove('open'); });
+$('#sheet').addEventListener('click', e => {
+  const t = e.target.closest('[data-tab]');
+  if (t) { S.sheetTab = t.dataset.tab; renderSheet(); return; }
+  const a = e.target.closest('[data-act]'); if (!a) return;
+  const act = a.dataset.act;
+  if (act === 'close-sheet') { S.sheet = false; $('#sheet').classList.remove('open'); }
+  if (act === 'discard') discard();
+  if (act === 'commit') commit();
+});
+$('#sheet').addEventListener('input', e => {
+  if (e.target.dataset.role === 'branch') S.branch = e.target.value;
+  if (e.target.dataset.role === 'msg') S.msg = e.target.value;
+});
+$('#sheet').addEventListener('change', e => {
+  if (e.target.dataset.role === 'backup') S.backup = e.target.checked;
+});
+$('#pop').addEventListener('input', e => {
+  if (!S.pop || S.pop.mode !== 'key' || e.target.dataset.role !== 'search') return;
+  S.pop.d.search = e.target.value;
+  const g = $('#keygrid'); if (g) g.innerHTML = keyGrid(S.pop.d);
+});
+$('#pop').addEventListener('click', e => {
+  const P = S.pop; if (!P) return;
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.act === 'close') return closePop();
+  if (P.mode !== 'key') return;
+  const d = P.d;
+  const set = fn => { fn(); d.touched = true; renderPop(); };
+  if (b.dataset.tab) return set(() => { d.tab = b.dataset.tab; });
+  if (b.dataset.kc) return set(() => { if (d.tab === 'hold') d[d.field] = b.dataset.kc; else d.kpCode = b.dataset.kc; });
+  if (b.dataset.mod) return set(() => { d.mods = d.mods.includes(b.dataset.mod) ? d.mods.filter(x => x !== b.dataset.mod) : [...d.mods, b.dataset.mod]; });
+  if (b.dataset.field) return set(() => { d.field = b.dataset.field; d.search = ''; });
+  if (b.dataset.lt) return set(() => { d.layerT = +b.dataset.lt; });
+  if (b.dataset.lm) return set(() => { d.layerMode = b.dataset.lm; });
+  if (b.dataset.mac) return set(() => { d.macroId = b.dataset.mac; });
+  if (b.dataset.bt) return set(() => { d.bt = b.dataset.bt; });
+  switch (b.dataset.act) {
+    case 'apply': return applyPop();
+    case 'reset': P.d = draftFrom(P.l, P.i); return renderPop();
+    case 'open-tpf': return openTpf();
+    case 'open-macro': return openMacro(d.macroId);
+  }
+});
+$('#modalbg').addEventListener('click', e => {
+  if (e.target.id === 'modalbg') return showModal(false);
+  const M = S.mdl; if (!M) return;
+  const pos = e.target.closest('[data-pos]');
+  if (pos && M.type === 'tpf') {
+    const i = +pos.dataset.pos;
+    M.hold = M.hold.includes(i) ? M.hold.filter(x => x !== i) : [...M.hold, i];
+    $('#mini').innerHTML = miniBoard(M.hold);
+    $('#holdCount').textContent = M.hold.length + ' keys';
+    return;
+  }
+  const b = e.target.closest('[data-m]'); if (!b || b.disabled) return;
+  const act = b.dataset.m, si = +b.dataset.si;
+  if (act === 'close') return showModal(false);
+  if (M.type === 'macro') {
+    if (act === 'up') { [M.steps[si - 1], M.steps[si]] = [M.steps[si], M.steps[si - 1]]; }
+    if (act === 'down') { [M.steps[si + 1], M.steps[si]] = [M.steps[si], M.steps[si + 1]]; }
+    if (act === 'del') M.steps.splice(si, 1);
+    if (act === 'add') M.steps.push('&kp ' + $('#addSel').value);
+    if (act === 'save-macro') {
+      S.macros[M.id] = M.steps.slice();
+      if (S.macros[M.id].join('|') === macroById(M.id).steps.join('|')) delete S.macros[M.id];
+      showModal(false); toast(`${M.id} updated`); renderAll(); return;
+    }
+    if (['up','down','del','add'].includes(act)) renderModal();
+  } else {
+    if (act === 'save-tpf') {
+      S.tpf = {term: M.term, flavor: M.flavor, hold: M.hold.slice()};
+      showModal(false); toast(`tpf: tapping-term ${M.term} ms · ${M.flavor}`); renderAll(); return;
+    }
+  }
+});
+// macro drag reorder
+let dragFrom = null;
+$('#modal').addEventListener('dragstart', e => {
+  const s = e.target.closest('.step'); if (!s) return;
+  dragFrom = +s.dataset.si; s.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(dragFrom));
+});
+$('#modal').addEventListener('dragover', e => {
+  const s = e.target.closest('.step'); if (!s) return;
+  e.preventDefault();
+  $$('.step').forEach(x => x.classList.toggle('over', x === s));
+});
+$('#modal').addEventListener('dragend', () => { $$('.step').forEach(x => x.classList.remove('dragging', 'over')); dragFrom = null; });
+$('#modal').addEventListener('drop', e => {
+  const s = e.target.closest('.step'); const M = S.mdl;
+  if (!s || !M || M.type !== 'macro' || dragFrom == null) return;
+  e.preventDefault();
+  const to = +s.dataset.si;
+  const [item] = M.steps.splice(dragFrom, 1);
+  M.steps.splice(to, 0, item);
+  dragFrom = null; renderModal();
+});
+// modal: range + flavor (in-place updates so the slider stays smooth)
+$('#modal').addEventListener('input', e => {
+  const M = S.mdl; if (!M || M.type !== 'tpf') return;
+  if (e.target.id === 'term') {
+    M.term = +e.target.value;
+    $('#termOut').textContent = M.term + ' ms';
+    const orig = FILES[KF][D.tpf.termLine - 1];
+    $('#rawTpf').innerHTML = M.term !== D.tpf.term ? `<span class="m">- ${esc(orig)}</span>\n<span class="p">+ ${esc(orig.replace(/<\d+>/, `<${M.term}>`))}</span>` : `  ${esc(orig)}`;
+  }
+});
+$('#modal').addEventListener('change', e => {
+  const M = S.mdl; if (!M || M.type !== 'tpf') return;
+  if (e.target.id === 'flavor') { M.flavor = e.target.value; $('#flavorDesc').textContent = FLAVOR_DESC[M.flavor]; }
+  if (e.target.id === 'padPos') M.padPos = +e.target.value;
+});
+document.addEventListener('pointerdown', e => {
+  const p = e.target.closest && e.target.closest('#pad');
+  if (!p || !S.mdl) return;
+  const M = S.mdl; M.down = true; M.t0 = performance.now(); p.classList.add('down');
+  cancelAnimationFrame(M.raf); padTick();
+});
+document.addEventListener('pointerup', () => {
+  const M = S.mdl; if (!M || !M.down) return;
+  M.down = false; cancelAnimationFrame(M.raf);
+  $('#pad').classList.remove('down'); $('#padFill').style.width = '0';
+  $('#padOut').innerHTML = padResult();
+});
+document.addEventListener('pointerdown', e => {
+  if (!S.pop) return;
+  if (e.target.closest('#pop, .key, [data-combo], #modal')) return;
+  closePop();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (S.mdl) return showModal(false);
+    if (S.pop) return closePop();
+    if (S.pick) { S.pick = null; renderAll(); return; }
+    if (S.sheet) { S.sheet = false; $('#sheet').classList.remove('open'); }
+    return;
+  }
+  if (/input|textarea|select/i.test(document.activeElement.tagName) || S.mdl) return;
+  if (['1','2','3','4'].includes(e.key)) setLayer(+e.key - 1);
+});
+$('#theme').addEventListener('click', () => {
+  const dark = document.documentElement.dataset.theme !== 'dark';
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  $('#theme').textContent = dark ? 'Light' : 'Dark';
+});
+window.addEventListener('resize', () => { layoutBoard(); if (S.pop && S.pop.mode) placePop(board.querySelector(`[data-i="${S.pop.i}"]`)); });
+
+/* seed with the real layer-0 layout and open the sheet state consistently */
+renderAll();
+})();
+</script>
+</body>
+</html>

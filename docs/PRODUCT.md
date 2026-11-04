@@ -39,6 +39,12 @@ Ideas may be borrowed from <https://github.com/nickcoutsos/keymap-editor> (MIT) 
 - 2026-11-05 — **UI direction: Board-first** concept, with a user-selectable theme system
   (many presets, inspired by Ghostty and OpenCode).
 
+- 2026-11-05 — **Theme picker approved.** Ship only the 40 license-cleared (MIT/Apache-2.0)
+  Ghostty palettes plus hand-tuned themes, with attribution; users can import their own. Default
+  follows the system: Catppuccin Mocha (dark) / Catppuccin Latte (light).
+- 2026-11-05 — **Team:** Haiku builds UI components in small tasks; Terra builds logic; Luna (max)
+  implements issue-research items. See `docs/ROADMAP.md`.
+
 ## The config (see `fixtures/adv360/`)
 
 - `adv360.keymap` — shared keymap: 4 layers × 76 keys (`default_layer`, `keypad`, `mod`, `macro`),

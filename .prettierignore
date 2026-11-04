@@ -6,3 +6,5 @@ src/routeTree.gen.ts
 docs/PRODUCT.md
 src/routes/__root.tsx
 src/routes/index.tsx
+design/
+docs/research/

@@ -1,0 +1,1569 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Workbench · adv360 keymap editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ---------- tokens ---------- */
+:root{
+  --bg:#0c0d10; --panel:#131519; --panel2:#181b21; --panel3:#20242c; --line:#252a33; --line2:#333945;
+  --text:#e8eaf0; --muted:#8c94a3; --faint:#5d6574;
+  --accent:#f2b04a; --accent-soft:rgba(242,176,74,.14); --accent-ink:#2a1a00;
+  --key-top:#2a2f3a; --key-bot:#1b1f27; --key-edge:#07080b; --key-text:#eceef4;
+  --hold:#a98bff; --layer:#3fd0b5; --bt:#ff9a5a; --danger:#ff6b6b; --warn:#f2b04a; --ok:#6fd68a;
+  --studio:#4cc3ff; --trans:#6b7280; --macro:#f06bd0; --device:#8fb4ff;
+  --radius:10px; --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+  --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#efeee9; --panel:#fbfaf6; --panel2:#f3f1ea; --panel3:#e9e6dd; --line:#dbd7cc; --line2:#c6c1b3;
+  --text:#1c1e23; --muted:#666b76; --faint:#9aa0aa;
+  --accent:#b86e00; --accent-soft:rgba(184,110,0,.12); --accent-ink:#fff7e6;
+  --key-top:#ffffff; --key-bot:#e7e4dc; --key-edge:#aaa596; --key-text:#1c1e23;
+  --hold:#6a4fd6; --layer:#0d8a72; --bt:#c5561c; --danger:#c9303a; --warn:#a86300; --ok:#2a8a48;
+  --studio:#0a7bb3; --trans:#8a8f99; --macro:#b03f98; --device:#3b63b8;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font:14px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+button:disabled{opacity:.45;cursor:not-allowed}
+kbd{font:500 11px var(--mono);padding:1px 5px;border:1px solid var(--line2);border-radius:5px;color:var(--muted);background:var(--panel2)}
+code,.mono{font-family:var(--mono)}
+.eyebrow{font:600 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.muted{color:var(--muted)}
+.hidden{display:none!important}
+
+/* ---------- shell ---------- */
+.app{display:grid;height:100vh;height:100dvh;grid-template-columns:232px minmax(0,1fr) 320px;grid-template-rows:48px minmax(0,1fr) var(--drawer-h,300px);background:var(--bg)}
+.app.dclosed{--drawer-h:38px}
+.topbar{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:0 14px;border-bottom:1px solid var(--line);background:var(--panel);min-width:0}
+.sidebar{grid-column:1;grid-row:2;border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+.main{grid-column:2;grid-row:2;min-width:0;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.inspector{grid-column:3;grid-row:2;border-left:1px solid var(--line);background:var(--panel);min-height:0;overflow:auto}
+.drawer{grid-column:1/-1;grid-row:3;border-top:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+
+/* ---------- topbar ---------- */
+.brand{display:flex;align-items:center;gap:9px;font-weight:600;white-space:nowrap}
+.mark{width:22px;height:22px;border-radius:6px;background:linear-gradient(140deg,var(--accent),#ff7a45);position:relative;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.mark::after{content:"";position:absolute;left:5px;right:5px;top:6px;height:3px;border-radius:2px;background:var(--accent-ink);box-shadow:0 5px 0 var(--accent-ink)}
+.brand span.dim{color:var(--muted);font-weight:400}
+.crumbs{display:flex;align-items:center;gap:6px;color:var(--muted);font:12px var(--mono);white-space:nowrap;overflow:hidden;min-width:0}
+.crumbs .cur{color:var(--text)}
+.crumbs .branch{margin-left:6px;padding:2px 7px;border-radius:99px;border:1px solid var(--line2);color:var(--layer);font-size:11px}
+.jump{position:relative;flex:1;max-width:340px;min-width:120px;margin-left:auto}
+.jump input{width:100%;height:30px;border-radius:8px;border:1px solid var(--line2);background:var(--panel2);padding:0 56px 0 11px;outline:none}
+.jump input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.jump .slash{position:absolute;right:9px;top:50%;transform:translateY(-50%)}
+.jump-res{position:absolute;top:36px;left:0;right:0;background:var(--panel3);border:1px solid var(--line2);border-radius:10px;padding:5px;box-shadow:0 18px 40px rgba(0,0,0,.35);z-index:30}
+.jump-res button{display:flex;width:100%;justify-content:space-between;gap:10px;padding:7px 9px;border-radius:7px;text-align:left}
+.jump-res button:hover,.jump-res button.on{background:var(--accent-soft)}
+.jump-res small{color:var(--muted);font:11px var(--mono)}
+.tb-right{display:flex;align-items:center;gap:8px}
+.pill{height:28px;padding:0 10px;border-radius:99px;border:1px solid var(--line2);display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);background:var(--panel2);white-space:nowrap}
+.pill:hover{color:var(--text)}
+.pill.dirty{color:var(--accent);border-color:rgba(242,176,74,.4);background:var(--accent-soft)}
+.pill .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.btn{height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--line2);background:var(--panel2);display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:13px;font-weight:500;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.primary:hover:not(:disabled){filter:brightness(1.07)}
+.btn.ghost{background:transparent}
+.btn.sm{height:26px;padding:0 9px;font-size:12px}
+.btn.teal{border-color:rgba(76,195,255,.5);color:var(--studio)}
+.icon-btn{width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line2);background:var(--panel2);color:var(--muted)}
+.icon-btn:hover{color:var(--text)}
+.icon-btn svg{width:15px;height:15px}
+.mobile-only{display:none}
+
+/* ---------- sidebar ---------- */
+.sb-scroll{overflow:auto;flex:1;padding:8px 8px 14px}
+.sidebar section{margin-bottom:14px}
+.sidebar h3{display:flex;justify-content:space-between;align-items:center;margin:8px 8px 5px;font:600 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.tree-item{width:100%;display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:7px;text-align:left;color:var(--muted);font-size:13px}
+.tree-item:hover{background:var(--panel2);color:var(--text)}
+.tree-item.on{background:var(--accent-soft);color:var(--text);box-shadow:inset 2px 0 0 var(--accent)}
+.tree-item .ico{width:18px;height:18px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font:600 10.5px var(--mono);background:var(--panel3);color:var(--muted);flex:none}
+.tree-item .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tree-item .meta{font:500 10.5px var(--mono);color:var(--faint)}
+.tree-item .meta.bad{color:var(--danger)}
+.tree-item .meta.ok{color:var(--ok)}
+.tree-item .tag{font:600 9.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:2px 5px;border-radius:4px;border:1px solid rgba(76,195,255,.45);color:var(--studio)}
+.sb-foot{padding:11px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.5}
+.sb-foot b{color:var(--text);font-weight:600}
+.count{font:500 10.5px var(--mono);color:var(--faint);letter-spacing:0}
+.badge{font:600 10.5px var(--mono);padding:1px 6px;border-radius:99px;background:var(--danger);color:#fff;letter-spacing:0}
+.badge.warn{background:var(--warn);color:#1a1200}
+.badge.info{background:var(--panel3);color:var(--muted)}
+
+/* ---------- main header ---------- */
+.mainhead{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:12px 18px 10px;border-bottom:1px solid var(--line);background:var(--panel)}
+.mainhead h1{margin:3px 0 0;font-size:18px;font-weight:600;letter-spacing:-.01em}
+.tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.seg{display:inline-flex;padding:3px;border-radius:9px;background:var(--panel2);border:1px solid var(--line)}
+.seg button{height:26px;min-width:46px;padding:0 10px;border-radius:6px;font:500 12.5px var(--sans);color:var(--muted);display:inline-flex;align-items:center;gap:6px;justify-content:center}
+.seg button.on{background:var(--panel3);color:var(--text);box-shadow:0 1px 0 rgba(0,0,0,.25),inset 0 0 0 1px var(--line2)}
+.seg button .n{font:500 10.5px var(--mono);color:var(--faint)}
+.seg button.warnd::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--danger);margin-left:-2px}
+.toggle{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);cursor:pointer;user-select:none}
+.toggle input{accent-color:var(--studio)}
+.legend{display:flex;gap:11px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.stage{flex:1;min-height:0;overflow:auto;padding:18px}
+.stage-inner{max-width:1180px;margin:0 auto}
+
+/* ---------- banners ---------- */
+.banner{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,107,107,.45);background:rgba(255,107,107,.08);margin-bottom:14px;font-size:13px}
+.banner .ttl{font-weight:600}
+.banner.assign{border-color:rgba(242,176,74,.6);background:var(--accent-soft)}
+.banner .grow{flex:1;min-width:0}
+.banner .sub{color:var(--muted);font-size:12.5px}
+.sev-ico{width:18px;height:18px;flex:none;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font:700 11px var(--mono);color:#fff}
+.sev-ico.error{background:var(--danger)}
+.sev-ico.warn{background:var(--warn);color:#1a1200}
+.sev-ico.info{background:var(--studio);color:#00202e}
+
+/* ---------- board ---------- */
+.board-card{position:relative;border:1px solid var(--line);border-radius:18px;padding:26px 18px 18px;background:
+  radial-gradient(120% 90% at 50% 0%, rgba(242,176,74,.06), transparent 60%),
+  linear-gradient(var(--line) 1px, transparent 1px) 0 0/28px 28px,
+  linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0/28px 28px,
+  var(--panel);
+  background-blend-mode:normal;overflow:auto}
+.board-card .cardhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.board-host{overflow-x:auto;padding-bottom:2px}
+.board{position:relative;margin:0 auto;}
+.k{position:absolute;padding:0;border:0;background:none;border-radius:calc(var(--u)*.17);transition:transform .12s}
+.k .cap{position:absolute;inset:3px;border-radius:calc(var(--u)*.17);
+  background:linear-gradient(180deg,var(--key-top),var(--key-bot));
+  box-shadow:0 2px 0 var(--key-edge),inset 0 1px 0 rgba(255,255,255,.08);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2px 4px;text-align:center;overflow:hidden;color:var(--key-text)}
+.k .main{font:600 calc(var(--u)*.28)/1.06 var(--sans);max-width:100%;text-wrap:balance;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.k .main.long{font-size:calc(var(--u)*.21)}
+.k .sub{font:500 calc(var(--u)*.165)/1.2 var(--mono);color:var(--muted);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.k::before{content:"";position:absolute;left:calc(var(--u)*.22);right:calc(var(--u)*.22);top:calc(var(--u)*.11);height:calc(var(--u)*.07);border-radius:4px;background:transparent;z-index:1}
+.k[data-kind=hold]::before{background:var(--hold)}
+.k[data-kind=layer]::before{background:var(--layer)}
+.k[data-kind=bt]::before,.k[data-kind=device]::before{background:var(--bt)}
+.k[data-kind=danger]::before{background:var(--danger)}
+.k[data-kind=studio]::before{background:var(--studio)}
+.k[data-kind=macro]::before{background:var(--macro)}
+.k[data-kind=warn]::before{background:var(--warn)}
+.k[data-kind=trigger]::before{background:var(--hold)}
+.k[data-kind=none] .cap,.k[data-kind=trans] .cap{opacity:.42}
+.k[data-kind=trans] .cap{background:transparent;box-shadow:inset 0 0 0 1px var(--line2)}
+.k[data-kind=none] .cap{background:transparent;box-shadow:none;border:1px dashed var(--line2)}
+.k:hover .cap{filter:brightness(1.15)}
+.k.sel .cap{outline:2px solid var(--accent);outline-offset:2px}
+.k:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.k.edited::after{content:"";position:absolute;top:calc(var(--u)*.06);right:calc(var(--u)*.06);width:calc(var(--u)*.16);height:calc(var(--u)*.16);border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--panel);z-index:2}
+.k.ov-combo .cap{outline:1.5px dashed var(--accent);outline-offset:3px}
+.k.ov-studio .cap{outline:2px dashed var(--studio);outline-offset:3px;box-shadow:0 0 0 6px rgba(76,195,255,.12),0 2px 0 var(--key-edge)}
+.k.ov-sel .cap{outline:2.5px solid var(--studio);outline-offset:3px}
+.k.trig.on .cap{outline:2px solid var(--hold);outline-offset:2px;background:linear-gradient(180deg,rgba(169,139,255,.35),rgba(169,139,255,.12))}
+.assign-on .k .cap{cursor:crosshair}
+.assign-on .k:hover .cap{outline:2px dashed var(--accent);outline-offset:3px}
+.studio-tag{position:absolute;font:600 9.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--studio);background:var(--panel);padding:2px 6px;border-radius:5px;border:1px solid rgba(76,195,255,.5);white-space:nowrap;pointer-events:none;z-index:3}
+.note-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.note{flex:1 1 280px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:12px 14px;font-size:12.5px;color:var(--muted);line-height:1.5}
+.note b{color:var(--text);font-weight:600}
+.note.studio{border-color:rgba(76,195,255,.4)}
+.note .eyebrow{margin-bottom:6px}
+.note.studio .eyebrow{color:var(--studio)}
+
+/* ---------- panels/forms ---------- */
+.panel{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:16px 16px 14px;min-width:0}
+.split{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;align-items:start}
+.panel h2{margin:4px 0 0;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.panel h4{margin:0 0 8px;font:600 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{font:500 11px var(--mono);padding:3px 7px;border-radius:6px;background:var(--panel3);color:var(--muted);border:1px solid var(--line)}
+.chip.bad{color:var(--danger);border-color:rgba(255,107,107,.4)}
+.chip.teal{color:var(--studio);border-color:rgba(76,195,255,.4)}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.field>label,.field>.lbl{font-size:12px;color:var(--muted);font-weight:500}
+.inp,.sel,.txt{width:100%;height:32px;border-radius:8px;border:1px solid var(--line2);background:var(--panel2);padding:0 10px;outline:none;font-size:13px}
+.txt{height:auto;min-height:74px;padding:9px 10px;resize:vertical;font:12.5px/1.5 var(--mono)}
+.inp:focus,.sel:focus,.txt:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.sel{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 15px) 52%,calc(100% - 10px) 52%;background-size:5px 5px;background-repeat:no-repeat;padding-right:28px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row.end{justify-content:flex-end}
+.grow{flex:1;min-width:0}
+.hint{font-size:12px;color:var(--muted);line-height:1.5}
+.hint code{font-size:11.5px;color:var(--text)}
+.code{font:12.5px/1.5 var(--mono);background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.code .old{color:var(--faint);text-decoration:line-through}
+.code .new{color:var(--accent)}
+.kc-list{display:flex;flex-direction:column;gap:2px;max-height:172px;overflow:auto;border:1px solid var(--line);border-radius:9px;padding:4px;background:var(--panel2)}
+.kc-list button{display:flex;justify-content:space-between;padding:5px 8px;border-radius:6px;font:12px var(--mono);color:var(--muted);text-align:left}
+.kc-list button:hover{background:var(--panel3);color:var(--text)}
+.kc-list button.on{background:var(--accent-soft);color:var(--text);box-shadow:inset 2px 0 0 var(--accent)}
+.kc-list small{font:11px var(--sans);color:var(--faint)}
+.seg2{display:flex;gap:6px;flex-wrap:wrap}
+.seg2 label{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:7px;border:1px solid var(--line2);font-size:12.5px;color:var(--muted);cursor:pointer;background:var(--panel2)}
+.seg2 label:has(input:checked){border-color:var(--accent);color:var(--text);background:var(--accent-soft)}
+.seg2 input{accent-color:var(--accent);margin:0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:12.5px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font:12px var(--mono);color:var(--text);word-break:break-all}
+.sect{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.sect h4{margin-bottom:6px}
+.ref{display:flex;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:7px;background:var(--panel2);font-size:12.5px;margin-bottom:5px;text-align:left;width:100%}
+.ref:hover{background:var(--panel3)}
+.ref small{color:var(--muted);font:11px var(--mono)}
+.ref.warn{box-shadow:inset 2px 0 0 var(--studio)}
+
+/* ---------- inspector ---------- */
+.insp{padding:16px 16px 22px}
+.insp-head h2{margin:4px 0 0;font-size:22px;font-weight:600;letter-spacing:-.02em}
+.insp-head .sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+
+/* macro editor */
+.steps{list-style:none;padding:0;margin:12px 0 10px;display:flex;flex-direction:column;gap:6px}
+.step{display:flex;align-items:center;gap:10px;padding:8px 9px 8px 8px;border:1px solid var(--line2);border-radius:10px;background:var(--panel2);cursor:grab}
+.step.dragging{opacity:.4}
+.step.over{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.step .grip{color:var(--faint);font:14px/1 var(--mono);letter-spacing:-2px;user-select:none}
+.step .stepn{font:500 11px var(--mono);color:var(--faint);width:16px}
+.step .stype{font:600 10px var(--mono);text-transform:uppercase;letter-spacing:.08em;padding:3px 6px;border-radius:5px;background:var(--panel3);color:var(--muted)}
+.step .kcode{flex:1;min-width:0;display:flex;flex-direction:column}
+.step .kcode b{font-size:14px;font-weight:600}
+.step .kcode code{font-size:11px;color:var(--faint)}
+.step .sact{display:flex;gap:4px}
+.step .sact button{width:24px;height:24px;border-radius:6px;border:1px solid var(--line2);color:var(--muted);font-size:12px;display:inline-flex;align-items:center;justify-content:center}
+.step .sact button:hover:not(:disabled){color:var(--text);border-color:var(--muted)}
+.step .sact button:disabled{opacity:.3}
+.sandbox{font:15px/1.6 var(--mono);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px;min-height:56px;white-space:pre;overflow:auto}
+.sandbox .caret{display:inline-block;width:2px;height:1.15em;background:var(--accent);vertical-align:-3px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.dtsi{font:12px/1.6 var(--mono);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;color:var(--muted);white-space:pre;overflow:auto}
+.dtsi .add{color:var(--ok);background:rgba(111,214,138,.08);display:block}
+.dtsi .del{color:var(--danger);background:rgba(255,107,107,.08);display:block;text-decoration:line-through}
+.dtsi .kw{color:var(--studio)}
+
+/* hold-tap */
+.slider-row{display:flex;gap:10px;align-items:center}
+.slider-row input[type=range]{flex:1;accent-color:var(--hold)}
+.slider-row .inp{width:86px;text-align:right;font-family:var(--mono)}
+.trig-host{margin-top:6px;overflow:auto}
+.sim-track{position:relative;height:34px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);overflow:hidden;margin:8px 0 6px}
+.sim-track .bar{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,rgba(169,139,255,.25),rgba(169,139,255,.55));transition:width .25s}
+.sim-track .term{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--accent)}
+.sim-track .tlab{position:absolute;top:50%;transform:translateY(-50%);font:600 11px var(--mono);color:var(--text);white-space:nowrap;padding:0 8px}
+.sim-scale{display:flex;justify-content:space-between;font:11px var(--mono);color:var(--faint)}
+.sim-out{margin-top:14px;padding:12px;border-radius:10px;border:1px solid var(--line2);background:var(--panel2)}
+.sim-out b{font-size:15px}
+.usage{width:100%;border-collapse:collapse;font-size:12.5px}
+.usage th{text-align:left;font:600 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);padding:6px 6px;border-bottom:1px solid var(--line)}
+.usage td{padding:6px 6px;border-bottom:1px solid var(--line);color:var(--muted)}
+.usage td b{color:var(--text);font-weight:600}
+.usage tr{cursor:pointer}
+.usage tr:hover td{background:var(--panel2)}
+
+/* combos */
+.combo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;margin-top:14px}
+.combo-card{text-align:left;border:1px solid var(--line2);border-radius:12px;background:var(--panel2);padding:12px 13px;display:flex;flex-direction:column;gap:8px;position:relative}
+.combo-card.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.combo-card.studio{border-left:3px solid var(--studio)}
+.combo-card .nm{font:600 14px var(--mono)}
+.combo-card .meta{font-size:12px;color:var(--muted)}
+.combo-card .tag{align-self:flex-start}
+.combo-card pre{margin:0;font:11.5px/1.5 var(--mono);color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;white-space:pre;overflow:auto}
+
+/* ---------- drawer ---------- */
+.dtabs{display:flex;align-items:center;gap:2px;padding:0 8px;height:38px;border-bottom:1px solid var(--line);flex:none}
+.dtabs button{height:30px;padding:0 11px;border-radius:7px;font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:7px}
+.dtabs button.on{color:var(--text);background:var(--panel3)}
+.dtabs button:hover{color:var(--text)}
+.dtabs .spacer{flex:1}
+.dtabs .chev{transform:rotate(180deg)}
+.app.dclosed .dtabs{border-bottom:0}
+.app.dclosed .dbody{display:none}
+.dbody{flex:1;min-height:0;overflow:auto}
+.prob-list{padding:6px 10px 12px}
+.prob{display:flex;gap:11px;align-items:flex-start;padding:10px 8px;border-bottom:1px solid var(--line)}
+.prob:last-child{border-bottom:0}
+.prob .pb{flex:1;min-width:0}
+.prob .pb b{font-weight:600}
+.prob .pd{font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.45}
+.prob .pl{font:11.5px var(--mono);color:var(--faint);margin-top:4px}
+.git-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) minmax(0,1fr);height:100%;min-height:0}
+.gcol{min-height:0;overflow:auto;padding:12px 14px 14px;border-left:1px solid var(--line)}
+.gcol:first-child{border-left:0}
+.gcol h4{margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+.diff{font:11.5px/1.5 var(--mono);border:1px solid var(--line);border-radius:9px;overflow:auto;background:var(--bg)}
+.diff .fh{padding:5px 9px;background:var(--panel2);color:var(--text);font-weight:600;border-bottom:1px solid var(--line);position:sticky;top:0}
+.diff .hk{padding:3px 9px;color:var(--studio);background:rgba(76,195,255,.06)}
+.dl{display:grid;grid-template-columns:34px 34px 14px minmax(0,1fr);white-space:pre}
+.dl .ln{color:var(--faint);text-align:right;padding-right:6px;user-select:none}
+.dl .sg{color:var(--muted);text-align:center}
+.dl code{overflow:hidden;text-overflow:ellipsis;font:inherit;color:var(--text)}
+.dl.add{background:rgba(111,214,138,.1)}
+.dl.add .sg{color:var(--ok)}
+.dl.del{background:rgba(255,107,107,.09)}
+.dl.del .sg{color:var(--danger)}
+.field-check{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--muted);margin-bottom:8px}
+.field-check input{accent-color:var(--accent);margin-top:3px}
+.field-check b{color:var(--text);font-weight:600}
+.commit-log{margin-top:12px;display:flex;flex-direction:column;gap:6px;font-size:12.5px}
+.commit-log div{display:flex;gap:8px;align-items:baseline}
+.commit-log code{color:var(--faint);font-size:11px}
+.prog{display:flex;flex-direction:column;gap:5px;margin-top:10px;font:12px var(--mono);color:var(--muted)}
+.prog div{display:flex;gap:8px}
+.prog .ok{color:var(--ok)}
+.prog .run{color:var(--accent)}
+.status{display:inline-flex;align-items:center;gap:6px;font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:99px;border:1px solid var(--line2)}
+.status.success{color:var(--ok);border-color:rgba(111,214,138,.45)}
+.status.running,.status.queued{color:var(--accent);border-color:rgba(242,176,74,.5)}
+.status.failure{color:var(--danger);border-color:rgba(255,107,107,.5)}
+.status.idle{color:var(--muted)}
+.steps-b{list-style:none;padding:0;margin:10px 0;display:flex;flex-direction:column;gap:5px;font:12px var(--mono)}
+.steps-b li{display:flex;align-items:center;gap:9px;color:var(--muted)}
+.steps-b li i{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line2);display:inline-block;flex:none}
+.steps-b li.done{color:var(--text)}
+.steps-b li.done i{background:var(--ok);border-color:var(--ok)}
+.steps-b li.run i{border-color:var(--accent);border-top-color:transparent;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.arts a{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid var(--line2);border-radius:9px;color:var(--text);text-decoration:none;font:12.5px var(--mono);margin-top:6px;background:var(--panel2)}
+.arts a:hover{border-color:var(--muted)}
+.arts a span{color:var(--layer)}
+.never{margin-top:12px;border:1px dashed rgba(111,214,138,.5);border-radius:10px;padding:10px 11px;font-size:12.5px;line-height:1.5;color:var(--muted);background:rgba(111,214,138,.05)}
+.never b{color:var(--ok)}
+
+/* toasts */
+.toasts{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:50;pointer-events:none}
+.toast{pointer-events:auto;background:var(--panel3);border:1px solid var(--line2);border-radius:10px;padding:9px 13px;font-size:13px;box-shadow:0 14px 34px rgba(0,0,0,.35);max-width:360px;animation:tin .2s ease-out}
+.toast.ok{border-color:rgba(111,214,138,.5)}
+.toast.warn{border-color:rgba(242,176,74,.6)}
+@keyframes tin{from{opacity:0;transform:translateY(6px)}}
+
+/* ---------- responsive ---------- */
+@media (max-width:1180px){
+  .app{grid-template-columns:220px minmax(0,1fr) 290px}
+  .split{grid-template-columns:1fr}
+}
+@media (max-width:900px){
+  .app{height:auto;min-height:100vh;grid-template-columns:minmax(0,1fr);grid-template-rows:auto}
+  .app.dclosed{--drawer-h:auto}
+  .topbar{flex-wrap:nowrap;gap:8px;position:sticky;top:0;z-index:25;height:52px}
+  .mobile-only{display:inline-flex}
+  .crumbs,.tb-right .pill:not(.dirty),#gotoCommit,.brand span.dim{display:none}
+  .jump{max-width:none;min-width:0;flex:1 1 0;margin-left:0}
+  .jump .slash{display:none}
+  .jump input{padding-right:10px}
+  .tb-right{flex:none;gap:6px}
+  .tb-right .btn,.tb-right .pill{display:none}
+  .tb-right .pill.dirty{display:inline-flex}
+  .brand{flex:none}
+  .sidebar{position:fixed;top:52px;left:0;bottom:0;width:272px;z-index:30;transform:translateX(-104%);transition:transform .22s ease;box-shadow:12px 0 40px rgba(0,0,0,.4)}
+  .sidebar.open{transform:none}
+  .main,.inspector,.drawer,.sidebar{grid-column:1;grid-row:auto}
+  .main{min-height:auto}
+  .stage{overflow:visible;padding:12px}
+  .inspector{border-left:0;border-top:1px solid var(--line);overflow:visible}
+  .drawer{min-height:auto}
+  .dbody{overflow:visible}
+  .git-grid{grid-template-columns:1fr;height:auto}
+  .gcol{border-left:0;border-top:1px solid var(--line);overflow:visible}
+  .gcol:first-child{border-top:0}
+  .board-card{padding:22px 10px 12px}
+  .legend{display:none}
+  .split{grid-template-columns:1fr}
+  .mainhead{padding:10px 12px}
+  .mainhead h1{font-size:16px}
+  .seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+  .seg button{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .banner{flex-wrap:wrap}
+  .note{flex-basis:100%}
+  .tools{width:100%}
+  .stage-inner,.main{max-width:100vw}
+  .panel{padding:14px 12px}
+  .app.dclosed .dbody{display:none}
+  .dtabs button{padding:0 8px}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="topbar">
+    <button class="icon-btn mobile-only" id="menuBtn" aria-label="Open explorer"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4h12M2 8h12M2 12h12"/></svg></button>
+    <div class="brand"><span class="mark"></span>adv360 <span class="dim">/ workbench</span></div>
+    <nav class="crumbs"><span>Adv360-Pro-ZMK</span><span>/</span><span>config</span><span>/</span><span class="cur">adv360.keymap</span><span class="branch">V3.0</span></nav>
+    <div class="jump">
+      <input id="jump" placeholder="Jump to key, macro, combo…" autocomplete="off" aria-label="Jump to">
+      <span class="slash"><kbd>/</kbd></span>
+      <div class="jump-res hidden" id="jumpRes"></div>
+    </div>
+    <div class="tb-right">
+      <button class="pill" id="undoBtn" title="Undo (⌘Z)"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 4L2 7l3 3"/><path d="M2.5 7H10a4 4 0 010 8H8"/></svg>Undo <kbd>⌘Z</kbd></button>
+      <button class="pill dirty" id="dirtyBtn" title="Open the Git panel"><span class="dot"></span><span id="dirtyN">0 changes</span></button>
+      <button class="btn primary" id="gotoCommit">Commit…</button>
+      <button class="icon-btn" id="themeBtn" aria-label="Toggle light / dark theme" title="Toggle theme"></button>
+    </div>
+  </header>
+
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main" id="main"></main>
+  <aside class="inspector" id="inspector"></aside>
+  <section class="drawer" id="drawer"></section>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* =========================================================
+   DATA: physical layout (info.json) + real keymap/macros
+   ========================================================= */
+const DATA = {"keys": [{"x": 0, "y": 0.25, "w": 1.25, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 0, "col": 0, "label": "="}, {"x": 1.25, "y": 0.25, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 0, "col": 1, "label": "1"}, {"x": 2.25, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 0, "col": 2, "label": "2"}, {"x": 3.25, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 0, "col": 3, "label": "3"}, {"x": 4.25, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 0, "col": 4, "label": "4"}, {"x": 5.25, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 0, "col": 5, "label": "5"}, {"x": 6.25, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 0, "col": 6, "label": "mod1"}, {"x": 10.75, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 0, "col": 13, "label": "mod2"}, {"x": 11.75, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 0, "col": 14, "label": "6"}, {"x": 12.75, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 0, "col": 15, "label": "7"}, {"x": 13.75, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 0, "col": 16, "label": "8"}, {"x": 14.75, "y": 0, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 0, "col": 17, "label": "9"}, {"x": 15.75, "y": 0.25, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 0, "col": 18, "label": "0"}, {"x": 16.75, "y": 0.25, "w": 1.25, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 0, "col": 19, "label": "-"}, {"x": 0, "y": 1.25, "w": 1.25, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 1, "col": 0, "label": "Tab"}, {"x": 1.25, "y": 1.25, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 1, "col": 1, "label": "Q"}, {"x": 2.25, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 1, "col": 2, "label": "W"}, {"x": 3.25, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 1, "col": 3, "label": "E"}, {"x": 4.25, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 1, "col": 4, "label": "R"}, {"x": 5.25, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 1, "col": 5, "label": "T"}, {"x": 6.25, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 1, "col": 6, "label": "mod3"}, {"x": 10.75, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 1, "col": 13, "label": "mod4"}, {"x": 11.75, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 1, "col": 14, "label": "Y"}, {"x": 12.75, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 1, "col": 15, "label": "U"}, {"x": 13.75, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 1, "col": 16, "label": "I"}, {"x": 14.75, "y": 1, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 1, "col": 17, "label": "O"}, {"x": 15.75, "y": 1.25, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 1, "col": 18, "label": "P"}, {"x": 16.75, "y": 1.25, "w": 1.25, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 1, "col": 19, "label": "\\"}, {"x": 0, "y": 2.25, "w": 1.25, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 2, "col": 0, "label": "Caps"}, {"x": 1.25, "y": 2.25, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 2, "col": 1, "label": "A"}, {"x": 2.25, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 2, "col": 2, "label": "S"}, {"x": 3.25, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 2, "col": 3, "label": "D"}, {"x": 4.25, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 2, "col": 4, "label": "F"}, {"x": 5.25, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 2, "col": 5, "label": "G"}, {"x": 6.25, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 2, "col": 6, "label": "mod5"}, {"x": 6.75, "y": 4, "w": 1, "h": 1, "r": 15, "rx": 5.25, "ry": 4, "row": 2, "col": 7, "label": "LCtrl"}, {"x": 7.75, "y": 4, "w": 1, "h": 1, "r": 15, "rx": 5.25, "ry": 4, "row": 2, "col": 8, "label": "LAlt"}, {"x": 9.25, "y": 4, "w": 1, "h": 1, "r": -15, "rx": 12.75, "ry": 4, "row": 2, "col": 11, "label": "LGui"}, {"x": 10.25, "y": 4, "w": 1, "h": 1, "r": -15, "rx": 12.75, "ry": 4, "row": 2, "col": 12, "label": "RCtrl"}, {"x": 10.75, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 2, "col": 13, "label": "mod6"}, {"x": 11.75, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 2, "col": 14, "label": "H"}, {"x": 12.75, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 2, "col": 15, "label": "J"}, {"x": 13.75, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 2, "col": 16, "label": "K"}, {"x": 14.75, "y": 2, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 2, "col": 17, "label": "L"}, {"x": 15.75, "y": 2.25, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 2, "col": 18, "label": ";"}, {"x": 16.75, "y": 2.25, "w": 1.25, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 2, "col": 19, "label": "'"}, {"x": 0, "y": 3.25, "w": 1.25, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 3, "col": 0, "label": "LShift"}, {"x": 1.25, "y": 3.25, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 3, "col": 1, "label": "Z"}, {"x": 2.25, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 3, "col": 2, "label": "X"}, {"x": 3.25, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 3, "col": 3, "label": "C"}, {"x": 4.25, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 3, "col": 4, "label": "V"}, {"x": 5.25, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 3, "col": 5, "label": "B"}, {"x": 7.75, "y": 5, "w": 1, "h": 1, "r": 15, "rx": 5.25, "ry": 4, "row": 3, "col": 8, "label": "Home"}, {"x": 9.25, "y": 5, "w": 1, "h": 1, "r": -15, "rx": 12.75, "ry": 4, "row": 3, "col": 11, "label": "PgUp"}, {"x": 11.75, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 3, "col": 14, "label": "N"}, {"x": 12.75, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 3, "col": 15, "label": "M"}, {"x": 13.75, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 3, "col": 16, "label": ","}, {"x": 14.75, "y": 3, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 3, "col": 17, "label": "."}, {"x": 15.75, "y": 3.25, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 3, "col": 18, "label": "/"}, {"x": 16.75, "y": 3.25, "w": 1.25, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 3, "col": 19, "label": "RShift"}, {"x": 0, "y": 4.25, "w": 1.25, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 4, "col": 0, "label": "mod7"}, {"x": 1.25, "y": 4.25, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 4, "col": 1, "label": "`"}, {"x": 2.25, "y": 4, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 4, "col": 2, "label": "Caps"}, {"x": 3.25, "y": 4, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 4, "col": 3, "label": "Left"}, {"x": 4.25, "y": 4, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 4, "col": 4, "label": "Right"}, {"x": 5.75, "y": 5, "w": 1, "h": 2, "r": 15, "rx": 5.25, "ry": 4, "row": 4, "col": 6, "label": "Bksp"}, {"x": 6.75, "y": 5, "w": 1, "h": 2, "r": 15, "rx": 5.25, "ry": 4, "row": 4, "col": 7, "label": "Del"}, {"x": 7.75, "y": 6, "w": 1, "h": 1, "r": 15, "rx": 5.25, "ry": 4, "row": 4, "col": 8, "label": "End"}, {"x": 9.25, "y": 6, "w": 1, "h": 1, "r": -15, "rx": 12.75, "ry": 4, "row": 4, "col": 11, "label": "PgDn"}, {"x": 10.25, "y": 5, "w": 1, "h": 2, "r": -15, "rx": 12.75, "ry": 4, "row": 4, "col": 12, "label": "RET"}, {"x": 11.25, "y": 5, "w": 1, "h": 2, "r": -15, "rx": 12.75, "ry": 4, "row": 4, "col": 13, "label": "SPC"}, {"x": 12.75, "y": 4, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 4, "col": 15, "label": "Up"}, {"x": 13.75, "y": 4, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 4, "col": 16, "label": "Down"}, {"x": 14.75, "y": 4, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 4, "col": 17, "label": ","}, {"x": 15.75, "y": 4.25, "w": 1, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 4, "col": 18, "label": "."}, {"x": 16.75, "y": 4.25, "w": 1.25, "h": 1, "r": 0, "rx": 0, "ry": 0, "row": 4, "col": 19, "label": "mod8"}], "layers": {"default_layer": ["&kp EQUAL", "&tpf F1 NUMBER_1", "&tpf F2 NUMBER_2", "&tpf F3 NUMBER_3", "&tpf F4 NUMBER_4", "&tpf F5 N5", "&kp LG(LC(NUMBER_4))", "&tog 1", "&tpf F6 NUMBER_6", "&tpf F7 N7", "&tpf F8 NUMBER_8", "&tpf F9 N9", "&tpf F10 NUMBER_0", "&tpf F11 MINUS", "&kp TAB", "&kp Q", "&tpf LG(LS(W)) W", "&kp E", "&kp R", "&kp T", "&tpf F12 C_MENU", "&kp C_PLAY_PAUSE", "&kp Y", "&kp U", "&kp I", "&kp O", "&kp P", "&tpf F12 BACKSLASH", "&kp ESC", "&kp A", "&kp S", "&kp D", "&kp F", "&kp G", "&kp RC(SPACE)", "&kp LEFT_ALT", "&kp LC(E)", "&kp RIGHT_CONTROL", "&tpf INT_KATAKANAHIRAGANA COLON", "&tpf LC(GRAVE) GRAVE", "&kp H", "&kp J", "&kp K", "&kp L", "&kp SEMI", "&kp SQT", "&kp LSHFT", "&kp Z", "&kp X", "&tpf LS(LG(LA(C))) C", "&kp V", "&kp B", "&kp LEFT_CONTROL", "&kp RIGHT_ALT", "&kp N", "&kp M", "&kp COMMA", "&kp DOT", "&kp FSLH", "&kp RSHFT", "&mo 1", "&kp K_MENU", "&kp DELETE", "&kp LEFT", "&kp RIGHT", "&kp SPACE", "&kp CAPSLOCK", "&kp LGUI", "&kp LGUI", "&kp ENTER", "&kp BACKSPACE", "&kp UP", "&kp DOWN", "&kp LBKT", "&kp RBKT", "&mo 3"], "keypad": ["&kp EQUAL", "&kp N1", "&kp N2", "&kp N3", "&kp N4", "&kp N5", "&trans", "&tog 0", "&kp N6", "&kp KP_NUM", "&kp KP_EQUAL", "&kp KP_DIVIDE", "&kp KP_MULTIPLY", "&kp MINUS", "&kp TAB", "&kp Q", "&kp W", "&kp E", "&kp R", "&kp T", "&none", "&none", "&kp Y", "&kp KP_N7", "&kp KP_N8", "&kp KP_N9", "&kp KP_MINUS", "&kp BSLH", "&kp ESC", "&kp A", "&kp S", "&kp D", "&kp F", "&kp G", "&none", "&kp LCTRL", "&kp LALT", "&kp LGUI", "&kp BACKSPACE", "&none", "&kp H", "&kp KP_N4", "&kp KP_N5", "&kp KP_N6", "&kp KP_PLUS", "&kp SQT", "&kp LSHFT", "&kp Z", "&kp X", "&kp C", "&kp V", "&kp B", "&kp HOME", "&kp PG_UP", "&kp N", "&kp KP_N1", "&kp KP_N2", "&kp KP_N3", "&kp KP_ENTER", "&kp RSHFT", "&mo 0", "&kp GRAVE", "&kp CAPS", "&kp LEFT", "&kp RIGHT", "&kp BSPC", "&kp DEL", "&kp END", "&kp PG_DN", "&kp BACKSPACE", "&kp KP_N0", "&kp UP", "&kp DOWN", "&kp KP_DOT", "&kp RBKT", "&mo 0"], "mod": ["&none", "&bt BT_SEL 0", "&bt BT_SEL 1", "&bt BT_SEL 2", "&bt BT_SEL 3", "&bt BT_SEL 4", "&none", "&trans", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&kp Z", "&none", "&bootloader", "&bootloader", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&macro_ver", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&bt BT_CLR", "&none", "&rgb_ug RGB_MEFS_CMD 5", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&macro_ver", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&none", "&bl BL_TOG", "&rgb_ug RGB_TOG", "&bl BL_INC", "&bl BL_DEC", "&none", "&none", "&none"], "macro": ["&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&kp C_PREV", "&trans", "&kp C_NEXT", "&trans", "&bl BL_OFF", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&mail", "&name", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans", "&trans"]}, "keymapRaw": "#include <dt-bindings/zmk/mouse.h>\n#include <behaviors.dtsi>\n#include <dt-bindings/zmk/backlight.h>\n#include <dt-bindings/zmk/bt.h>\n#include <dt-bindings/zmk/keys.h>\n#include <dt-bindings/zmk/rgb.h>\n\n/ {\n    behaviors {\n        #include \"macros.dtsi\"\n      #include \"version.dtsi\"\n      #ifndef VERSION_MACRO\n\n\n\n\n\n        #endif\n\n        tpf: tpf {\n            compatible = \"zmk,behavior-hold-tap\";\n            label = \"TPF\";\n            bindings = <&kp>, <&kp>;\n\n            #binding-cells = <2>;\n            hold-trigger-key-positions = <1 2 3 4 5 8 9 10 11 12 13 27>;\n            tapping-term-ms = <200>;\n        };\n    };\n\n    macros {\n        mail: mail {\n            compatible = \"zmk,behavior-macro\";\n            #binding-cells = <0>;\n            bindings = <&none &kp M &kp E &kp AT &kp A &kp L &kp J &kp U &kp F &kp A &kp I &kp R &kp I &kp DOT &kp O &kp R &kp G>;\n            label = \"MAIL\";\n        };\n\n        name: name {\n            compatible = \"zmk,behavior-macro\";\n            #binding-cells = <0>;\n            bindings = <&none &kp LS(A) &kp L &kp I &kp SPACE &kp LS(R) &kp E &kp D &kp H &kp A &kp SPACE &kp LS(A) &kp L &kp I &kp SPACE &kp LS(A) &kp B &kp D &kp U &kp L &kp L &kp A &kp SPACE &kp LS(A) &kp L &kp J &kp U &kp F &kp A &kp I &kp R &kp I>;\n            label = \"NAME\";\n        };\n    };\n\n    combos {\n        compatible = \"zmk,combos\";\n\n#if defined(CONFIG_ZMK_STUDIO)\n        // Unlock Studio without replacing any existing key assignments.\n        combo_studio_unlock {\n            bindings = <&studio_unlock>;\n            key-positions = <46 59>;\n            timeout-ms = <50>;\n            layers = <0>;\n        };\n#endif\n\n        combo {\n            bindings = <&kp K_SCREENSAVER>;\n            key-positions = <61>;\n            layers = <0>;\n        };\n\n        Dfffsdfa {\n            bindings = <&kp D>;\n            key-positions = <35 37>;\n        };\n    };\n\n    keymap {\n        compatible = \"zmk,keymap\";\n\n        default_layer {\n            bindings = <\n&kp EQUAL  &tpf F1 NUMBER_1  &tpf F2 NUMBER_2  &tpf F3 NUMBER_3      &tpf F4 NUMBER_4  &tpf F5 N5  &kp LG(LC(NUMBER_4))                                                                                          &tog 1                &tpf F6 NUMBER_6  &tpf F7 N7  &tpf F8 NUMBER_8  &tpf F9 N9  &tpf F10 NUMBER_0  &tpf F11 MINUS\n&kp TAB    &kp Q             &tpf LG(LS(W)) W  &kp E                 &kp R             &kp T       &tpf F12 C_MENU                                                                                               &kp C_PLAY_PAUSE      &kp Y             &kp U       &kp I             &kp O       &kp P              &tpf F12 BACKSLASH\n&kp ESC    &kp A             &kp S             &kp D                 &kp F             &kp G       &kp RC(SPACE)         &kp LEFT_ALT  &kp LC(E)             &kp RIGHT_CONTROL  &tpf INT_KATAKANAHIRAGANA COLON  &tpf LC(GRAVE) GRAVE  &kp H             &kp J       &kp K             &kp L       &kp SEMI           &kp SQT\n&kp LSHFT  &kp Z             &kp X             &tpf LS(LG(LA(C))) C  &kp V             &kp B                                           &kp LEFT_CONTROL      &kp RIGHT_ALT                                                             &kp N             &kp M       &kp COMMA         &kp DOT     &kp FSLH           &kp RSHFT\n&mo 1      &kp K_MENU        &kp DELETE        &kp LEFT              &kp RIGHT                     &kp SPACE             &kp CAPSLOCK  &kp LGUI              &kp LGUI           &kp ENTER                        &kp BACKSPACE                           &kp UP      &kp DOWN          &kp LBKT    &kp RBKT           &mo 3\n            >;\n        };\n\n        keypad {\n            bindings = <\n&kp EQUAL  &kp N1     &kp N2    &kp N3    &kp N4     &kp N5  &trans                                                       &tog 0     &kp N6  &kp KP_NUM  &kp KP_EQUAL  &kp KP_DIVIDE  &kp KP_MULTIPLY  &kp MINUS\n&kp TAB    &kp Q      &kp W     &kp E     &kp R      &kp T   &none                                                        &none      &kp Y   &kp KP_N7   &kp KP_N8     &kp KP_N9      &kp KP_MINUS     &kp BSLH\n&kp ESC    &kp A      &kp S     &kp D     &kp F      &kp G   &none     &kp LCTRL  &kp LALT      &kp LGUI   &kp BACKSPACE  &none      &kp H   &kp KP_N4   &kp KP_N5     &kp KP_N6      &kp KP_PLUS      &kp SQT\n&kp LSHFT  &kp Z      &kp X     &kp C     &kp V      &kp B                        &kp HOME      &kp PG_UP                            &kp N   &kp KP_N1   &kp KP_N2     &kp KP_N3      &kp KP_ENTER     &kp RSHFT\n&mo 0      &kp GRAVE  &kp CAPS  &kp LEFT  &kp RIGHT          &kp BSPC  &kp DEL    &kp END       &kp PG_DN  &kp BACKSPACE  &kp KP_N0          &kp UP      &kp DOWN      &kp KP_DOT     &kp RBKT         &mo 0\n            >;\n        };\n\n        mod {\n            bindings = <\n&none  &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4  &none                                                  &trans                  &none  &none       &none       &none  &none  &none\n&none  &none         &none         &none         &kp Z         &none         &bootloader                                            &bootloader             &none  &none       &none       &none  &none  &none\n&none  &macro_ver    &none         &none         &none         &none         &none        &none  &none      &bt BT_CLR  &none       &rgb_ug RGB_MEFS_CMD 5  &none  &none       &none       &none  &none  &none\n&none  &none         &none         &none         &macro_ver    &none                             &none      &none                                           &none  &none       &none       &none  &none  &none\n&none  &none         &none         &none         &none                       &none        &none  &none      &none       &bl BL_TOG  &rgb_ug RGB_TOG                &bl BL_INC  &bl BL_DEC  &none  &none  &none\n            >;\n        };\n\n        macro {\n            bindings = <\n&trans  &trans      &trans  &trans      &trans  &trans      &trans                                      &trans  &trans  &trans  &trans  &trans  &trans  &trans\n&trans  &kp C_PREV  &trans  &kp C_NEXT  &trans  &bl BL_OFF  &trans                                      &trans  &trans  &trans  &trans  &trans  &trans  &trans\n&trans  &mail       &name   &trans      &trans  &trans      &trans  &trans  &trans      &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans\n&trans  &trans      &trans  &trans      &trans  &trans                      &trans      &trans                  &trans  &trans  &trans  &trans  &trans  &trans\n&trans  &trans      &trans  &trans      &trans              &trans  &trans  &trans      &trans  &trans  &trans          &trans  &trans  &trans  &trans  &trans\n            >;\n        };\n    };\n};\n", "macrosRaw": "  macro_quotes: macro_quotes {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_quotes\";\n    #binding-cells = <0>;\n    bindings = <&kp SQT>, <&kp SQT>, <&kp LEFT>;\n  };\n  macro_dquotes: macro_dquotes {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_dquotes\";\n    #binding-cells = <0>;\n    bindings = <&kp DQT>, <&kp DQT>, <&kp LEFT>;\n  };\n  macro_braces: macro_braces {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_braces\";\n    #binding-cells = <0>;\n    bindings = <&kp LBRC>, <&kp RBRC>, <&kp LEFT>;\n  };\n  macro_parens: macro_parens {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_parens\";\n    #binding-cells = <0>;\n    bindings = <&kp LPAR>, <&kp RPAR>, <&kp LEFT>;\n  };\n  macro_brackets: macro_brackets {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_brackets\";\n    #binding-cells = <0>;\n    bindings = <&kp LBKT>, <&kp RBKT>, <&kp LEFT>;\n  };\n  macro_kinesis: macro_kinesis {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_kinesis\";\n    #binding-cells = <0>;\n    bindings = <&kp LS(K)>, <&kp I>, <&kp N>, <&kp E>, <&kp S>, <&kp I>, <&kp S>;\n  };\n  Win_Cut: Windows_Cut {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(X)>;\n    display-name = \"Windows Cut\";\n  };\n\n  Win_Copy: Windows_Copy {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(C)>;\n    display-name = \"Windows Copy\";\n  };\n\n  Win_Paste: Windows_Paste {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(V)>;\n    display-name = \"Windows Paste\";\n  };\n\n  Win_Select_All: Windows_SelectAll {\n      compatible = \"zmk,behavior-macro\";\n      #binding-cells = <0>;\n      bindings = <&kp LC(A)>;\n      display-name = \"Windows Select All\";\n  };\n\n  Win_Undo: Windows_Undo {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(Z)>;\n    display-name = \"Windows Undo\";\n  };\n\n  Win_Desktop: Win_Desk {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(D)>;\n    display-name = \"Windows Desktop\";\n  };\n\n  Win_File_Explorer: Win_Explr {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(E)>;\n    display-name = \"Windows Explorer\";\n  };\n\n  Win_Snip_Tool: Win_Snip {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LS(LG(S))>;\n    display-name = \"Windows Screen Snip\";\n  };\n\n  Win_Show_All_Windows: Win_ShowAW {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(TAB)>;\n    display-name = \"Windows Show All Windows\";\n  };\n\n  Mac_Cut: Mac_Cut {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(X)>;\n    display-name = \"Mac Cut\";\n  };\n\n  Mac_Copy: Mac_Copy {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(C)>;\n    display-name = \"Mac Copy\";\n  };\n\n  Mac_Paste: Mac_Paste {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(V)>;\n    display-name = \"Mac Paste\";\n  };\n\n  Mac_Undo: Mac_Undo {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(Z)>;\n    display-name = \"Mac Undo\";\n  };\n\n  Mac_Select_All: Mac_SelAll {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(A)>;\n    display-name = \"Mac Select All\";\n  };\n\n  Mac_Mission_Control: Mac_ShowAW {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(UP_ARROW)>;\n    display-name = \"Mac Show All Windows\";\n  };\n\n  Mac_Snip_Tool: Mac_Snip {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(LG(LS(NUMBER_4)))>;\n    display-name = \"Mac Screen Snip\";\n  };\n\n  Win_Close_Program: Win_Close_Program {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LA(F4)>;\n    display-name = \"Windows Close\";\n  };\n\n  Win_Settings_Menu: Win_Settings_Menu {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(I)>;\n    display-name = \"Windows Settings\";\n  };\n\n  Win_Lock_PC: Win_Lock_PC {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(L)>;\n    display-name = \"Windows Lock\";\n  };\n\n  Win_Tile_Left: Win_Tile_Left {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(LEFT)>;\n    display-name = \"Windows Tile Left\";\n  };\n\n  Win_Tile_Up: Win_Tile_Up {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(UP_ARROW)>;\n    display-name = \"Windows Tile Up\";\n  };\n\n  Win_Tile_Down: Win_Tile_Down {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(DOWN)>;\n    display-name = \"Windows Tile Down\";\n  };\n\n  Win_Tile_Right: Win_Tile_Right {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(RIGHT)>;\n    display-name = \"Windows Tile Right\";\n  };\n\n  Mac_Spotlight_Search: Mac_Spotlight_Search {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(SPACE)>;\n    display-name = \"Mac Spotlight Search\";\n  };\n\n  Mac_Close_Program: Mac_Close_Program {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(Q)>;\n    display-name = \"Mac Close Program\";\n  };\n\n  Mac_Strike_Through_Text: Mac_Strike_Through_Text {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(LS(X))>;\n    display-name = \"Mac Strikethrough Text\";\n  };\n\n  Double_Click: Double_Click {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&mkp MB1 &mkp MB1>;\n    display-name = \"Double Click\";\n  };"};
+
+/* ---------- helpers ---------- */
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const LAYERS = ['default_layer','keypad','mod','macro'];
+const LNAME  = ['default','keypad','mod','macro'];
+const LN = n => cap(LNAME[+n] ?? String(n));
+const lineOfIdx = (text, idx) => text.slice(0, Math.max(0, idx)).split('\n').length;
+const lineOfRe  = (text, re) => { const i = text.search(re); return i < 0 ? 1 : lineOfIdx(text, i); };
+
+function splitArgs(s){
+  const out = []; let cur = '', d = 0;
+  for (const ch of (s||'').trim()){
+    if (ch === '(') d++;
+    if (ch === ')') d--;
+    if (/\s/.test(ch) && d === 0){ if (cur){ out.push(cur); cur=''; } }
+    else cur += ch;
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+function parseB(raw){
+  const m = raw.trim().match(/^&(\S+)\s*(.*)$/);
+  return m ? {beh:m[1], args:splitArgs(m[2])} : {beh:'?', args:[]};
+}
+function parseNodes(text){
+  const out = {}; const re = /(\w+):\s*(\w+)\s*\{([^}]*)\}/g; let m;
+  while ((m = re.exec(text))){
+    const body = m[3];
+    const compat = (body.match(/compatible = "([^"]+)"/)||[])[1] || '';
+    const label  = (body.match(/label = "([^"]+)"/)||[])[1] || m[1];
+    const bm = body.match(/bindings = ([^;]*);/);
+    const bindings = bm ? [...bm[1].matchAll(/&(\w+)([^&<>,]*)/g)].map(x => ({beh:x[1], args:splitArgs(x[2])})) : [];
+    out[m[1]] = {node:m[1], compat, label, bindings};
+  }
+  return out;
+}
+
+/* ---------- keycode labels ---------- */
+const KC = {LSHFT:'Shift',RSHFT:'Shift',LCTRL:'Ctrl',RCTRL:'Ctrl',LEFT_CONTROL:'Ctrl',RIGHT_CONTROL:'Ctrl',
+  LALT:'Alt',RALT:'Alt',LEFT_ALT:'Alt',RIGHT_ALT:'Alt',LGUI:'Gui',RGUI:'Gui',
+  ESC:'Esc',TAB:'Tab',CAPSLOCK:'Caps',CAPS:'Caps',K_MENU:'Menu',C_MENU:'Menu',C_PLAY_PAUSE:'Play/Pause',
+  DELETE:'Del',DEL:'Del',BACKSPACE:'Bksp',BSPC:'Bksp',SPACE:'Space',SPC:'Space',ENTER:'Enter',RET:'Enter',
+  LEFT:'←',RIGHT:'→',UP:'↑',DOWN:'↓',UP_ARROW:'↑',HOME:'Home',END:'End',PG_UP:'PgUp',PG_DN:'PgDn',
+  LBKT:'[',RBKT:']',LBRC:'{',RBRC:'}',LPAR:'(',RPAR:')',SEMI:';',SQT:"'",DQT:'"',COMMA:',',DOT:'.',
+  FSLH:'/',BSLH:'\\',BACKSLASH:'\\',GRAVE:'`',EQUAL:'=',MINUS:'-',COLON:':',INT_KATAKANAHIRAGANA:'Kana',
+  K_SCREENSAVER:'Screensaver',KP_NUM:'KP Num',KP_EQUAL:'KP =',KP_DIVIDE:'KP /',KP_MULTIPLY:'KP *',
+  KP_MINUS:'KP −',KP_PLUS:'KP +',KP_ENTER:'KP ⏎',KP_DOT:'KP .'};
+const MODW = {LC:'Ctrl',LS:'Shift',LA:'Alt',LG:'Gui',RC:'Ctrl',RS:'Shift',RA:'Alt',RG:'Gui'};
+function kcLabel(code){
+  if (code == null || code === '') return '';
+  const m = code.match(/^(LC|LS|LA|LG|RC|RS|RA|RG)\((.*)\)$/);
+  if (m) return MODW[m[1]] + '+' + kcLabel(m[2]);
+  if (KC[code]) return KC[code];
+  if (/^[A-Z]$/.test(code) || /^F\d+$/.test(code)) return code;
+  let n = code.match(/^(?:NUMBER_|N)(\d)$/); if (n) return n[1];
+  n = code.match(/^KP_N(\d)$/); if (n) return 'KP ' + n[1];
+  return code.replace(/_/g,' ').toLowerCase();
+}
+
+/* ---------- nodes from the real files ---------- */
+const NODES = Object.assign({}, parseNodes(DATA.keymapRaw), parseNodes(DATA.macrosRaw));
+const MACROS = Object.values(NODES).filter(n => /behavior-macro/.test(n.compat));
+const KEYCODES = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].concat(
+  [...Array(10)].map((_,i)=>'NUMBER_'+i), [...Array(12)].map((_,i)=>'F'+(i+1)),
+  ['ENTER','ESC','BSPC','TAB','SPACE','MINUS','EQUAL','BACKSPACE','LSHFT','RSHFT','LCTRL','RCTRL','LALT','RALT','LGUI','RGUI',
+   'LEFT','RIGHT','UP','DOWN','HOME','END','PG_UP','PG_DN','DELETE','CAPSLOCK','LPAR','RPAR','LBKT','RBKT','LBRC','RBRC',
+   'SEMI','SQT','DQT','COMMA','DOT','FSLH','BSLH','GRAVE','K_MENU','C_PLAY_PAUSE','C_MENU','K_SCREENSAVER',
+   'INT_KATAKANAHIRAGANA','COLON','LG(LS(W))','LC(E)','RC(SPACE)','LG(LC(NUMBER_4))','LS(A)','LC(X)','LC(C)','LC(V)','LG(Q)']);
+const SANDBOX_CH = {LPAR:'(',RPAR:')',LBKT:'[',RBKT:']',LBRC:'{',RBRC:'}',SQT:"'",DQT:'"',SPACE:' ',COMMA:',',DOT:'.',
+  SEMI:';',MINUS:'-',FSLH:'/',EQUAL:'=',NUMBER_0:'0',NUMBER_1:'1',NUMBER_2:'2',NUMBER_3:'3',NUMBER_4:'4',NUMBER_5:'5',
+  NUMBER_6:'6',NUMBER_7:'7',NUMBER_8:'8',NUMBER_9:'9'};
+for (const c of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') SANDBOX_CH[c] = c.toLowerCase();
+
+/* compact board label: modifiers as symbols, e.g. LG(LS(W)) -> "⌘⇧W" */
+const MODSYM = {LC:'⌃',LS:'⇧',LA:'⌥',LG:'⌘',RC:'⌃',RS:'⇧',RA:'⌥',RG:'⌘'};
+function kcSym(code){
+  const m = (code||'').match(/^(LC|LS|LA|LG|RC|RS|RA|RG)\((.*)\)$/);
+  if (m) return MODSYM[m[1]] + kcSym(m[2]);
+  return kcLabel(code);
+}
+/* ---------- binding presentation ---------- */
+function present(raw){
+  const {beh, args} = parseB(raw);
+  const a0 = args[0], a1 = args[1];
+  switch (beh){
+    case 'kp':     return {main:kcSym(a0), sub:(a0||'').includes('(') ? kcLabel(a0) : '', kind:'key'};
+    case 'tpf':    return {main:kcSym(a1), sub:kcSym(a0)+' hold', kind:'hold'};
+    case 'mo':     return {main:LN(a0)+' (hold)', sub:'layer '+a0, kind:'layer'};
+    case 'tog':    return {main:LN(a0)+' (tog)',  sub:'layer '+a0, kind:'layer'};
+    case 'trans':  return {main:'▽', sub:'transparent', kind:'trans'};
+    case 'none':   return {main:'—', sub:'none', kind:'none'};
+    case 'bt':     return a0==='BT_CLR' ? {main:'BT clear', sub:'bt', kind:'bt'} : {main:'BT '+a1, sub:'profile', kind:'bt'};
+    case 'bootloader': return {main:'Boot', sub:'bootloader', kind:'danger'};
+    case 'bl':     return {main:({BL_TOG:'BL tog',BL_INC:'BL +',BL_DEC:'BL −'})[a0]||'BL', sub:'backlight', kind:'device'};
+    case 'rgb_ug': return {main: a0==='RGB_TOG' ? 'RGB tog' : 'RGB '+a1, sub:'rgb', kind:'device'};
+    case 'studio_unlock': return {main:'Studio', sub:'unlock', kind:'studio'};
+    case 'macro_ver':     return {main:'Version', sub:'macro · unresolved', kind:'warn'};
+    default:
+      if (NODES[beh] && /behavior-macro/.test(NODES[beh].compat)) return {main:NODES[beh].label, sub:'macro', kind:'macro'};
+      return {main:[beh,...args].join(' '), sub:'', kind:'other'};
+  }
+}
+
+/* ---------- geometry: rotate KLE-style keys, normalise to a box ---------- */
+const GEO = (() => {
+  let minX=1e9, minY=1e9, maxX=-1e9, maxY=-1e9;
+  DATA.keys.forEach(k => {
+    const rad = k.r*Math.PI/180, c = Math.cos(rad), s = Math.sin(rad);
+    [[k.x,k.y],[k.x+k.w,k.y],[k.x+k.w,k.y+k.h],[k.x,k.y+k.h]].forEach(([px,py]) => {
+      const dx = px-k.rx, dy = py-k.ry;
+      const X = k.rx + dx*c - dy*s, Y = k.ry + dx*s + dy*c;
+      minX=Math.min(minX,X); minY=Math.min(minY,Y); maxX=Math.max(maxX,X); maxY=Math.max(maxY,Y);
+    });
+  });
+  return {bw:maxX-minX, bh:maxY-minY,
+    keys: DATA.keys.map(k => ({...k, lx:k.x-minX, ly:k.y-minY, ox:k.rx-k.x, oy:k.ry-k.y}))};
+})();
+
+/* ---------- combos (from keymap combos node) ---------- */
+const COMBOS = [
+  {id:'combo_studio_unlock', pos:[46,59], bind:'&studio_unlock', layers:'0 only', studio:true,
+   snippet:'#if defined(CONFIG_ZMK_STUDIO)\n combo_studio_unlock {\n  bindings = <&studio_unlock>;\n  key-positions = <46 59>;\n  timeout-ms = <50>;\n  layers = <0>;\n };\n#endif'},
+  {id:'combo', pos:[61], bind:'&kp K_SCREENSAVER', layers:'0 only', studio:false,
+   snippet:'combo {\n  bindings = <&kp K_SCREENSAVER>;\n  key-positions = <61>;\n  layers = <0>;\n};'},
+  {id:'Dfffsdfa', pos:[35,37], bind:'&kp D', layers:'all layers', studio:false,
+   snippet:'Dfffsdfa {\n  bindings = <&kp D>;\n  key-positions = <35 37>;\n};'},
+];
+COMBOS.forEach(c => { c.line = lineOfRe(DATA.keymapRaw, new RegExp('^\\s*' + c.id.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\s*\\{', 'm')); });
+
+/* ---------- state ---------- */
+const BASE = {
+  layers: LAYERS.map(n => DATA.layers[n].slice()),
+  keymap: DATA.keymapRaw,
+  macros: DATA.macrosRaw,
+  macroSteps: NODES.macro_parens.bindings.map(b => b.args[0]),
+  tpf: {term:200, flavor:'balanced', triggers:[1,2,3,4,5,8,9,10,11,12,13,27]},
+};
+const S = {
+  layer: 0, view: 'keyboard', sel: 46, overlay: true, assign: false,
+  edits: {},                       // "L:i" -> raw binding (vs BASE)
+  macro: {name:'macro_parens', steps: BASE.macroSteps.slice()},
+  tpf: JSON.parse(JSON.stringify(BASE.tpf)),
+  sim: {dur:120, other:false},
+  combo: 0, sbAll:false,
+  undo: [],
+  drawerOpen: true, drawerTab: 'problems',
+  git: {branch:'keymap/mod-layer-reach', target:'branch', backup:true, trigger:true, msgEdited:false, msg:'', phase:[], busy:false,
+        log:[
+          {sha:'e46bd74', msg:'feat(studio): add Studio unlock combo and handover notes', when:'2d ago'},
+          {sha:'6abd6d9', msg:'Trying combo', when:'3d ago'},
+          {sha:'29a6be5', msg:'trying combo', when:'3d ago'},
+          {sha:'869e941', msg:'update it to close vscode', when:'5d ago'}]},
+  build: {n:143, current:null, history:[
+          {n:142, status:'success', sha:'e46bd74', when:'2d ago'},
+          {n:141, status:'success', sha:'6abd6d9', when:'3d ago'},
+          {n:140, status:'failure', sha:'29a6be5', when:'3d ago'}]},
+  kf: null,                        // key form state
+  kq: '',                          // key search query
+};
+S.kf = null;
+
+/* ---------- effective state ---------- */
+const effRaw = (L,i) => (S.edits[L+':'+i] ?? BASE.layers[L][i]);
+const isEdited = (L,i) => ((L+':'+i) in S.edits);
+const effLayers = () => [0,1,2,3].map(L => BASE.layers[L].map((_,i) => effRaw(L,i)));
+const tpfBase = () => BASE.tpf;
+const macroChanged = () => JSON.stringify(S.macro.steps) !== JSON.stringify(BASE.macroSteps);
+const tpfChanged = () => JSON.stringify(S.tpf) !== JSON.stringify(BASE.tpf);
+const changeCount = () => Object.keys(S.edits).length + (macroChanged()?1:0) + (tpfChanged()?1:0);
+
+/* ---------- surgical text patches (round-trip safe) ---------- */
+function layerSpans(text, layerName){
+  const i = text.indexOf(layerName + ' {');
+  const b = text.indexOf('bindings = <', i);
+  const bodyStart = b + 'bindings = <'.length;
+  const bodyEnd = text.indexOf('>;', bodyStart);
+  const amps = [];
+  for (let q = bodyStart; q < bodyEnd; q++) if (text[q] === '&') amps.push(q);
+  return amps.map((s, idx) => {
+    let e = idx+1 < amps.length ? amps[idx+1] : bodyEnd;
+    while (e > s && /\s/.test(text[e-1])) e--;
+    return [s, e];
+  });
+}
+function patchKeymap(text){
+  const reps = [];
+  Object.entries(S.edits).forEach(([key, raw]) => {
+    const [L, i] = key.split(':');
+    const sp = layerSpans(BASE.keymap, LAYERS[+L])[+i];
+    reps.push([sp[0], sp[1], raw]);
+  });
+  const t = S.tpf, b = BASE.tpf;
+  if (t.term !== b.term){
+    const s = text.indexOf('tapping-term-ms = <') + 'tapping-term-ms = <'.length;
+    reps.push([s, text.indexOf('>;', s), String(t.term)]);
+  }
+  if (JSON.stringify(t.triggers) !== JSON.stringify(b.triggers)){
+    const s = text.indexOf('hold-trigger-key-positions = <') + 'hold-trigger-key-positions = <'.length;
+    reps.push([s, text.indexOf('>;', s), t.triggers.slice().sort((x,y)=>x-y).join(' ')]);
+  }
+  if (t.flavor !== b.flavor){
+    const ti = text.indexOf('tapping-term-ms = <');
+    const tpfEnd = text.indexOf('};', ti);
+    const fi = text.indexOf('flavor = "', ti);
+    if (fi >= 0 && fi < tpfEnd){
+      // flavor line already exists in the file: rewrite only its value
+      const s = fi + 'flavor = "'.length;
+      reps.push([s, text.indexOf('"', s), t.flavor]);
+    } else if (t.flavor !== 'balanced'){
+      const lineEnd = text.indexOf(';', ti) + 1;
+      reps.push([lineEnd, lineEnd, `\n            flavor = "${t.flavor}";`]);
+    }
+  }
+  let out = text;
+  reps.sort((a,b) => b[0]-a[0]).forEach(([s,e,v]) => { out = out.slice(0,s) + v + out.slice(e); });
+  return out;
+}
+function patchMacros(text){
+  if (!macroChanged()) return text;
+  const i = text.indexOf('macro_parens: macro_parens {');
+  const j = text.indexOf('bindings = ', i);
+  const s = j + 'bindings = '.length;
+  const e = text.indexOf('>;', s) + 1;
+  return text.slice(0, s) + S.macro.steps.map(c => `<&kp ${c}>`).join(', ') + text.slice(e);
+}
+const keymapNew = () => patchKeymap(BASE.keymap);
+const macrosNew = () => patchMacros(BASE.macros);
+
+/* ---------- validator ---------- */
+function computeIssues(){
+  const L = effLayers();
+  const out = [];
+  const reach = new Set([0]);
+  L.forEach(arr => arr.forEach(raw => { const p = parseB(raw); if (['mo','tog','sl'].includes(p.beh)) reach.add(+p.args[0]); }));
+  if (!reach.has(2)) out.push({id:'unreach2', sev:'error',
+    title:"Layer 2 'mod' (Bluetooth, bootloader) is unreachable — no key activates it",
+    detail:"No &mo 2, &tog 2 or &sl 2 exists on any layer, so the Bluetooth profile keys and bootloader on this layer can't be reached from the keyboard.",
+    file:'config/adv360.keymap', line: lineOfRe(BASE.keymap, /^\s*mod \{/m),
+    action:{label:'Fix: assign a key…', act:'fix-mod'}});
+  let mv = null;
+  L.forEach((arr,li) => arr.forEach((raw,i) => { if (!mv && parseB(raw).beh==='macro_ver') mv = {li,i}; }));
+  if (mv) out.push({id:'macro-ver', sev:'warn',
+    title:'&macro_ver is not defined in the loaded files',
+    detail:'Defined in version.dtsi, which this editor does not load yet, so the validator cannot check what it expands to.',
+    file:'config/adv360.keymap', line: lineOfRe(BASE.keymap, /&macro_ver/),
+    action:{label:'Show key', act:'goto-key', L:mv.li, i:mv.i}});
+  out.push({id:'studio-gated', sev:'info',
+    title:'combo_studio_unlock exists only in Studio builds',
+    detail:'Wrapped in #if defined(CONFIG_ZMK_STUDIO). It is absent from firmware-no-clique, so Studio-less keyboards have no unlock combo.',
+    file:'config/adv360.keymap', line: lineOfRe(BASE.keymap, /CONFIG_ZMK_STUDIO/),
+    action:{label:'Show on board', act:'goto-combo', i:0}});
+  out.push({id:'combo-single', sev:'info',
+    title:"Combo 'combo' lists a single key position (61)",
+    detail:'Combos normally join two or more keys. Confirm this is intentional before you build.',
+    file:'config/adv360.keymap', line: COMBOS[1].line,
+    action:{label:'Open combo', act:'goto-combo', i:1}});
+  out.push({id:'dfffsdfa', sev:'info',
+    title:"Combo 'Dfffsdfa' fires on all layers and chords two modifiers",
+    detail:'Its positions 35 and 37 are both modifiers on layer 0 (Alt and Ctrl). Holding both by accident will type D.',
+    file:'config/adv360.keymap', line: COMBOS[2].line,
+    action:{label:'Open combo', act:'goto-combo', i:2}});
+  const usesMacroParens = L.flat().some(r => parseB(r).beh==='macro_parens');
+  if (!usesMacroParens) out.push({id:'macro-unbound', sev:'info',
+    title:'macro_parens is defined but bound on no key',
+    detail:'Exists in macros.dtsi only. Bind it to a key, or leave it for later.',
+    file:'config/macros.dtsi', line: lineOfRe(DATA.macrosRaw, /macro_parens: macro_parens/),
+    action:{label:'Open macro', act:'goto-macro'}});
+  return out;
+}
+
+/* ---------- diff ---------- */
+function lcsOps(a, b){
+  const n=a.length, m=b.length;
+  const dp = Array.from({length:n+1}, () => new Int32Array(m+1));
+  for (let i=n-1;i>=0;i--) for (let j=m-1;j>=0;j--)
+    dp[i][j] = a[i]===b[j] ? dp[i+1][j+1]+1 : Math.max(dp[i+1][j], dp[i][j+1]);
+  const ops=[]; let i=0, j=0;
+  while (i<n && j<m){
+    if (a[i]===b[j]){ ops.push({t:' ', s:a[i], o:i+1, n:j+1}); i++; j++; }
+    else if (dp[i+1][j] >= dp[i][j+1]){ ops.push({t:'-', s:a[i], o:i+1}); i++; }
+    else { ops.push({t:'+', s:b[j], n:j+1}); j++; }
+  }
+  while (i<n){ ops.push({t:'-', s:a[i], o:i+1}); i++; }
+  while (j<m){ ops.push({t:'+', s:b[j], n:j+1}); j++; }
+  return ops;
+}
+function diffHTML(name, oldT, newT){
+  if (oldT === newT) return '';
+  const ops = lcsOps(oldT.split('\n'), newT.split('\n'));
+  const adds = ops.filter(o=>o.t==='+').length, dels = ops.filter(o=>o.t==='-').length;
+  const keep = new Set();
+  ops.forEach((o,idx) => { if (o.t!==' ') for (let k=idx-2;k<=idx+2;k++) if (k>=0&&k<ops.length) keep.add(k); });
+  let html = `<div class="fh">${esc(name)} <span class="muted" style="float:right">+${adds} −${dels}</span></div>`;
+  let prev = -2;
+  ops.forEach((o,idx) => {
+    if (!keep.has(idx)) return;
+    if (idx !== prev+1) html += `<div class="hk">@@ ${o.o||o.n ? 'line '+(o.o||o.n) : ''} @@</div>`;
+    prev = idx;
+    const cls = o.t==='+' ? 'add' : o.t==='-' ? 'del' : '';
+    html += `<div class="dl ${cls}"><span class="ln">${o.o??''}</span><span class="ln">${o.n??''}</span><span class="sg">${o.t===' '?'':o.t}</span><code>${esc(o.s)||'&nbsp;'}</code></div>`;
+  });
+  return html;
+}
+
+/* ---------- binding editing ---------- */
+function setEdit(L, i, raw){
+  const base = BASE.layers[L][i];
+  if (raw === base) delete S.edits[L+':'+i];
+  else S.edits[L+':'+i] = raw;
+}
+function pushUndo(){
+  S.undo.push(JSON.stringify({edits:S.edits, macro:S.macro.steps, tpf:S.tpf}));
+  if (S.undo.length > 60) S.undo.shift();
+}
+function undo(){
+  if (!S.undo.length){ toast('Nothing to undo'); return; }
+  const snap = JSON.parse(S.undo.pop());
+  S.edits = snap.edits; S.macro.steps = snap.macro; S.tpf = snap.tpf;
+  toast('Undone'); refresh();
+}
+
+/* ---------- toast ---------- */
+function toast(msg, kind=''){
+  const el = document.createElement('div');
+  el.className = 'toast ' + kind; el.textContent = msg;
+  $('#toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+/* ---------- board ---------- */
+function drawBoard(host, o){
+  host.dataset.board = '1'; host._opts = o;
+  const avail = (host.clientWidth || 820) - 6;
+  const U = Math.max(o.min||26, Math.min(o.max||60, avail / GEO.bw));
+  let tags = '';
+  const keysHTML = GEO.keys.map((k,i) => {
+    let main, sub = '', kind;
+    if (o.mini){
+      main = String(i); kind = o.triggers && o.triggers.includes(i) ? 'trigger' : 'plain';
+    } else {
+      const pr = present(o.raw(i)); main = pr.main; sub = pr.sub; kind = pr.kind;
+    }
+    const cls = ['k'];
+    if (i === o.sel) cls.push('sel');
+    if (o.edited && o.edited(i)) cls.push('edited');
+    if (o.overlay){
+      const combo = COMBOS.find(c => c.pos.includes(i));
+      if (combo){
+        cls.push(combo.studio ? 'ov-studio' : 'ov-combo');
+        if (o.comboSel && o.comboSel.pos.includes(i)) cls.push('ov-sel');
+      }
+    }
+    if (o.mini && o.triggers && o.triggers.includes(i)) cls.push('on','trig');
+    if (o.mini) cls.push('trig');
+    const rot = k.r ? `transform:rotate(${k.r}deg);transform-origin:${k.ox*U}px ${k.oy*U}px;` : '';
+    const style = `left:${k.lx*U}px;top:${k.ly*U}px;width:${k.w*U}px;height:${k.h*U}px;${rot}`;
+    const long = main.length > 5 ? ' long' : '';
+    return `<button class="${cls.join(' ')}" data-role="key" data-i="${i}" data-kind="${kind}" title="${esc(o.mini?'key '+i:o.raw(i))}" style="${style}"><span class="cap"><span class="main${long}">${esc(main)||'&nbsp;'}</span>${sub?`<span class="sub">${esc(sub)}</span>`:''}</span></button>`;
+  }).join('');
+  // studio badge over the Studio combo pair
+  if (o.overlay && !o.mini){
+    // free corner under the left thumb area, so the tag never sits on a key
+    tags = `<span class="studio-tag" style="left:0;top:${(GEO.bh-0.45)*U}px">Studio builds only · combo 46+59</span>`;
+  }
+  host.innerHTML = `<div class="board${o.assign?' assign-on':''}" style="width:${GEO.bw*U}px;height:${GEO.bh*U}px;--u:${U}px">${keysHTML}${tags}</div>`;
+}
+
+/* ---------- sidebar ---------- */
+function renderSidebar(){
+  const issues = computeIssues();
+  const errs = issues.filter(i=>i.sev==='error').length, warns = issues.filter(i=>i.sev==='warn').length;
+  const L = effLayers();
+  const reached = new Set([0]);
+  L.forEach(a => a.forEach(r => { const p=parseB(r); if(['mo','tog','sl'].includes(p.beh)) reached.add(+p.args[0]); }));
+  const macros = MACROS;
+  const showMacros = S.sbAll ? macros : macros.slice(0, 7);
+  $('#sidebar').innerHTML = `
+    <div class="sb-scroll">
+      <section>
+        <h3>Layers <span class="count">4 × 76 keys</span></h3>
+        ${LNAME.map((n,Li) => {
+          const on = S.view==='keyboard' && S.layer===Li;
+          const bad = !reached.has(Li);
+          const meta = Li===0 ? 'root' : bad ? 'unreachable' : 'reached';
+          return `<button class="tree-item ${on?'on':''}" data-go="layer:${Li}"><span class="ico">${Li}</span><span class="nm">${cap(n)}</span><span class="meta ${bad?'bad':'ok'}">${meta}</span></button>`;
+        }).join('')}
+      </section>
+      <section>
+        <h3>Macros <span class="count">${MACROS.length}</span></h3>
+        ${showMacros.map(m => `<button class="tree-item ${S.view==='macro' && S.macro.name===m.node?'on':''}" data-go="macro:${m.node}"><span class="ico">M</span><span class="nm">${esc(m.node)}</span>${m.node==='macro_parens'?'<span class="meta">edit</span>':''}</button>`).join('')}
+        ${macros.length>7 ? `<button class="tree-item" data-act="sb-all"><span class="ico">…</span><span class="nm">${S.sbAll?'Show fewer':'Show all '+macros.length}</span></button>`:''}
+      </section>
+      <section>
+        <h3>Hold-taps <span class="count">1</span></h3>
+        <button class="tree-item ${S.view==='holdtap'?'on':''}" data-go="holdtap"><span class="ico">H</span><span class="nm">tpf</span><span class="meta">${S.tpf.term}ms</span></button>
+      </section>
+      <section>
+        <h3>Combos <span class="count">${COMBOS.length}</span></h3>
+        ${COMBOS.map((c,i) => `<button class="tree-item ${S.view==='combos' && S.combo===i?'on':''}" data-go="combo:${i}"><span class="ico">C</span><span class="nm">${esc(c.id)}</span>${c.studio?'<span class="tag">studio</span>':''}</button>`).join('')}
+      </section>
+      <section>
+        <h3>Validator <span>${errs?`<span class="badge">${errs} error</span>`:''}${warns?`<span class="badge warn" style="margin-left:4px">${warns} warn</span>`:''}</span></h3>
+        <button class="tree-item" data-go="problems"><span class="ico">!</span><span class="nm">Problems</span><span class="meta">${issues.length}</span></button>
+      </section>
+    </div>
+    <div class="sb-foot"><b>ZMK Studio</b> can change the keyboard at runtime and override this file. The <code>.keymap</code> in git is the source of truth.</div>`;
+}
+
+/* ---------- top bar ---------- */
+function renderTop(){
+  const n = changeCount();
+  $('#dirtyN').textContent = n + (n === 1 ? ' change' : ' changes');
+  $('#dirtyBtn').style.display = n ? '' : 'none';
+  $('#undoBtn').style.opacity = S.undo.length ? 1 : .5;
+  $('#themeBtn').innerHTML = document.documentElement.dataset.theme === 'light'
+    ? '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13.5 9.5A6 6 0 116.5 2.5a4.7 4.7 0 007 7z"/></svg>'
+    : '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M3 13l1.4-1.4M11.6 4.4L13 3"/></svg>';
+}
+
+/* ---------- main ---------- */
+function renderMain(){
+  const issues = computeIssues();
+  const unreach = issues.find(i=>i.id==='unreach2');
+  const reachedSet = new Set([0]);
+  effLayers().forEach(a => a.forEach(r => { const p=parseB(r); if(['mo','tog','sl'].includes(p.beh)) reachedSet.add(+p.args[0]); }));
+  let title = '', tools = '', body = '';
+  const legend = `<div class="legend">
+      <span><i style="background:var(--key-top);border:1px solid var(--line2)"></i>key</span>
+      <span><i style="background:var(--hold)"></i>hold-tap</span>
+      <span><i style="background:var(--layer)"></i>layer</span>
+      <span><i style="background:var(--bt)"></i>bt / device</span>
+      <span><i style="background:var(--macro)"></i>macro</span>
+      <span><i style="background:var(--danger)"></i>boot</span>
+      <span><i style="background:var(--studio);height:2px;border-top:2px dashed var(--studio);background:none"></i>studio combo</span></div>`;
+
+  if (S.view === 'keyboard'){
+    title = 'Keyboard · ' + LNAME[S.layer] + ' layer';
+    tools = `<div class="seg" role="tablist" aria-label="Layer">
+        ${LNAME.map((n,L) => `<button role="tab" aria-selected="${S.layer===L}" class="${S.layer===L?'on':''} ${!reachedSet.has(L)?'warnd':''}" data-go="layer:${L}">${L} · ${n}<span class="n">${BASE.layers[L].length}</span></button>`).join('')}
+      </div>
+      <label class="toggle"><input type="checkbox" id="ovToggle" ${S.overlay?'checked':''}> Combo overlay</label>`;
+    body = `<div class="stage-inner">
+      ${S.assign ? `<div class="banner assign"><div class="grow"><div class="ttl">Assign mode — click a key on layer 0 to bind <code>&amp;mo 2</code></div><div class="sub">Pick any key. Esc cancels. You can change the behavior afterwards in the inspector.</div></div><button class="btn sm" data-act="cancel-assign">Cancel</button></div>` : ''}
+      ${unreach && !S.assign ? `<div class="banner"><span class="sev-ico error">!</span><div class="grow"><div class="ttl">${esc(unreach.title)}</div><div class="sub">config/adv360.keymap line ${unreach.line}</div></div><button class="btn primary sm" data-act="fix-mod">Fix: assign a key…</button></div>` : ''}
+      <div class="board-card" id="boardCard">
+        <div class="cardhead"><span class="eyebrow">physical layout · info.json · 76 keys</span>${legend}</div>
+        <div class="board-host" id="boardHost"></div>
+      </div>
+      <div class="note-row">
+        <div class="note studio"><div class="eyebrow">combo_studio_unlock · Studio builds only</div><b>Shift + Shift</b> (positions 46 + 59) unlocks ZMK Studio. It sits inside <code>#if defined(CONFIG_ZMK_STUDIO)</code>, so it is absent from <code>firmware-no-clique</code>. It is bound on layer 0 only and does not replace either Shift key.</div>
+        <div class="note"><div class="eyebrow">Layer routes</div>${routeText()}</div>
+      </div>
+    </div>`;
+  }
+  else if (S.view === 'macro'){
+    title = 'Macro · ' + S.macro.name;
+    tools = `<span class="chip">zmk,behavior-macro</span><span class="chip">#binding-cells = &lt;0&gt;</span>`;
+    body = macroView();
+  }
+  else if (S.view === 'holdtap'){
+    title = 'Hold-tap · tpf';
+    tools = `<span class="chip">zmk,behavior-hold-tap</span><span class="chip">${S.tpf.term} ms</span>`;
+    body = holdTapView();
+  }
+  else if (S.view === 'combos'){
+    title = 'Combos';
+    tools = `<span class="chip">zmk,combos</span><span class="chip teal">Studio gate on 1</span>`;
+    body = comboView();
+  }
+  else { title = 'Problems'; body = ''; }
+
+  $('#main').innerHTML = `
+    <div class="mainhead">
+      <div><div class="eyebrow">${S.view==='keyboard'?'Keymap':S.view==='macro'?'Macros':S.view==='holdtap'?'Hold-taps':'Combos'}</div><h1>${esc(title)}</h1></div>
+      <div class="tools">${tools}</div>
+    </div>
+    <div class="stage">${body}</div>`;
+
+  // boards
+  if (S.view==='keyboard'){
+    drawBoard($('#boardHost'), {raw:i=>effRaw(S.layer,i), sel:S.sel, overlay:S.overlay,
+      edited:i=>isEdited(S.layer,i), assign:S.assign, min:26, max:60});
+  }
+  if (S.view==='combos'){
+    drawBoard($('#comboHost'), {raw:i=>effRaw(0,i), sel:-1, overlay:true, comboSel:COMBOS[S.combo], min:24, max:50, assign:false});
+  }
+  if (S.view==='holdtap'){
+    drawBoard($('#miniHost'), {mini:true, triggers:S.tpf.triggers, sel:-1, overlay:false, min:20, max:36});
+  }
+  if (S.view==='macro') renderSteps();
+}
+function routeText(){
+  const routes = [];
+  effLayers().forEach((arr, Lf) => arr.forEach((r,i) => {
+    const p = parseB(r);
+    if (['mo','tog'].includes(p.beh)) routes.push(`L${Lf} key ${i} → <b>${LN(p.args[0])}</b> (${p.beh==='mo'?'hold':'toggle'})`);
+  }));
+  return routes.map(r => `<div>${r}</div>`).join('') + `<div style="margin-top:6px;color:var(--faint)">Layer 2 has no entry: nothing points at it.</div>`;
+}
+
+/* ---------- macro editor ---------- */
+function macroView(){
+  const steps = S.macro.steps;
+  const r = runSandbox(steps);
+  const newLine = steps.map(c => `<&kp ${c}>`).join(', ');
+  const oldLine = BASE.macroSteps.map(c => `<&kp ${c}>`).join(', ');
+  const diffLine = macroChanged()
+    ? `<span class="del">        bindings = ${oldLine};</span><span class="add">        bindings = ${newLine};</span>`
+    : `        bindings = ${newLine};`;
+  return `<div class="split">
+    <section class="panel">
+      <div class="eyebrow">ZMK behavior · macro · macros.dtsi line ${lineOfRe(DATA.macrosRaw,/macro_parens: macro_parens/)}</div>
+      <h2>macro_parens</h2>
+      <div class="chips"><span class="chip">label "macro_parens"</span><span class="chip ${S.view==='macro'?'bad':''}">not bound on any layer</span><span class="chip">${steps.length} steps</span></div>
+      <h4 style="margin-top:16px">Steps · run in order · drag to reorder</h4>
+      <ol class="steps" id="steps"></ol>
+      <div class="row" style="margin-top:6px">
+        <input class="inp grow" id="addCode" list="kcl" placeholder="Add a tap: type a keycode, e.g. RPAR" style="max-width:340px">
+        <datalist id="kcl">${KEYCODES.map(k=>`<option value="${k}">`).join('')}</datalist>
+        <button class="btn sm" data-act="add-step">+ Add tap</button>
+      </div>
+      <div class="row end" style="margin-top:16px">
+        <button class="btn ghost sm" data-act="macro-revert" ${macroChanged()?'':'disabled'}>Revert</button>
+        <button class="btn primary sm" data-act="macro-stage" ${macroChanged()?'':'disabled'}>Stage macro change</button>
+      </div>
+    </section>
+    <section class="panel">
+      <h4>Sandbox · what the steps type</h4>
+      <div class="sandbox" id="sandbox">${esc(r.text.slice(0,r.caret))}<span class="caret"></span>${esc(r.text.slice(r.caret))}</div>
+      <p class="hint" style="margin:8px 0 14px">Replays the taps in order against a text field. Cursor moves are simulated, so moving <code>LEFT</code> changes where the cursor ends.</p>
+      <h4>Generated source · macros.dtsi</h4>
+      <div class="dtsi">        macro_parens: macro_parens {
+          compatible = "zmk,behavior-macro";
+          label = "macro_parens";
+          #binding-cells = &lt;0&gt;;
+${diffLine}
+        };</div>
+      <p class="hint" style="margin-top:10px">Saved through a surgical patch: only the <code>bindings</code> line changes, the rest of the file is untouched.</p>
+    </section>
+  </div>`;
+}
+function runSandbox(steps){
+  const buf = []; let caret = 0;
+  for (const c of steps){
+    if (c==='LEFT') caret = Math.max(0, caret-1);
+    else if (c==='RIGHT') caret = Math.min(buf.length, caret+1);
+    else if (SANDBOX_CH[c] !== undefined){ buf.splice(caret,0,SANDBOX_CH[c]); caret++; }
+  }
+  return {text: buf.join(''), caret};
+}
+function renderSteps(){
+  const host = $('#steps'); if (!host) return;
+  const steps = S.macro.steps;
+  host.innerHTML = steps.map((c,i) => `
+    <li class="step" draggable="true" data-idx="${i}">
+      <span class="grip" title="drag">⋮⋮</span><span class="stepn">${i+1}</span>
+      <span class="stype">tap</span>
+      <span class="kcode"><b>${esc(kcLabel(c))}</b><code>&amp;kp ${esc(c)}</code></span>
+      <span class="sact">
+        <button data-act="mv-up" data-idx="${i}" ${i===0?'disabled':''} aria-label="Move up">↑</button>
+        <button data-act="mv-dn" data-idx="${i}" ${i===steps.length-1?'disabled':''} aria-label="Move down">↓</button>
+        <button data-act="rm-step" data-idx="${i}" aria-label="Remove step">✕</button>
+      </span>
+    </li>`).join('') || '<li class="hint">No steps. Add a tap below.</li>';
+  $$('#steps .step').forEach(li => {
+    li.addEventListener('dragstart', e => { li.classList.add('dragging'); e.dataTransfer.setData('text/plain', li.dataset.idx); e.dataTransfer.effectAllowed='move'; });
+    li.addEventListener('dragend', () => { li.classList.remove('dragging'); $$('#steps .step').forEach(x=>x.classList.remove('over')); });
+    li.addEventListener('dragover', e => { e.preventDefault(); li.classList.add('over'); });
+    li.addEventListener('dragleave', () => li.classList.remove('over'));
+    li.addEventListener('drop', e => {
+      e.preventDefault();
+      const from = +e.dataTransfer.getData('text/plain'), to = +li.dataset.idx;
+      if (from !== to) moveStep(from, to);
+    });
+  });
+}
+function moveStep(from, to){
+  pushUndo();
+  const arr = S.macro.steps; const [x] = arr.splice(from,1); arr.splice(to,0,x);
+  refresh();
+}
+
+/* ---------- hold-tap editor ---------- */
+function holdTapView(){
+  const t = S.tpf;
+  const usages = [];
+  effLayers().forEach((arr,L) => arr.forEach((r,i) => { const p=parseB(r); if (p.beh==='tpf') usages.push({L,i,hold:p.args[0],tap:p.args[1]}); }));
+  const flavorOpts = ['balanced','hold-preferred','tap-preferred'];
+  return `<div class="split">
+    <section class="panel">
+      <div class="eyebrow">keymap · behaviors · tpf · line ${lineOfRe(BASE.keymap,/tpf: tpf/)}</div>
+      <h2>tpf</h2>
+      <p class="hint" style="margin:8px 0 14px">Each key supplies its own hold and tap actions: <code>bindings = &lt;&amp;kp&gt;, &lt;&amp;kp&gt;</code>. In <code>&amp;tpf HOLD TAP</code> the first argument is the hold action. This node sets the timing.</p>
+      <div class="field"><label>tapping-term-ms · <span id="termLbl">${t.term}</span></label>
+        <div class="slider-row">
+          <input type="range" id="termR" min="100" max="400" step="5" value="${t.term}">
+          <input class="inp" id="termN" type="number" min="50" max="600" step="5" value="${t.term}">
+        </div>
+        <div class="hint">A press shorter than the term taps. Longer holds. Changing it only changes the <code>tapping-term-ms</code> line.</div>
+      </div>
+      <div class="field"><label>flavor</label>
+        <select class="sel" id="flavor">${flavorOpts.map(f=>`<option ${t.flavor===f?'selected':''} value="${f}">${f}</option>`).join('')}</select>
+        <div class="hint">${t.flavor==='balanced'?'Not set in keymap. ZMK default (balanced) applies.':'Will be written as a new <code>flavor</code> line under tpf.'}</div>
+      </div>
+      <div class="field"><label>hold-trigger-key-positions · ${t.triggers.length} keys</label>
+        <div class="trig-host" id="miniHost"></div>
+        <div class="hint">Pressing one of these keys during the term resolves to hold right away (balanced flavor). Click a key to toggle it.</div>
+      </div>
+      <div class="sect"><h4>Usages · ${usages.length} bindings</h4>
+        <table class="usage"><thead><tr><th>layer</th><th>key</th><th>hold</th><th>tap</th></tr></thead><tbody>
+        ${usages.map(u => `<tr data-act="goto-key" data-L="${u.L}" data-i="${u.i}"><td>${LNAME[u.L]}</td><td>${u.i}</td><td><b>${esc(kcLabel(u.hold))}</b></td><td>${esc(kcLabel(u.tap))}</td></tr>`).join('')}
+        </tbody></table>
+      </div>
+    </section>
+    <section class="panel">
+      <h4>Simulator · what the press resolves to</h4>
+      <div class="field"><label>press duration · <span id="durLbl">${S.sim.dur}</span> ms</label>
+        <input type="range" id="durR" min="0" max="500" step="5" value="${S.sim.dur}" style="accent-color:var(--hold)"></div>
+      <label class="field-check"><input type="checkbox" id="otherK" ${S.sim.other?'checked':''}><span>Another key pressed during the hold. Under balanced, only trigger positions count.</span></label>
+      <div id="simWrap">${simHTML()}</div>
+      <div class="sect">
+        <h4>Staged</h4>
+        <div class="row">
+          <button class="btn primary sm" data-act="tpf-stage" ${tpfChanged()?'':'disabled'}>Stage hold-tap change</button>
+          <button class="btn ghost sm" data-act="tpf-revert" ${tpfChanged()?'':'disabled'}>Revert</button>
+        </div>
+        <p class="hint" style="margin-top:10px">The simulator approximates ZMK flavors for a quick read. Confirm on hardware before you flash.</p>
+      </div>
+    </section>
+  </div>`;
+}
+function simResult(){
+  const t = S.tpf, d = S.sim.dur, other = S.sim.other, term = t.term;
+  const timeout = d >= term;
+  if (t.flavor === 'balanced'){
+    const early = other && t.triggers.length > 0;
+    return {hold: early || timeout,
+      why: early ? 'another key on a trigger position during the hold' : timeout ? 'held past the term' : 'released before the term'};
+  }
+  if (t.flavor === 'hold-preferred'){
+    return {hold: other || timeout, why: other ? 'another key pressed: hold wins' : timeout ? 'held past the term' : 'released before the term'};
+  }
+  return {hold: !other && timeout, why: other ? 'another key pressed: tap wins' : timeout ? 'held past the term' : 'released before the term'};
+}
+function simHTML(){
+  const r = simResult(); const t = S.tpf;
+  const pct = Math.min(100, S.sim.dur/500*100), tp = t.term/500*100;
+  return `<div class="sim-track">
+      <div class="bar" style="width:${pct}%"></div>
+      <div class="term" style="left:${tp}%"></div>
+      <span class="tlab" style="left:${Math.min(tp+1,78)}%">term ${t.term} ms</span>
+    </div>
+    <div class="sim-scale"><span>0</span><span>250</span><span>500 ms</span></div>
+    <div class="sim-out">
+      <div class="eyebrow" style="margin-bottom:6px">resolves to</div>
+      <b>${r.hold ? 'hold' : 'tap'}</b>
+      <div class="hint" style="margin-top:4px">${esc(r.why)} · flavor <code>${t.flavor}</code></div>
+    </div>`;
+}
+function updateHoldPreview(){
+  const w = $('#simWrap'); if (w) w.innerHTML = simHTML();
+  const dl = $('#durLbl'); if (dl) dl.textContent = S.sim.dur;
+  const tl = $('#termLbl'); if (tl) tl.textContent = S.tpf.term;
+}
+
+/* ---------- combos ---------- */
+function comboView(){
+  return `<div class="board-card" style="padding:18px">
+      <div class="cardhead"><span class="eyebrow">overlay · layer 0 · combos highlighted</span>
+        <span class="hint">Teal dashed: Studio-only combo. Amber dotted: always-on combos.</span></div>
+      <div class="board-host" id="comboHost"></div>
+    </div>
+    <div class="combo-grid">
+      ${COMBOS.map((c,i) => `<div class="combo-card ${c.studio?'studio':''} ${S.combo===i?'on':''}" data-act="combo-sel" data-idx="${i}" role="button" tabindex="0">
+        ${c.studio?'<span class="status tag" style="color:var(--studio);border-color:rgba(76,195,255,.5)">only in Studio builds</span>':''}
+        <span class="nm">${esc(c.id)}</span>
+        <span class="meta">positions <code>${c.pos.join(' + ')}</code> · bind <code>${esc(c.bind)}</code></span>
+        <span class="meta">layers: ${c.layers}${c.studio?' · timeout 50 ms':''}</span>
+        <pre>${esc(c.snippet)}</pre>
+        <span class="meta">config/adv360.keymap line ${c.line}</span>
+      </div>`).join('')}
+    </div>`;
+}
+
+/* ---------- inspector ---------- */
+const BEH_OPTS = [['kp','Key press'],['hold','Hold-tap'],['layer','Layer (momentary / toggle)'],['macro','Macro'],['bt','Bluetooth'],['trans','Transparent'],['none','None']];
+function formFromRaw(raw){
+  const p = parseB(raw), a = p.args;
+  if (p.beh==='kp') return {beh:'kp', code:a[0]||'NONE'};
+  if (p.beh==='tpf') return {beh:'hold', hold:a[0], tap:a[1]};
+  if (p.beh==='mo'||p.beh==='tog') return {beh:'layer', mode:p.beh, layer:+a[0]};
+  if (p.beh==='bt') return {beh:'bt', bt: a[0]==='BT_CLR' ? 'BT_CLR' : 'BT_SEL '+a[1]};
+  if (p.beh==='trans') return {beh:'trans'};
+  if (p.beh==='none') return {beh:'none'};
+  if (NODES[p.beh] && /behavior-macro/.test(NODES[p.beh].compat)) return {beh:'macro', macro:p.beh};
+  return {beh:'other', raw};
+}
+function rawFromForm(f){
+  switch(f.beh){
+    case 'kp': return `&kp ${f.code}`;
+    case 'hold': return `&tpf ${f.hold} ${f.tap}`;
+    case 'layer': return `&${f.mode} ${f.layer}`;
+    case 'macro': return `&${f.macro}`;
+    case 'bt': return `&bt ${f.bt}`;
+    case 'trans': return '&trans';
+    case 'none': return '&none';
+    default: return f.raw;
+  }
+}
+function renderInspector(){
+  const host = $('#inspector');
+  if (S.view==='keyboard') host.innerHTML = keyInspector();
+  else if (S.view==='macro') host.innerHTML = macroInspector();
+  else if (S.view==='holdtap') host.innerHTML = tpfInspector();
+  else if (S.view==='combos') host.innerHTML = comboInspector();
+  else host.innerHTML = '';
+  bindInspector();
+}
+function keyInspector(){
+  const i = S.sel, L = S.layer;
+  const raw = effRaw(L,i), orig = BASE.layers[L][i];
+  const pr = present(raw), f = S.kf || formFromRaw(raw);
+  const combos = COMBOS.filter(c => c.pos.includes(i));
+  const trig = S.tpf.triggers.includes(i);
+  const routes = [];
+  effLayers().forEach((arr,Lf) => arr.forEach((r,j) => { const p=parseB(r); if (['mo','tog'].includes(p.beh) && +p.args[0]===L) routes.push(`layer ${Lf} key ${j} · ${p.beh==='mo'?'hold':'toggle'}`); }));
+  const kq = S.kq.toLowerCase();
+  const list = KEYCODES.filter(k => !kq || k.toLowerCase().includes(kq)).slice(0,12);
+  const behSel = `<select class="sel" id="beh">${BEH_OPTS.map(([v,l]) => `<option value="${v}" ${f.beh===v?'selected':''}>${l}</option>`).join('')}${f.beh==='macro'||f.beh==='kp'||f.beh==='hold'||f.beh==='layer'||f.beh==='bt'||f.beh==='trans'||f.beh==='none'?'':''}${f.beh==='other'?'<option selected disabled>Raw · read-only</option>':''}</select>`;
+  let fields = '';
+  if (f.beh==='kp'){
+    fields = `<div class="field"><label>Key search</label><input class="inp" id="kq" value="${esc(S.kq)}" placeholder="type: lshift, f5, pg_up…" autocomplete="off"></div>
+      <div class="kc-list" id="kcList">${list.map(k=>`<button data-act="pick-kc" data-code="${k}" class="${f.code===k?'on':''}"><span>${k}</span><small>${esc(kcLabel(k))}</small></button>`).join('') || '<small style="padding:8px">no match</small>'}</div>`;
+  } else if (f.beh==='hold'){
+    fields = `<div class="field"><label>Hold action</label><input class="inp" id="holdK" list="kcl2" value="${esc(f.hold||'')}"></div>
+      <div class="field"><label>Tap action</label><input class="inp" id="tapK" list="kcl2" value="${esc(f.tap||'')}"></div>
+      <datalist id="kcl2">${KEYCODES.map(k=>`<option value="${k}">`).join('')}</datalist>
+      <div class="hint">Compiles to <code>&amp;tpf ${esc(f.hold||'?')} ${esc(f.tap||'?')}</code>. Timing comes from the tpf node: ${S.tpf.term} ms, ${S.tpf.flavor}.</div>
+      <button class="btn ghost sm" style="margin-top:10px" data-act="open-tpf">Open hold-tap editor →</button>`;
+  } else if (f.beh==='layer'){
+    fields = `<div class="field"><label>Target layer</label><select class="sel" id="layerSel">${LNAME.map((n,Lx)=>`<option value="${Lx}" ${f.layer===Lx?'selected':''}>${Lx} · ${n}</option>`).join('')}</select></div>
+      <div class="field"><label>Mode</label><div class="seg2">
+        <label><input type="radio" name="lm" value="mo" ${f.mode==='mo'?'checked':''}>momentary <span class="muted">&amp;mo</span></label>
+        <label><input type="radio" name="lm" value="tog" ${f.mode==='tog'?'checked':''}>toggle <span class="muted">&amp;tog</span></label></div></div>`;
+  } else if (f.beh==='macro'){
+    fields = `<div class="field"><label>Macro</label><select class="sel" id="macroSel">${MACROS.map(m=>`<option value="${m.node}" ${f.macro===m.node?'selected':''}>${m.node} · ${m.bindings.length} steps</option>`).join('')}</select></div>
+      <button class="btn ghost sm" data-act="goto-macro-sel">Open macro editor →</button>`;
+  } else if (f.beh==='bt'){
+    fields = `<div class="field"><label>Bluetooth action</label><select class="sel" id="btSel">${['BT_SEL 0','BT_SEL 1','BT_SEL 2','BT_SEL 3','BT_SEL 4','BT_CLR'].map(v=>`<option ${f.bt===v?'selected':''}>${v}</option>`).join('')}</select></div>`;
+  } else if (f.beh==='trans'){
+    fields = `<p class="hint">Falls through to the layer below. Use on layers that only add a few keys.</p>`;
+  } else if (f.beh==='none'){
+    fields = `<p class="hint">Key does nothing. Use <code>&amp;trans</code> if you want the lower layer to show through.</p>`;
+  } else {
+    fields = `<p class="hint">Raw binding the editor keeps verbatim. Edit it in the source file.</p>`;
+  }
+  const dirty = isEdited(L,i);
+  const pending = dirty ? `<div class="code" style="margin-top:12px"><span class="old">${esc(orig)}</span>\n<span class="new">${esc(raw)}</span></div>` : '';
+  const formRaw = f.beh === 'other' ? raw : rawFromForm(f);
+  const warning = combos.length > 0 && formRaw !== orig;
+  return `<div class="insp">
+    <div class="insp-head">
+      <div class="eyebrow">key ${i} · ${LNAME[L]} · ${S.layer===0?'root':'layer '+L}</div>
+      <h2>${esc(pr.main||'—')}</h2>
+      <div class="sub">${pr.sub?esc(pr.sub)+' · ':''}${trig?'hold-trigger for tpf · ':''}${combos.length?`in combo ${combos.map(c=>c.id).join(', ')}`:'no combo'}</div>
+    </div>
+    <div class="field" style="margin-top:14px"><label>Current binding</label><div class="code">${esc(orig)}${dirty?` <span class="muted">(staged)</span>`:''}</div>${pending}</div>
+    ${warning?`<div class="banner" style="margin:0 0 12px;padding:9px 11px"><div class="grow" style="font-size:12.5px">Key ${i} belongs to <b>${combos.map(c=>c.id).join(', ')}</b>. Changing it changes that combo's output.</div></div>`:''}
+    <div class="field"><label>Behavior</label>${behSel}</div>
+    ${fields}
+    <div class="row end" style="margin-top:6px">
+      ${dirty?`<button class="btn ghost sm" data-act="revert-key">Revert key</button>`:''}
+      <button class="btn primary sm" data-act="stage-key">Stage change</button>
+    </div>
+    <div class="sect">
+      <h4>Routes into this layer</h4>
+      ${L===0 ? '<div class="hint">Layer 0 is the root and is always active.</div>' : (routes.length ? routes.map(r=>`<div class="ref" style="cursor:default"><span>${esc(r)}</span></div>`).join('') : `<div class="chip bad" style="display:inline-block">Unreachable: no key points at layer ${L}</div>`)}
+    </div>
+    <div class="sect">
+      <h4>Staged in this session</h4>
+      <div class="hint">${changeCount()} change${changeCount()===1?'':'s'} · review the diff in the Git panel before you commit.</div>
+    </div>
+  </div>`;
+}
+function macroInspector(){
+  const hits = [];
+  effLayers().forEach((arr,L) => arr.forEach((r,i) => { const p=parseB(r); if (NODES[p.beh] && /behavior-macro/.test(NODES[p.beh].compat)) hits.push({L,i,name:p.beh}); }));
+  return `<div class="insp"><div class="insp-head"><div class="eyebrow">usage</div><h2>macro_parens</h2><div class="sub">${S.macro.steps.length} steps · ${macroChanged()?'changed, not staged':'unchanged'}</div></div>
+    <div class="sect"><h4>Macros bound on the keyboard · ${hits.length}</h4>
+      ${hits.map(h=>`<button class="ref" data-act="goto-key" data-L="${h.L}" data-i="${h.i}"><span>${esc(h.name)}</span><small>${LNAME[h.L]} · key ${h.i}</small></button>`).join('')}
+      <div class="hint" style="margin-top:8px"><code>macro_parens</code> is in macros.dtsi, bound on no key. Bind it from any key's inspector.</div>
+    </div>
+    <div class="sect"><h4>Macro list · macros.dtsi</h4>
+      ${MACROS.slice(0,12).map(m=>`<button class="ref ${m.node==='macro_parens'?'warn':''}" data-go="macro:${m.node}"><span>${esc(m.node)}</span><small>${m.bindings.length} steps</small></button>`).join('')}
+    </div>
+  </div>`;
+}
+function tpfInspector(){
+  const usages = [];
+  effLayers().forEach((arr,L) => arr.forEach((r,i) => { const p=parseB(r); if (p.beh==='tpf') usages.push(L); }));
+  const counts = [0,1,2,3].map(L => usages.filter(x=>x===L).length);
+  return `<div class="insp"><div class="insp-head"><div class="eyebrow">hold-tap · tpf</div><h2>${S.tpf.term} ms</h2><div class="sub">${S.tpf.flavor} · ${S.tpf.triggers.length} trigger positions</div></div>
+    <div class="sect"><h4>Usages per layer</h4>
+      ${LNAME.map((n,L)=>`<div class="ref" style="cursor:default"><span>${n}</span><small>${counts[L]} keys</small></div>`).join('')}
+    </div>
+    <div class="sect"><h4>Staged</h4><div class="hint">${tpfChanged()?'Hold-tap changes are staged. Commit from the Git panel.':'No hold-tap changes staged.'}</div></div>
+  </div>`;
+}
+function comboInspector(){
+  const c = COMBOS[S.combo];
+  return `<div class="insp"><div class="insp-head"><div class="eyebrow">combo · ${c.studio?'Studio gate':'always on'}</div><h2>${esc(c.id)}</h2><div class="sub">positions ${c.pos.join(' + ')}</div></div>
+    <div class="sect"><h4>Binding</h4><div class="code">${esc(c.bind)}</div></div>
+    <div class="sect"><h4>Keys in this combo</h4>
+      ${c.pos.map(p=>`<button class="ref" data-act="goto-key" data-L="0" data-i="${p}"><span>position ${p} · ${esc(present(effRaw(0,p)).main)}</span><small>layer 0</small></button>`).join('')}
+    </div>
+    ${c.studio?`<div class="sect"><h4>Studio builds only</h4><div class="hint">Wrapped in <code>#if defined(CONFIG_ZMK_STUDIO)</code>. Builds without Studio do not get this combo. Keep the unlock on layer 0 so it works from the default state.</div></div>`:''}
+    <div class="sect"><h4>Layers</h4><div class="hint">${c.layers}. ${c.layers==='0 only'?'Layer 0 only.':'Fires on every layer.'}</div></div>
+  </div>`;
+}
+
+function bindInspector(){
+  const on = (sel, ev, fn) => { const el = $(sel); if (el) el.addEventListener(ev, fn); };
+  if (S.view!=='keyboard') return;
+  on('#beh','change', e => {
+    const beh = e.target.value;
+    const f = S.kf || formFromRaw(effRaw(S.layer,S.sel));
+    const map = {kp:{beh:'kp',code:f.code||'LSHFT'}, hold:{beh:'hold',hold:'F1',tap:'NUMBER_1'}, layer:{beh:'layer',mode:'mo',layer:1},
+      macro:{beh:'macro',macro:'macro_parens'}, bt:{beh:'bt',bt:'BT_SEL 0'}, trans:{beh:'trans'}, none:{beh:'none'}};
+    S.kf = map[beh]; renderInspector();
+  });
+  on('#kq','input', e => { S.kq = e.target.value; const pos=e.target.selectionStart; renderInspector(); const el=$('#kq'); if(el){el.focus(); el.setSelectionRange(pos,pos);} });
+  on('#holdK','input', e => { S.kf.hold = e.target.value; });
+  on('#tapK','input', e => { S.kf.tap = e.target.value; });
+  on('#layerSel','change', e => { S.kf.layer = +e.target.value; });
+  $$('input[name=lm]').forEach(r => r.addEventListener('change', e => { S.kf.mode = e.target.value; }));
+  on('#macroSel','change', e => { S.kf.macro = e.target.value; });
+  on('#btSel','change', e => { S.kf.bt = e.target.value; });
+}
+
+/* ---------- key form actions ---------- */
+function stageKey(){
+  if (!S.kf) return;
+  const L = S.layer, i = S.sel;
+  const raw = rawFromForm(S.kf);
+  if (raw === effRaw(L,i)){ toast('No change'); return; }
+  pushUndo(); setEdit(L,i,raw);
+  toast(`Staged: ${LNAME[L]} key ${i} → ${raw}`, 'ok');
+  refresh();
+}
+
+/* ---------- drawer ---------- */
+function renderDrawer(){
+  const issues = computeIssues();
+  const errs = issues.filter(i=>i.sev==='error').length, warns = issues.filter(i=>i.sev==='warn').length;
+  const tab = S.drawerTab;
+  $('#drawer').innerHTML = `
+    <div class="dtabs">
+      <button class="${tab==='problems'?'on':''}" data-act="dtab" data-tab="problems">Problems ${errs?`<span class="badge">${errs}</span>`:''}${warns?`<span class="badge warn">${warns}</span>`:''}${!errs&&!warns?`<span class="badge info">${issues.length}</span>`:''}</button>
+      <button class="${tab==='git'?'on':''}" data-act="dtab" data-tab="git">Git <span class="count" style="margin-left:4px">${S.git.branch}</span>${changeCount()?` <span class="badge warn">${changeCount()}</span>`:''}</button>
+      <span class="spacer"></span>
+      <button data-act="toggle-drawer" aria-label="Collapse or expand panel"><svg class="${S.drawerOpen?'':'chev'}" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4.5l4 4 4-4"/></svg></button>
+    </div>
+    <div class="dbody">${tab==='problems'?problemsHTML(issues):gitHTML()}</div>`;
+  if (tab==='git') bindGit();
+}
+function problemsHTML(issues){
+  if (!issues.length) return '<div class="prob-list"><div class="prob"><div class="pb"><b>No problems.</b><div class="pd">The validator passes all checks.</div></div></div></div>';
+  return `<div class="prob-list">${issues.map(i => `
+    <div class="prob">
+      <span class="sev-ico ${i.sev}">${i.sev==='error'?'!':i.sev==='warn'?'!':'i'}</span>
+      <div class="pb"><b>${esc(i.title)}</b><div class="pd">${esc(i.detail)}</div><div class="pl">${esc(i.file)}:${i.line}</div></div>
+      ${i.action?`<button class="btn sm ${i.sev==='error'?'primary':''}" data-act="${i.action.act}" data-L="${i.action.L??''}" data-i="${i.action.i??''}" style="white-space:nowrap;align-self:center">${esc(i.action.label)}</button>`:''}
+    </div>`).join('')}</div>`;
+}
+function commitMessage(){
+  if (S.git.msgEdited) return S.git.msg;
+  const lines = [];
+  Object.keys(S.edits).forEach(k => {
+    const [L,i] = k.split(':');
+    lines.push(`- ${LNAME[+L]} key ${i}: ${BASE.layers[+L][+i]} -> ${S.edits[k]}`);
+  });
+  if (tpfChanged()) lines.push(`- tpf: tapping-term-ms ${BASE.tpf.term} -> ${S.tpf.term}${S.tpf.flavor!==BASE.tpf.flavor?`, flavor ${S.tpf.flavor}`:''}`);
+  if (macroChanged()) lines.push(`- macro_parens: reorder steps to ${S.macro.steps.join(', ')}`);
+  const keys = Object.keys(S.edits);
+  let subject;
+  if (keys.length === 1 && !tpfChanged() && !macroChanged()){
+    const [L,i] = keys[0].split(':');
+    subject = `keymap: ${LNAME[+L]} key ${i} -> ${S.edits[keys[0]]}`;
+  } else subject = 'keymap: update bindings, macros and hold-taps';
+  return subject + (lines.length ? '\n\n' + lines.join('\n') : '');
+}
+function gitHTML(){
+  const n = changeCount();
+  const km = keymapNew(), mc = macrosNew();
+  const diffs = diffHTML('config/adv360.keymap', BASE.keymap, km) + diffHTML('config/macros.dtsi', BASE.macros, mc);
+  const b = S.build.current;
+  const runSt = b ? b.status : 'idle';
+  const stepsB = b ? b.steps : [];
+  const stepLabel = {queued:'queued', running:'running', success:'success', failure:'failed', idle:'no run yet'}[runSt];
+  return `<div class="git-grid">
+    <div class="gcol">
+      <h4><span class="eyebrow">Diff preview · before commit</span><span class="count">${n ? (Object.keys(S.edits).length + (tpfChanged()?1:0) + (macroChanged()?1:0)) + ' change(s)' : 'clean'}</span></h4>
+      ${n ? `<div class="diff">${diffs || '<div class="fh">no text change</div>'}</div>` : `<div class="diff"><div class="fh">Working tree is clean</div><div class="dl"><span></span><span></span><span></span><code>matches V3.0 @ e46bd74. Stage a change in the keyboard or hold-tap view to see it here.</code></div></div>`}
+      <p class="hint" style="margin-top:10px">Round-trip safe: only the lines above change. Comments, <code>#include</code>, <code>#if</code> blocks and column alignment stay as they are.</p>
+    </div>
+    <div class="gcol">
+      <h4><span class="eyebrow">Commit to branch</span></h4>
+      <div class="field"><label>Target</label>
+        <div class="seg2">
+          <label><input type="radio" name="tgt" value="branch" ${S.git.target==='branch'?'checked':''}>New branch</label>
+          <label><input type="radio" name="tgt" value="direct" ${S.git.target==='direct'?'checked':''}>V3.0 directly</label>
+        </div></div>
+      <div class="field"><label>Branch</label><input class="inp" id="branchN" value="${esc(S.git.branch)}" ${S.git.target==='direct'?'disabled':''}></div>
+      <div class="field"><label>Message</label><textarea class="txt" id="commitMsg" rows="5">${esc(commitMessage())}</textarea></div>
+      <label class="field-check"><input type="checkbox" id="backupC" ${S.git.backup?'checked':''}><span><b>Backup branch</b> backup/2026-11-05-1432 is created first</span></label>
+      <label class="field-check"><input type="checkbox" id="trigC" ${S.git.trigger?'checked':''}><span><b>Trigger build.yml</b> after push. Builds only. Never flashes.</span></label>
+      <div class="row">
+        <button class="btn primary" data-act="do-commit" ${n && !S.git.busy ? '' : 'disabled'}>${S.git.busy?'Committing…':'Commit & push'}</button>
+        <span class="hint">${n?`${n} staged`:'nothing staged'}</span>
+      </div>
+      ${S.git.phase.length ? `<div class="prog">${S.git.phase.map(p=>`<div class="${p.s}">${p.s==='ok'?'✓':p.s==='run'?'…':'·'} ${esc(p.t)}</div>`).join('')}</div>`:''}
+      <div class="sect"><h4>Recent on V3.0</h4>
+        <div class="commit-log">${S.git.log.map(c=>`<div><code>${c.sha}</code><span>${esc(c.msg)}</span><span class="muted" style="margin-left:auto;font-size:11px">${c.when}</span></div>`).join('')}</div>
+      </div>
+    </div>
+    <div class="gcol">
+      <h4><span class="eyebrow">Build · build.yml</span><span class="status ${runSt}">${stepLabel}</span></h4>
+      ${b ? `<div class="hint">run #${b.n} · <code>${b.sha}</code> · ${b.note}</div>` : '<div class="hint">No run started from this session yet. Last build on V3.0: #142 success.</div>'}
+      <ul class="steps-b">${stepsB.map(s=>`<li class="${s.st==='done'?'done':s.st==='run'?'run':''}"><i></i>${esc(s.name)}</li>`).join('')}</ul>
+      <button class="btn primary" data-act="do-build" ${S.git.busy || (b && (b.status==='running'||b.status==='queued')) ? 'disabled':''} style="width:100%;justify-content:center">Build firmware</button>
+      ${n ? '<p class="hint" style="margin-top:8px;color:var(--accent)">Uncommitted edits are not part of this build. Commit first.</p>' : ''}
+      ${b && b.status==='success' ? `<div class="arts" style="margin-top:12px">
+        <a href="#" data-act="artifact">firmware-clique <span>.uf2 ↗</span></a>
+        <a href="#" data-act="artifact">firmware-no-clique <span>.uf2 ↗</span></a></div>` : ''}
+      <div class="never"><b>Never flashes your keyboard.</b> Flashing is a separate step. Download the <code>.uf2</code>, check it, and flash it yourself.</div>
+      <div class="sect"><h4>Studio</h4><div class="hint">Runtime edits made in ZMK Studio live on the keyboard and can override this file. No live keyboard connection in this session.</div></div>
+    </div>
+  </div>`;
+}
+function bindGit(){
+  const on = (sel, ev, fn) => { const el=$(sel); if(el) el.addEventListener(ev, fn); };
+  on('#commitMsg','input', e => { S.git.msg = e.target.value; S.git.msgEdited = true; });
+  on('#branchN','input', e => { S.git.branch = e.target.value; });
+  on('#backupC','change', e => { S.git.backup = e.target.checked; });
+  on('#trigC','change', e => { S.git.trigger = e.target.checked; });
+  $$('input[name=tgt]').forEach(r => r.addEventListener('change', e => { S.git.target = e.target.value; if (S.git.target==='direct') S.git.branch='V3.0'; else if (S.git.branch==='V3.0') S.git.branch='keymap/mod-layer-reach'; renderDrawer(); }));
+}
+
+/* ---------- commit & build (simulated) ---------- */
+async function doCommit(){
+  if (!changeCount() || S.git.busy) return;
+  const msg = $('#commitMsg') ? $('#commitMsg').value : commitMessage();
+  S.git.busy = true; S.git.phase = [];
+  const push = (t, s='run') => { S.git.phase.push({t,s}); renderDrawer(); };
+  const done = () => { S.git.phase[S.git.phase.length-1].s = 'ok'; renderDrawer(); };
+  if (S.git.backup){ push('create backup/2026-11-05-1432'); await sleep(450); done(); }
+  push(`commit ${Object.keys(S.edits).length + (macroChanged()?1:0) + (tpfChanged()?1:0)} change(s) to ${S.git.target==='direct'?'V3.0':S.git.branch}`); await sleep(550); done();
+  push(`push origin ${S.git.target==='direct'?'V3.0':S.git.branch}`); await sleep(500); done();
+  const sha = Math.random().toString(16).slice(2,9).padEnd(7,'0');
+  // commit becomes the new baseline
+  BASE.keymap = keymapNew(); BASE.macros = macrosNew();
+  BASE.layers = effLayers();
+  BASE.macroSteps = S.macro.steps.slice();
+  BASE.tpf = JSON.parse(JSON.stringify(S.tpf));
+  S.edits = {}; S.undo = [];
+  S.git.log.unshift({sha, msg: msg.split('\n')[0], when:'just now'});
+  S.git.msgEdited = false; S.git.busy = false;
+  if (S.git.trigger){ push('trigger build.yml'); await sleep(350); done(); S.git.busy=false; S.git.phase=[]; refresh(); toast('Committed ' + sha + ' · build queued', 'ok'); runBuild(sha); return; }
+  S.git.busy=false; S.git.phase=[]; toast('Committed ' + sha, 'ok'); refresh();
+}
+const BUILD_STEPS = ['Queue','Checkout @ commit','west update','Build firmware-clique','Build firmware-no-clique','Upload artifacts'];
+async function runBuild(sha){
+  if (S.build.current && (S.build.current.status==='running'||S.build.current.status==='queued')) return;
+  const run = {n:S.build.n++, sha: sha || S.git.log[0].sha, status:'queued', note:'workflow_dispatch', steps: BUILD_STEPS.map(s=>({name:s, st:'todo'}))};
+  S.build.current = run; renderDrawer();
+  await sleep(500);
+  run.status='running';
+  for (const s of run.steps){ s.st='run'; renderDrawer(); await sleep(480 + Math.random()*260); s.st='done'; renderDrawer(); }
+  run.status='success'; run.note = 'artifacts ready';
+  S.build.history.unshift({n:run.n, status:'success', sha:run.sha, when:'now'});
+  renderDrawer();
+  toast(`Build #${run.n} succeeded · firmware ready to download (not flashed)`, 'ok');
+}
+
+/* ---------- navigation ---------- */
+function go(target){
+  const [kind, a, b] = target.split(':');
+  if (kind==='layer'){ S.view='keyboard'; S.layer=+a; S.kf=null; S.sel = Math.min(S.sel,75); }
+  else if (kind==='macro'){ S.view='macro'; S.macro.name = a; }
+  else if (kind==='holdtap'){ S.view='holdtap'; }
+  else if (kind==='combos'){ S.view='combos'; }
+  else if (kind==='combo'){ S.view='combos'; S.combo=+a; }
+  else if (kind==='problems'){ S.drawerOpen=true; S.drawerTab='problems'; }
+  closeSidebar(); refresh();
+}
+function selectKey(L, i){
+  S.view='keyboard'; S.layer=L; S.sel=i; S.kq=''; S.kf=formFromRaw(effRaw(L,i)); refresh();
+}
+function closeSidebar(){ $('#sidebar').classList.remove('open'); }
+function refresh(){
+  renderTop(); renderSidebar(); renderMain(); renderInspector(); renderDrawer();
+  $('#app').classList.toggle('dclosed', !S.drawerOpen);
+}
+
+/* ---------- actions ---------- */
+const ACT = {
+  'fix-mod': () => { S.drawerOpen = true; S.view='keyboard'; S.layer=0; S.assign=true; S.kf=null; toast('Assign mode: click a key on layer 0'); refresh(); },
+  'cancel-assign': () => { S.assign=false; refresh(); },
+  'goto-key': (d) => { selectKey(+d.L, +d.i); },
+  'goto-combo': (d) => { go('combo:'+d.i); },
+  'goto-macro': () => go('macro:macro_parens'),
+  'goto-macro-sel': () => { go('macro:'+(S.kf&&S.kf.macro||'macro_parens')); },
+  'open-tpf': () => go('holdtap'),
+  'pick-kc': (d) => { S.kf.code = d.code; renderInspector(); },
+  'stage-key': () => stageKey(),
+  'revert-key': () => { pushUndo(); delete S.edits[S.layer+':'+S.sel]; S.kf=formFromRaw(effRaw(S.layer,S.sel)); toast('Reverted key'); refresh(); },
+  'dtab': (d) => { S.drawerTab = d.tab; S.drawerOpen = true; refresh(); },
+  'toggle-drawer': () => { S.drawerOpen = !S.drawerOpen; refresh(); },
+  'do-commit': () => doCommit(),
+  'do-build': () => runBuild(),
+  'artifact': () => { toast('Artifact link: opens the GitHub run in a new tab (mock)'); },
+  'sb-all': () => { S.sbAll = !S.sbAll; renderSidebar(); },
+  'mv-up': (d) => { const i=+d.idx; if (i>0) moveStep(i,i-1); },
+  'mv-dn': (d) => { const i=+d.idx; if (i<S.macro.steps.length-1) moveStep(i,i+1); },
+  'rm-step': (d) => { pushUndo(); S.macro.steps.splice(+d.idx,1); refresh(); },
+  'add-step': () => {
+    const v = ($('#addCode').value||'').trim().toUpperCase();
+    if (!v){ toast('Type a keycode first', 'warn'); return; }
+    if (!KEYCODES.includes(v) && !(v in SANDBOX_CH)){ toast(v+' is not in the keycode list', 'warn'); return; }
+    pushUndo(); S.macro.steps.push(v); refresh();
+  },
+  'macro-revert': () => { pushUndo(); S.macro.steps = BASE.macroSteps.slice(); refresh(); },
+  'macro-stage': () => { toast('Macro reorder staged. Diff updated.', 'ok'); refresh(); S.drawerTab='git'; S.drawerOpen=true; refresh(); },
+  'tpf-stage': () => { toast('Hold-tap change staged', 'ok'); S.drawerTab='git'; S.drawerOpen=true; refresh(); },
+  'tpf-revert': () => { pushUndo(); S.tpf = JSON.parse(JSON.stringify(BASE.tpf)); refresh(); },
+  'combo-sel': (d) => { S.combo=+d.idx; refresh(); },
+};
+document.addEventListener('click', e => {
+  const jr = $('#jumpRes'); if (jr && !e.target.closest('.jump')) jr.classList.add('hidden');
+  const t = e.target.closest('[data-role=key],[data-go],[data-act]');
+  if (!t) return;
+  if (t.dataset.role === 'key'){
+    const i = +t.dataset.i;
+    if (S.view==='holdtap' && t.closest('#miniHost')){
+      pushUndo();
+      const tr = S.tpf.triggers, k = tr.indexOf(i);
+      if (k>=0) tr.splice(k,1); else tr.push(i);
+      tr.sort((a,b)=>a-b);
+      refresh(); return;
+    }
+    if (S.assign){
+      pushUndo(); setEdit(0, i, '&mo 2'); S.assign=false;
+      toast(`Layer 0 key ${i} now holds layer 2 (mod). Validator updated.`, 'ok');
+      refresh(); return;
+    }
+    if (S.view!=='keyboard') return;
+    S.sel = i; S.kq=''; S.kf = formFromRaw(effRaw(S.layer,i)); refresh(); return;
+  }
+  if (t.dataset.go){ go(t.dataset.go); return; }
+  const act = t.dataset.act; if (ACT[act]) ACT[act](t.dataset);
+});
+
+/* hold-tap sliders: snapshot once per drag, preview live, commit on release */
+let tpfDragging = false;
+function beginTpfDrag(){ if (!tpfDragging){ pushUndo(); tpfDragging = true; } }
+document.addEventListener('input', e => {
+  const id = e.target.id;
+  if (id==='termR' || id==='termN'){
+    const v = Math.max(50, Math.min(600, Math.round(+e.target.value/5)*5 || 0));
+    if (!v) return;
+    beginTpfDrag(); S.tpf.term = v;
+    if (id==='termR') $('#termN').value = v; else $('#termR').value = Math.max(100, Math.min(400, v));
+    updateHoldPreview();
+  }
+  if (id==='durR'){ S.sim.dur = +e.target.value; updateHoldPreview(); }
+  if (id==='jump') renderJump(e.target.value);
+});
+document.addEventListener('change', e => {
+  const id = e.target.id;
+  if (id==='termR' || id==='termN'){ tpfDragging = false; refresh(); }
+  if (id==='flavor'){ pushUndo(); S.tpf.flavor = e.target.value; refresh(); }
+  if (id==='otherK'){ S.sim.other = e.target.checked; refresh(); }
+  if (id==='ovToggle'){ S.overlay = e.target.checked; refresh(); }
+});
+
+/* ---------- jump search ---------- */
+function renderJump(q){
+  const box = $('#jumpRes');
+  q = (q||'').trim().toLowerCase();
+  if (!q){ box.classList.add('hidden'); return; }
+  const res = [];
+  LNAME.forEach((n,L) => { if (n.includes(q) || ('layer '+L).includes(q)) res.push({label:`Layer ${L} · ${n}`, meta:'layer', go:'layer:'+L}); });
+  MACROS.forEach(m => { if (m.node.toLowerCase().includes(q) || m.label.toLowerCase().includes(q)) res.push({label:m.node, meta:'macro', go:'macro:'+m.node}); });
+  COMBOS.forEach((c,i) => { if (c.id.toLowerCase().includes(q)) res.push({label:c.id, meta:'combo', go:'combo:'+i}); });
+  if ('tpf'.includes(q)) res.push({label:'tpf (hold-tap)', meta:'hold-tap', go:'holdtap'});
+  effLayers().forEach((arr,L) => arr.forEach((r,i) => {
+    const p = present(r);
+    if (p.main.toLowerCase().includes(q) || r.toLowerCase().includes(q)) { if (res.length < 14) res.push({label:`${p.main}  ·  ${r}`, meta:`${LNAME[L]} key ${i}`, key:[L,i]}); }
+  }));
+  box.innerHTML = res.slice(0,8).map((r,k) => `<button data-jump="${k}"><span>${esc(r.label)}</span><small>${esc(r.meta)}</small></button>`).join('') || '<div class="hint" style="padding:8px">No matches</div>';
+  box.classList.remove('hidden');
+  $$('#jumpRes button').forEach((b,k) => b.addEventListener('click', () => {
+    const r = res[k];
+    box.classList.add('hidden'); $('#jump').value='';
+    if (r.key) selectKey(r.key[0], r.key[1]); else go(r.go);
+  }));
+}
+
+/* ---------- top-level wiring ---------- */
+$('#undoBtn').addEventListener('click', undo);
+$('#dirtyBtn').addEventListener('click', () => { S.drawerOpen=true; S.drawerTab='git'; refresh(); });
+$('#gotoCommit').addEventListener('click', () => { S.drawerOpen=true; S.drawerTab='git'; refresh(); });
+$('#themeBtn').addEventListener('click', () => {
+  const r = document.documentElement;
+  r.dataset.theme = r.dataset.theme === 'light' ? 'dark' : 'light';
+  renderTop(); renderMain();
+});
+$('#menuBtn').addEventListener('click', () => $('#sidebar').classList.toggle('open'));
+$('#jump').addEventListener('keydown', e => {
+  if (e.key === 'Escape'){ $('#jumpRes').classList.add('hidden'); e.target.blur(); }
+});
+document.addEventListener('keydown', e => {
+  const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+  if ((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='z' && !typing){ e.preventDefault(); undo(); return; }
+  if (e.key === 'Escape' && S.assign){ S.assign=false; refresh(); return; }
+  if (typing) return;
+  if (e.key === '/'){ e.preventDefault(); $('#jump').focus(); }
+  if (/^[0-3]$/.test(e.key) && S.view==='keyboard'){ S.layer=+e.key; S.kf=null; refresh(); }
+});
+
+/* re-fit every board whenever the main column changes size (first layout included) */
+const fitBoards = () => $$('[data-board]').forEach(h => { if (h._opts && h.isConnected) drawBoard(h, h._opts); });
+if ('ResizeObserver' in window) new ResizeObserver(fitBoards).observe($('#main'));
+else window.addEventListener('resize', fitBoards);
+
+/* ---------- boot ---------- */
+S.kf = formFromRaw(effRaw(S.layer,S.sel));
+refresh();
+</script>
+</body>
+</html>

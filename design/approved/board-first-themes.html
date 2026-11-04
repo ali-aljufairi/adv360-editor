@@ -1,0 +1,1332 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>adv360 keymap · board-first</title>
+<style>
+:root{
+  --sans:"Instrument Sans","Helvetica Neue",system-ui,-apple-system,sans-serif;
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--surface-canvas);color:var(--text-primary);font:14px/1.45 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+code,pre,.mono{font-family:var(--mono);font-size:12px}
+.muted{color:var(--text-muted)}
+.fine{font-size:12px;color:var(--text-muted);margin:8px 0}
+.eyebrow{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted)}
+
+/* top bar */
+.top{height:56px;display:flex;align-items:center;gap:14px;padding:0 20px;position:relative;z-index:50}
+.brand{display:flex;align-items:baseline;gap:8px}
+.brand b{font:italic 600 22px/1 var(--serif);letter-spacing:-.01em}
+.brand-sub{font:500 12px/1 var(--mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em}
+.logo{display:inline-flex;gap:3px;align-self:center;margin-right:2px}
+.logo i{width:5px;height:14px;border-radius:2px;background:var(--layer-1)}
+.logo i:nth-child(2){background:var(--layer-2);height:18px}
+.logo i:nth-child(3){background:var(--layer-3)}
+.concept{font:500 11px/1 var(--mono);color:var(--text-muted);border:1px solid var(--border-base);border-radius:999px;padding:5px 9px}
+.branch{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border-base);background:var(--surface-panel);border-radius:999px;padding:5px 11px;font:500 12px var(--mono)}
+.dot-ok{width:7px;height:7px;border-radius:50%;background:var(--status-success);display:inline-block}
+.grow{flex:1}
+.ghost-btn{border:1px solid var(--border-base);background:var(--surface-panel);border-radius:999px;padding:6px 13px;font-weight:500}
+
+/* stage */
+.stage{position:relative;min-height:calc(100vh - 56px);display:flex;flex-direction:column;align-items:center;padding:14px 16px 64px;
+  background:
+    radial-gradient(70% 55% at 50% 42%, var(--surface-glow), transparent 70%),
+    radial-gradient(var(--surface-dot) 1px, transparent 1.3px) 0 0/22px 22px,
+    var(--surface-canvas);}
+.lb-wrap{position:sticky;top:12px;z-index:30;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
+.layerbar{display:flex;align-items:center;gap:4px;padding:5px;background:var(--surface-panel);border:1px solid var(--border-base);border-radius:999px;box-shadow:var(--shadow-float);max-width:100%;overflow-x:auto}
+.pills{display:flex;gap:3px}
+.pill{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;border-radius:999px;padding:8px 14px 8px 12px;font-weight:600;color:var(--text-secondary);white-space:nowrap;transition:background .2s,color .2s,transform .15s}
+.pill:hover{transform:translateY(-1px)}
+.pill .sw{width:9px;height:9px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 3px color-mix(in srgb,var(--pc) 22%,transparent)}
+.pill[aria-pressed="true"]{background:var(--pc);color:var(--on-pc);box-shadow:0 6px 16px -6px var(--pc)}
+.pill[aria-pressed="true"] .sw{background:var(--on-pc);box-shadow:none}
+.pill[data-l="2"][aria-pressed="true"]{color:var(--on-layer-3)}
+.pill[data-l="2"][aria-pressed="true"] .sw{background:var(--on-layer-3)}
+.pill.warn .sw{box-shadow:0 0 0 3px color-mix(in srgb,var(--status-warning) 35%,transparent);animation:blink 1.6s infinite}
+.wmark{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--status-warning);color:var(--on-warning);font:700 11px/1 var(--sans)}
+.cnt{font:600 10px/1 var(--mono);background:var(--text-primary);color:var(--surface-panel);border-radius:999px;padding:3px 6px}
+.sep{width:1px;height:22px;background:var(--border-base);margin:0 4px}
+.pill-ghost{border:0;background:transparent;border-radius:999px;padding:8px 12px;font-weight:600;color:var(--text-secondary);white-space:nowrap}
+.pill-ghost b{font:600 11px var(--mono);background:var(--arc-combo);color:var(--on-combo);border-radius:999px;padding:2px 6px;margin-left:2px}
+.pill-ghost[aria-pressed="false"]{opacity:.5}
+.tip{font-size:12.5px;background:var(--text-primary);color:var(--surface-panel);padding:7px 12px;border-radius:12px;max-width:600px;text-align:center;opacity:0;transform:translateY(-4px);transition:.18s;pointer-events:none}
+.tip.on{opacity:1;transform:none}
+.pickbar{margin-top:10px;display:flex;align-items:center;gap:12px;background:color-mix(in srgb,var(--layer-3) 18%,var(--surface-panel));border:1px solid color-mix(in srgb,var(--layer-3) 50%,transparent);padding:8px 10px 8px 16px;border-radius:999px;font-weight:600;color:var(--text-primary)}
+.pickbar[hidden]{display:none}
+.hint{margin:14px 0 0;font:500 12px var(--mono);color:var(--text-muted);letter-spacing:.01em}
+
+/* board */
+.boardwrap{width:100%;overflow-x:auto;overflow-y:visible;padding:18px 6px 0;margin-top:6px}
+.board{position:relative;margin:0 auto;width:calc(var(--bw)*var(--u));height:calc(var(--bh)*var(--u));--hl:var(--layer-1)}
+.key{position:absolute;left:calc(var(--x)*var(--u));top:calc(var(--y)*var(--u));width:calc(var(--w)*var(--u));height:calc(var(--h)*var(--u));
+  transform:rotate(calc(var(--r)*1deg));transform-origin:0 0;background:none;border:0;padding:0;z-index:2}
+.cap{position:absolute;inset:calc(var(--u)*.065);border-radius:calc(var(--u)*.17);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,var(--keycap-top) 0%,var(--keycap-face) 62%,color-mix(in srgb,var(--keycap-face) 88%,var(--keycap-side)) 100%);
+  color:var(--keycap-legend);
+  box-shadow:inset 0 calc(var(--u)*.03) 0 var(--keycap-highlight),0 calc(var(--u)*.1) 0 var(--keycap-side),0 calc(var(--u)*.2) calc(var(--u)*.28) var(--keycap-shadow);
+  transition:transform .12s,box-shadow .2s,opacity .25s,filter .2s;padding:0 calc(var(--u)*.05);overflow:hidden}
+.key:hover .cap{transform:translateY(-2px);filter:brightness(1.03)}
+.key:active .cap{transform:translateY(3px);box-shadow:inset 0 calc(var(--u)*.03) 0 var(--keycap-highlight),0 calc(var(--u)*.03) 0 var(--keycap-side)}
+.key:focus-visible{outline:none}
+.key:focus-visible .cap{box-shadow:0 0 0 2px var(--surface-panel),0 0 0 4px var(--accent-primary)}
+.legend{font-weight:600;font-size:clamp(9px,calc(var(--u)*.23),15px);line-height:1;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:clip;letter-spacing:-.01em}
+.sub{font:500 clamp(7px,calc(var(--u)*.16),11px)/1 var(--mono);color:var(--keycap-sublegend);margin-bottom:calc(var(--u)*.06);white-space:nowrap}
+.key.kind-trans .cap,.key.kind-none .cap{background:transparent;box-shadow:none;border:1.5px dashed var(--border-base);color:var(--text-muted)}
+.key.kind-trans .cap{border-style:dotted}
+.key.kind-none .legend{opacity:.4}
+.key.kind-trans .legend{opacity:.5;font-weight:400}
+.key.kind-layer .cap{box-shadow:inset 0 calc(var(--u)*.03) 0 var(--keycap-highlight),0 calc(var(--u)*.1) 0 var(--keycap-side),0 0 0 calc(var(--u)*.045) var(--glow),0 0 calc(var(--u)*.6) calc(var(--u)*.02) color-mix(in srgb,var(--glow) 55%,transparent);animation:breathe 3.6s ease-in-out infinite}
+.key.kind-layer .legend{color:var(--glow)}
+.key.kind-layer .sub{color:var(--glow);opacity:.85}
+.key.kind-hold .sub{color:var(--layer-2);opacity:.95}
+.key.kind-macro .legend{color:var(--layer-4)}
+.key.kind-macro .cap::before{content:"";position:absolute;left:calc(var(--u)*.14);right:calc(var(--u)*.14);top:calc(var(--u)*.08);height:calc(var(--u)*.05);border-radius:9px;background:var(--layer-4);opacity:.7}
+.key.kind-danger .legend{color:var(--status-warning)}
+.key.kind-bt .legend{color:color-mix(in srgb,var(--layer-1) 80%,var(--text-primary))}
+.key.dirty .cap::after{content:"";position:absolute;right:calc(var(--u)*.1);top:calc(var(--u)*.1);width:calc(var(--u)*.15);height:calc(var(--u)*.15);border-radius:50%;background:var(--accent-primary);box-shadow:0 0 0 2px var(--surface-panel)}
+.key.has-combo .cap::before{content:"⋈";position:absolute;left:calc(var(--u)*.1);top:calc(var(--u)*.06);font:600 calc(var(--u)*.22)/1 var(--mono);color:var(--arc-combo)}
+@keyframes breathe{50%{filter:brightness(1.07)}}
+@keyframes blink{50%{opacity:.35}}
+@keyframes pulse{50%{transform:translateY(-3px)}}
+.board.reaching .key:not(.hl) .cap{opacity:.22;filter:saturate(.2)}
+.board.reaching .key.hl .cap{animation:pulse 1.1s ease-in-out infinite;box-shadow:inset 0 calc(var(--u)*.03) 0 var(--keycap-highlight),0 calc(var(--u)*.1) 0 var(--keycap-side),0 0 0 calc(var(--u)*.06) var(--hl),0 0 calc(var(--u)*.8) calc(var(--u)*.05) var(--hl)}
+.board.picking .key .cap{cursor:crosshair}
+.board.picking .key:hover .cap{box-shadow:0 0 0 calc(var(--u)*.05) var(--layer-3),0 calc(var(--u)*.1) 0 var(--keycap-side)}
+
+.arcs{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:4}
+.arc{fill:none;stroke:var(--arc-combo);stroke-width:.075;stroke-linecap:round;opacity:.92}
+.arc.studio{stroke-dasharray:.24 .16}
+.arc-hit{fill:none;stroke:transparent;stroke-width:.7;pointer-events:stroke;cursor:pointer}
+.ctag{position:absolute;left:calc(var(--tx)*var(--u));top:calc(var(--ty)*var(--u));transform:translate(-50%,-50%);z-index:5;
+  font:600 calc(var(--u)*.2)/1 var(--sans);white-space:nowrap;color:var(--arc-combo);background:var(--surface-panel);border:1px solid color-mix(in srgb,var(--arc-combo) 40%,transparent);
+  border-radius:999px;padding:calc(var(--u)*.07) calc(var(--u)*.2);box-shadow:var(--shadow-float)}
+.ctag.studio{color:var(--text-primary);border-color:var(--arc-combo);border-style:dashed}
+.ctag.studio em{font-style:normal;color:var(--arc-combo);font-weight:700}
+.nocombos .arcs,.nocombos .ctag{display:none}
+
+/* mini board */
+.board.mini .legend,.board.mini .sub{display:none}
+.board.mini .key .cap{box-shadow:inset 0 calc(var(--u)*.03) 0 var(--keycap-highlight),0 calc(var(--u)*.08) 0 var(--keycap-side)}
+.board.mini .key.on .cap{background:linear-gradient(180deg,color-mix(in srgb,var(--layer-2) 70%,var(--keycap-top)),var(--layer-2));box-shadow:0 0 0 calc(var(--u)*.06) color-mix(in srgb,var(--layer-2) 40%,transparent)}
+.board.mini .key{cursor:pointer}
+
+/* floating validator */
+.card-float{position:absolute;left:28px;bottom:70px;width:318px;background:var(--surface-panel);border:1px solid var(--border-base);border-radius:18px;box-shadow:var(--shadow-float);padding:14px 15px;z-index:20}
+.card-float.warn{border-color:color-mix(in srgb,var(--status-warning) 45%,var(--border-base))}
+.v-head{display:flex;gap:10px;align-items:flex-start}
+.v-head b{font-weight:600;line-height:1.35}
+.v-ico{flex:none;width:22px;height:22px;border-radius:50%;background:var(--status-warning);color:var(--on-warning);display:grid;place-items:center;font:700 13px/1 var(--sans);margin-top:1px}
+.v-ico.ok{background:var(--status-success)}
+.card-float p{margin:8px 0 10px 32px;color:var(--text-secondary);font-size:13px}
+.v-act{display:flex;gap:8px;margin-left:32px;flex-wrap:wrap}
+.v-info{margin:10px 0 0 32px;font-size:12px;color:var(--text-muted)}
+.foot-note{margin:14px 0 0;text-align:center;font-size:12px;color:var(--text-muted)}
+.foot-note code{font-size:11.5px}
+
+/* buttons */
+.btn{border:1px solid var(--border-base);background:var(--surface-raised);border-radius:999px;padding:8px 14px;font-weight:600;font-size:13px;transition:transform .1s,background .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary{background:var(--accent-primary);color:var(--on-accent);border-color:transparent;box-shadow:0 8px 18px -8px var(--accent-primary)}
+.btn.primary:disabled{box-shadow:none}
+.btn.ghost{background:transparent}
+.btn.wide{width:100%}
+.link{background:none;border:0;padding:6px 0;color:var(--accent-primary);font-weight:600;text-align:left}
+.icon{border:0;background:transparent;width:30px;height:30px;border-radius:50%;font-size:18px;line-height:1;display:grid;place-items:center;color:var(--text-muted)}
+.icon:hover{background:var(--border-subtle)}
+
+/* changes pill */
+.changes{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:45;display:flex;align-items:center;gap:10px;background:var(--text-primary);color:var(--surface-panel);border:0;border-radius:999px;padding:12px 20px 12px 16px;font-weight:600;box-shadow:0 18px 40px -14px var(--shadow-ink);transition:transform .2s}
+.changes:hover{transform:translateX(-50%) translateY(-2px)}
+.changes span{opacity:.7;font-weight:500}
+.changes .dot-accent{width:9px;height:9px;border-radius:50%;background:var(--layer-3);box-shadow:0 0 0 4px color-mix(in srgb,var(--layer-3) 30%,transparent)}
+.spin{width:12px;height:12px;border-radius:50%;border:2px solid color-mix(in srgb,var(--surface-panel) 30%,transparent);border-top-color:var(--surface-panel);animation:rot .8s linear infinite;display:inline-block}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* sheet */
+.sheet{position:fixed;top:68px;right:20px;bottom:92px;width:min(468px,calc(100vw - 40px));background:var(--surface-panel);border:1px solid var(--border-base);border-radius:22px;box-shadow:var(--shadow-dialog);z-index:55;display:flex;flex-direction:column;overflow:hidden;transform:translateX(calc(100% + 40px));transition:transform .38s cubic-bezier(.2,.8,.2,1)}
+.sheet.open{transform:none}
+.sh-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 20px 6px}
+.sh-head h2{margin:6px 0 0;font:italic 600 24px/1.1 var(--serif);letter-spacing:-.01em}
+.tabs{display:flex;gap:4px;padding:10px 16px 0;border-bottom:1px solid var(--border-base)}
+.tabs button{border:0;background:none;padding:9px 12px;font-weight:600;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--text-primary);border-bottom-color:var(--accent-primary)}
+.sh-body{flex:1;overflow:auto;padding:16px 20px}
+.sh-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid var(--border-base);background:var(--surface-raised)}
+.file{font:600 12px var(--mono);color:var(--text-secondary);margin:4px 0 8px;display:flex;justify-content:space-between}
+.hunk{border:1px solid var(--border-base);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.hh{background:var(--surface-raised);padding:7px 10px;font:500 11.5px var(--mono);color:var(--text-muted);display:flex;justify-content:space-between;gap:8px}
+.hh b{font-family:var(--sans);color:var(--text-primary);font-weight:600}
+.dl{font:12px/1.55 var(--mono);padding:3px 10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.dl.minus{background:color-mix(in srgb,var(--status-warning) 12%,transparent);color:color-mix(in srgb,var(--status-warning) 85%,var(--text-primary))}
+.dl.plus{background:color-mix(in srgb,var(--status-success) 13%,transparent);color:color-mix(in srgb,var(--status-success) 80%,var(--text-primary))}
+.okbar{display:flex;gap:10px;align-items:flex-start;background:color-mix(in srgb,var(--status-success) 11%,transparent);border-radius:12px;padding:10px 12px;font-size:12.5px;margin-top:6px}
+.okbar b{color:var(--status-success)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.chip{font:500 11px var(--mono);border:1px solid var(--border-base);border-radius:999px;padding:4px 9px;color:var(--text-secondary)}
+.field{display:block;margin:12px 0}
+.field>span{display:block;font-weight:600;margin-bottom:6px;font-size:12.5px}
+input[type=text],input:not([type]),textarea,select{width:100%;font:inherit;color:var(--text-primary);background:var(--surface-raised);border:1px solid var(--border-base);border-radius:12px;padding:9px 11px;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--accent-primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent-primary) 20%,transparent)}
+textarea{min-height:70px;resize:vertical;font-family:var(--mono);font-size:12.5px}
+.check{display:flex;gap:8px;align-items:center;margin:12px 0;font-size:13px}
+.build-step{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:12px 0;border-bottom:1px dashed var(--border-base)}
+.bs-ico{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 12px var(--sans);background:var(--surface-raised);border:1px solid var(--border-base);color:var(--text-muted)}
+.bs-ico.done{background:var(--status-success);border-color:var(--status-success);color:var(--on-success)}
+.bs-ico.run{border-color:var(--layer-1);border-top-color:transparent;animation:rot .8s linear infinite}
+.bar{height:6px;background:var(--border-subtle);border-radius:999px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--layer-1),var(--layer-2));border-radius:999px;transition:width .15s}
+.art{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.lock{display:flex;gap:10px;margin-top:14px;background:var(--surface-raised);border:1px solid var(--border-base);border-radius:14px;padding:12px;font-size:12.5px;color:var(--text-secondary)}
+.lock b{color:var(--text-primary)}
+
+/* popover */
+.pop{position:fixed;width:356px;max-height:calc(100vh - 110px);display:none;flex-direction:column;background:var(--surface-panel);border:1px solid var(--border-base);border-radius:20px;box-shadow:var(--shadow-dialog);z-index:60;overflow:hidden}
+.pop.open{display:flex;animation:popin .2s cubic-bezier(.2,.8,.2,1)}
+@keyframes popin{from{opacity:0;transform:translateY(6px) scale(.98)}}
+.pop-head{padding:14px 16px 10px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.pop-head h3{margin:6px 0 0;font:italic 600 20px/1.1 var(--serif)}
+.pop-now{font:500 11.5px var(--mono);color:var(--text-secondary);background:var(--surface-raised);border:1px solid var(--border-base);border-radius:9px;padding:5px 8px;margin-top:8px;display:inline-block}
+.seg{display:flex;flex-wrap:wrap;gap:4px;padding:0 14px 10px}
+.seg button{border:1px solid var(--border-base);background:transparent;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:600;color:var(--text-secondary)}
+.seg button[aria-pressed="true"]{background:var(--text-primary);color:var(--surface-panel);border-color:var(--text-primary)}
+.pop-body{overflow:auto;padding:4px 14px 12px;flex:1;min-height:0}
+.search{margin-bottom:8px}
+.mods{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.mods button{border:1px solid var(--border-base);background:var(--surface-raised);border-radius:9px;padding:5px 9px;font-size:12px;font-weight:600}
+.mods button[aria-pressed="true"]{background:var(--layer-2);color:var(--on-layer-2);border-color:transparent}
+.kg-h{font:500 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin:10px 0 6px}
+.kgrid{display:flex;flex-wrap:wrap;gap:5px}
+.kc{min-width:34px;height:30px;border-radius:9px;border:1px solid var(--border-base);background:var(--surface-raised);padding:0 8px;font:600 12px var(--sans);box-shadow:0 2px 0 var(--keycap-side)}
+.kc:hover{border-color:var(--accent-primary)}
+.kc[aria-pressed="true"]{background:var(--accent-primary);color:var(--on-accent);border-color:transparent}
+.fieldsel{display:flex;gap:8px;margin-bottom:8px}
+.fieldsel button{flex:1;text-align:left;border:1px solid var(--border-base);background:var(--surface-raised);border-radius:12px;padding:8px 10px}
+.fieldsel button small{display:block;font:500 10.5px var(--mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em}
+.fieldsel button b{font-size:15px}
+.fieldsel button[aria-pressed="true"]{border-color:var(--accent-primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent-primary) 18%,transparent)}
+.lcards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.lc{border:1px solid var(--border-base);background:var(--surface-raised);border-radius:14px;padding:10px 12px;text-align:left;font-weight:600;position:relative}
+.lc i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--pc);margin-right:7px}
+.lc small{display:block;font-weight:500;color:var(--text-muted);font-size:11.5px;margin-top:3px}
+.lc[aria-pressed="true"]{border-color:var(--pc);box-shadow:0 0 0 2px var(--pc) inset}
+.lmode{display:flex;gap:6px;margin-bottom:8px}
+.lmode button{flex:1;border:1px solid var(--border-base);background:var(--surface-raised);border-radius:10px;padding:8px;font-weight:600;font-size:12.5px}
+.lmode button[aria-pressed="true"]{background:var(--text-primary);color:var(--surface-panel)}
+.list{display:flex;flex-direction:column;gap:4px;max-height:230px;overflow:auto}
+.li{display:flex;justify-content:space-between;gap:8px;text-align:left;border:1px solid transparent;background:var(--surface-raised);border-radius:10px;padding:8px 10px}
+.li[aria-pressed="true"]{border-color:var(--accent-primary)}
+.li code{color:var(--text-muted)}
+.pop-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-top:1px solid var(--border-base);background:var(--surface-raised)}
+.preview{font:500 11.5px var(--mono);color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.preview b{color:var(--accent-primary)}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:var(--overlay);backdrop-filter:blur(4px);z-index:70;display:none;place-items:center;padding:16px}
+.modal-bg.open{display:grid;animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.modal{width:min(820px,100%);max-height:88vh;overflow:auto;background:var(--surface-panel);border:1px solid var(--border-base);border-radius:24px;box-shadow:var(--shadow-dialog)}
+.m-head{display:flex;justify-content:space-between;gap:12px;padding:20px 22px 8px}
+.m-head h2{margin:6px 0 0;font:italic 600 28px/1.05 var(--serif)}
+.m-body{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding:8px 22px 16px}
+@media (max-width:720px){.m-body{grid-template-columns:1fr}}
+.sec-title{font:600 13px var(--sans);margin:4px 0 10px;display:flex;justify-content:space-between;align-items:baseline}
+.sec-title span{font:500 11px var(--mono);color:var(--text-muted)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.step{display:grid;grid-template-columns:auto auto 1fr auto auto;align-items:center;gap:10px;background:var(--surface-raised);border:1px solid var(--border-base);border-radius:14px;padding:8px 8px 8px 10px;cursor:grab}
+.step.dragging{opacity:.4}
+.step.over{border-color:var(--accent-primary)}
+.grip{color:var(--text-muted);font-size:15px;letter-spacing:-2px}
+.idx{font:600 11px var(--mono);color:var(--text-muted);width:14px}
+.chip-k{font-weight:700;background:var(--keycap-face);border:1px solid var(--border-base);box-shadow:0 2px 0 var(--keycap-side);color:var(--keycap-legend);border-radius:9px;min-width:38px;text-align:center;padding:5px 8px;font-size:13px}
+.step .code{font:500 11.5px var(--mono);color:var(--text-muted)}
+.sx{display:flex;gap:2px}
+.sx button{border:0;background:transparent;width:26px;height:26px;border-radius:8px;color:var(--text-muted)}
+.sx button:hover:not(:disabled){background:var(--border-subtle);color:var(--text-primary)}
+.addrow{display:flex;gap:8px;margin-top:10px}
+.addrow select{flex:1}
+.preview-box{font:500 22px/1 var(--mono);background:var(--keycap-face);border:1px solid var(--border-base);border-radius:16px;padding:22px 16px;text-align:center;min-height:76px;display:flex;align-items:center;justify-content:center}
+.caret{display:inline-block;width:2px;height:24px;background:var(--accent-primary);margin:0 1px;animation:blink 1s steps(1) infinite}
+.raw{background:var(--surface-raised);border:1px solid var(--border-base);border-radius:12px;padding:10px 12px;white-space:pre-wrap;word-break:break-all;margin:6px 0 0;font-size:11.5px;line-height:1.6}
+.raw .m{color:var(--status-warning)}
+.raw .p{color:var(--status-success)}
+.m-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:14px 22px 18px;border-top:1px solid var(--border-base);flex-wrap:wrap}
+.m-foot .fine{margin-right:auto}
+.slider-row{display:flex;gap:12px;align-items:center}
+.slider-row input{flex:1;accent-color:var(--accent-primary)}
+.slider-row output{font:600 18px var(--mono);min-width:72px;text-align:right}
+.ticks{display:flex;justify-content:space-between;font:500 10.5px var(--mono);color:var(--text-muted);margin:2px 0 12px}
+.mini-wrap{background:var(--surface-raised);border:1px solid var(--border-base);border-radius:16px;padding:12px;display:flex;justify-content:center;overflow:auto}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 12px}
+.pair div{background:var(--surface-raised);border:1px solid var(--border-base);border-radius:12px;padding:10px}
+.pair small{display:block;font:500 10.5px var(--mono);color:var(--text-muted);text-transform:uppercase}
+.pair b{font-size:18px}
+.pad{width:100%;height:110px;border-radius:20px;border:1px solid var(--border-base);background:linear-gradient(180deg,var(--keycap-top),var(--keycap-face));box-shadow:0 5px 0 var(--keycap-side),0 14px 24px -12px var(--keycap-shadow);font-weight:600;color:var(--keycap-legend);margin-top:8px;touch-action:none;user-select:none}
+.pad.down{transform:translateY(4px);box-shadow:0 1px 0 var(--keycap-side)}
+.pad-bar{height:6px;border-radius:999px;background:var(--border-subtle);overflow:hidden;margin-top:10px}
+.pad-bar i{display:block;height:100%;width:0;background:var(--layer-2)}
+.pad-out{font:500 12.5px var(--mono);margin-top:8px;min-height:20px;color:var(--text-secondary)}
+.pad-out b{color:var(--text-primary)}
+.seg-flavor{font-size:12.5px;color:var(--text-muted);margin:6px 0 12px}
+
+/* toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translate(-50%,10px);background:var(--text-primary);color:var(--surface-panel);padding:10px 16px;border-radius:999px;font-weight:600;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:90;white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* mobile */
+@media (max-width:720px){
+  .top{padding:0 14px;gap:10px}
+  .concept,.branch{display:none}
+  .stage{padding:10px 10px 90px}
+  .layerbar{width:100%;justify-content:flex-start}
+  .pill{padding:7px 10px}
+  .hint{text-align:center;font-size:11px}
+  .boardwrap{padding-top:12px}
+  .card-float{position:static;width:100%;margin-top:18px}
+  .stage{align-items:stretch}
+  .board{margin:0}
+  .foot-note{position:static;margin-top:14px}
+  .sheet{left:0;right:0;top:auto;bottom:0;width:auto;max-height:84vh;border-radius:22px 22px 0 0;transform:translateY(105%)}
+  .sheet.open{transform:none}
+  .pop{left:0!important;right:0;top:auto!important;bottom:0;width:auto;max-height:80vh;border-radius:22px 22px 0 0}
+  .modal-bg{align-items:end;padding:0}
+  .modal{border-radius:22px 22px 0 0;max-height:92vh}
+  .changes{bottom:12px}
+}
+
+/* semantic theme tokens are injected on <html> from the catalog or an import */
+.theme-trigger{display:inline-flex;align-items:center;gap:9px;padding:6px 10px 6px 11px}.theme-trigger kbd,.theme-search kbd{font:500 10px var(--mono);border:1px solid var(--border-base);border-radius:5px;padding:2px 5px;color:var(--text-muted);background:var(--surface-raised)}.theme-trigger-dot{width:13px;height:13px;border-radius:50%;background:conic-gradient(var(--layer-1) 0 25%,var(--layer-2) 0 50%,var(--layer-3) 0 75%,var(--layer-4) 0);box-shadow:0 0 0 2px var(--surface-panel),0 0 0 3px var(--border-base)}
+.theme-scrim{position:fixed;inset:0;z-index:80;background:var(--overlay);backdrop-filter:blur(5px);display:none}.theme-scrim.open{display:block}.theme-picker{position:fixed;z-index:81;left:50%;top:50%;transform:translate(-50%,-48%) scale(.985);width:min(970px,calc(100vw - 40px));height:min(660px,calc(100vh - 48px));background:var(--surface-panel);border:1px solid var(--border-base);border-radius:22px;box-shadow:var(--shadow-dialog);display:none;flex-direction:column;overflow:hidden;opacity:0;transition:opacity .16s,transform .2s}.theme-picker.open{display:flex;opacity:1;transform:translate(-50%,-50%) scale(1)}.theme-picker-head{display:flex;align-items:flex-start;justify-content:space-between;padding:21px 24px 13px}.theme-picker-head h2{font:italic 600 26px/1.1 var(--serif);margin:7px 0 0;letter-spacing:-.02em}.theme-picker-toolbar{display:flex;align-items:center;gap:12px;padding:0 24px 14px;border-bottom:1px solid var(--border-subtle)}.theme-search{height:40px;display:flex;align-items:center;gap:9px;flex:1;background:var(--surface-raised);border:1px solid var(--border-base);border-radius:11px;padding:0 10px;color:var(--text-muted)}.theme-search>span{font-size:20px}.theme-search input{background:transparent;border:0;box-shadow:none!important;padding:0;outline:none;color:var(--text-primary);min-width:0}.theme-search input::placeholder{color:var(--text-muted)}.theme-filters{display:flex;padding:3px;background:var(--surface-raised);border:1px solid var(--border-subtle);border-radius:10px}.theme-filters button{border:0;background:transparent;color:var(--text-muted);font-size:12px;padding:6px 11px;border-radius:7px}.theme-filters button[aria-pressed=true]{background:var(--surface-panel);color:var(--text-primary);box-shadow:0 1px 4px var(--shadow-ink)}.theme-picker-body{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(330px,.95fr);min-height:0;flex:1}.theme-list-wrap{display:flex;flex-direction:column;border-right:1px solid var(--border-subtle);min-height:0}.theme-list-label{display:flex;justify-content:space-between;align-items:center;padding:13px 18px 8px;color:var(--text-muted);font:500 11px var(--mono);letter-spacing:.04em;text-transform:uppercase}.theme-list-label button{font:600 11px var(--sans);letter-spacing:0;text-transform:none;color:var(--text-secondary);border:0;background:transparent;padding:4px 6px;border-radius:6px}.theme-list-label button[aria-pressed=true]{background:color-mix(in srgb,var(--accent-primary) 14%,transparent);color:var(--accent-primary)}.theme-list{overflow:auto;padding:2px 9px 14px;outline:none}.theme-row{display:flex;align-items:center;gap:10px;border:1px solid transparent;background:transparent;color:var(--text-primary);width:100%;text-align:left;padding:8px 10px;border-radius:10px;min-height:42px}.theme-row:hover{background:var(--surface-raised)}.theme-row[aria-selected=true]{background:color-mix(in srgb,var(--accent-primary) 12%,var(--surface-raised));border-color:color-mix(in srgb,var(--accent-primary) 40%,transparent)}.theme-row:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}.theme-row .row-mark{width:25px;height:25px;border-radius:8px;flex:none;border:1px solid color-mix(in srgb,var(--text-primary) 12%,transparent)}.theme-row .row-name{font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.theme-row .row-type{font:10px var(--mono);color:var(--text-muted)}.theme-row .row-star{color:var(--status-warning);font-size:14px}.theme-preview{padding:18px 22px;display:flex;flex-direction:column;min-height:0;overflow:auto}.preview-head{display:flex;justify-content:space-between;align-items:center}.favorite-toggle{border:1px solid var(--border-base);background:var(--surface-raised);border-radius:9px;width:32px;height:30px;color:var(--text-secondary);font-size:17px}.favorite-toggle.on{color:var(--status-warning);border-color:var(--status-warning)}.theme-preview h3{font:italic 600 22px/1.1 var(--serif);margin:9px 0 2px}.theme-preview>p{font-size:12px;color:var(--text-muted);margin:0 0 14px}.preview-swatch-row{display:flex;gap:5px;margin-bottom:15px}.preview-swatch{height:24px;flex:1;border-radius:6px;border:1px solid color-mix(in srgb,var(--text-primary) 12%,transparent)}.preview-keyboard{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:13px;background:var(--surface-canvas);border:1px solid var(--border-subtle);border-radius:13px;box-shadow:inset 0 1px 5px var(--shadow-ink)}.preview-key{height:39px;display:grid;place-items:center;border-radius:7px;background:linear-gradient(180deg,var(--keycap-top),var(--keycap-face));color:var(--keycap-legend);font:600 12px var(--mono);box-shadow:0 3px 0 var(--keycap-side),0 5px 8px var(--keycap-shadow);border:1px solid color-mix(in srgb,var(--text-primary) 9%,transparent)}.preview-key:nth-child(2){color:var(--layer-2)}.preview-key:nth-child(3){color:var(--layer-3)}.preview-key:nth-child(4){color:var(--layer-1)}.preview-key.wide{grid-column:span 4;height:27px;font:500 10px var(--mono);color:var(--text-muted);box-shadow:none;background:transparent;border:0}.preview-token-label{margin:15px 0 7px;color:var(--text-muted);font:500 10px var(--mono);letter-spacing:.06em;text-transform:uppercase}.preview-token-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.token-chip{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary)}.token-chip i{width:9px;height:9px;border-radius:50%;background:var(--chip);box-shadow:0 0 0 2px color-mix(in srgb,var(--chip) 22%,transparent)}.theme-mode-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:15px;padding-top:12px;border-top:1px solid var(--border-subtle);font-size:11px;color:var(--text-muted)}.theme-mode-row>div{display:flex;gap:4px}.theme-mode-row button{border:1px solid var(--border-subtle);background:var(--surface-raised);color:var(--text-secondary);font-size:10px;border-radius:7px;padding:6px 7px}.theme-mode-row button[aria-pressed=true]{color:var(--accent-primary);border-color:var(--accent-primary)}.theme-import{margin-top:12px;border-top:1px solid var(--border-subtle);padding-top:11px;font-size:11px;color:var(--text-secondary)}.theme-import summary{cursor:pointer;font-weight:600}.theme-import textarea{margin:9px 0 6px;min-height:74px;font:11px/1.4 var(--mono);background:var(--surface-raised);color:var(--text-primary)}.theme-import .fine{display:inline;margin-left:7px}.preview-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:14px;color:var(--text-muted);font:10px var(--mono)}.preview-footer .btn{font:600 12px var(--sans);padding:8px 13px}.license-note{font:11px/1.5 var(--sans);color:var(--text-muted);padding:8px 16px 26px;max-width:900px;margin:10px auto 0;text-align:center}.license-note code{font-size:10px}@media(max-width:760px){.theme-picker{width:calc(100vw - 20px);height:calc(100vh - 20px);border-radius:16px}.theme-picker-head{padding:16px 17px 10px}.theme-picker-toolbar{padding:0 14px 10px;flex-wrap:wrap}.theme-filters{width:100%;justify-content:center}.theme-picker-body{grid-template-columns:1fr;grid-template-rows:minmax(160px,38%) 1fr}.theme-list-wrap{border-right:0;border-bottom:1px solid var(--border-subtle)}.theme-preview{padding:12px 16px}.theme-import{display:none}.concept{display:none}}@media(prefers-reduced-motion:reduce){.theme-picker,.theme-row{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo" aria-hidden="true"><i></i><i></i><i></i></span><b>adv360</b><span class="brand-sub">keymap</span></div>
+  <span class="concept">Concept · Board-first</span>
+  <span class="branch"><span class="dot-ok"></span>V3.0<span class="muted">· e46bd74</span></span>
+  <span class="grow"></span>
+  <button id="themePickerBtn" class="ghost-btn theme-trigger" type="button" aria-haspopup="dialog"><span class="theme-trigger-dot"></span><span id="activeThemeLabel">Themes</span><kbd>⌘K</kbd></button>
+</header>
+
+<main class="stage" id="stage">
+  <div class="lb-wrap">
+    <nav class="layerbar" aria-label="Layers">
+      <div class="pills" id="pills"></div>
+      <span class="sep"></span>
+      <button class="pill-ghost" id="combosBtn" type="button" aria-pressed="true">⋈ Combos <b id="comboCount">3</b></button>
+    </nav>
+    <div class="tip" id="tip"></div>
+  </div>
+  <div class="pickbar" id="pickbar" hidden><span id="pickText"></span><button class="link" id="pickCancel" type="button">Cancel · Esc</button></div>
+  <p class="hint">Click a key to rebind it · hover a layer to see what reaches it · keys 1–4 switch layers</p>
+  <div class="boardwrap" id="boardwrap">
+    <div class="board" id="board" role="group" aria-label="Kinesis Advantage360 Pro, layer keys"></div>
+  </div>
+  <section class="card-float" id="validator" aria-live="polite"></section>
+  <p class="foot-note">Source of truth is <code>adv360.keymap</code> in git. ZMK Studio edits made on the keyboard can override it.</p>
+</main>
+
+<button class="changes" id="changes" type="button"></button>
+<aside class="sheet" id="sheet" aria-label="Review changes"></aside>
+<div class="pop" id="pop" role="dialog"></div>
+<div class="modal-bg" id="modalbg"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<section id="themePicker" class="theme-picker" role="dialog" aria-modal="true" aria-labelledby="themeTitle" aria-hidden="true">
+  <div class="theme-picker-head"><div><div class="eyebrow">Appearance · 57 palettes</div><h2 id="themeTitle">Choose a colorway</h2></div><button class="icon" id="themeClose" type="button" aria-label="Close theme picker">×</button></div>
+  <div class="theme-picker-toolbar"><label class="theme-search"><span>⌕</span><input id="themeSearch" type="search" placeholder="Search palettes" autocomplete="off"><kbd>/</kbd></label><div class="theme-filters" role="group" aria-label="Filter theme appearance"><button data-filter="all" aria-pressed="true">All</button><button data-filter="light" aria-pressed="false">Light</button><button data-filter="dark" aria-pressed="false">Dark</button></div></div>
+  <div class="theme-picker-body"><div class="theme-list-wrap"><div class="theme-list-label"><span id="themeResultCount">All palettes</span><button id="favoritesOnly" type="button" aria-pressed="false">☆ Favorites</button></div><div id="themeList" class="theme-list" role="listbox" aria-label="Color themes" tabindex="0"></div></div>
+    <div class="theme-preview"><div class="preview-head"><span class="eyebrow">Live preview</span><button id="favoriteTheme" class="favorite-toggle" type="button" aria-label="Add favorite">☆</button></div><h3 id="previewName">Catppuccin Mocha</h3><p id="previewMeta">A Ghostty terminal palette</p><div class="preview-swatch-row" id="previewSwatches"></div><div class="preview-keyboard"><div class="preview-key" data-preview-key="1">Esc</div><div class="preview-key" data-preview-key="2">Tab</div><div class="preview-key" data-preview-key="3">⌘</div><div class="preview-key" data-preview-key="4">A</div><div class="preview-key wide">Advantage360 · 76 keys</div></div><div class="preview-token-label">Semantic accents</div><div class="preview-token-grid" id="previewTokens"></div><div class="theme-mode-row"><span>Appearance</span><div><button id="followSystem" type="button" aria-pressed="false">◐ Follow system</button><button id="lockDark" type="button" aria-pressed="false">◑ Dark</button><button id="lockLight" type="button" aria-pressed="false">◒ Light</button></div></div>
+      <details class="theme-import"><summary>Import a Ghostty theme or OpenCode JSON</summary><textarea id="themeImportText" spellcheck="false" placeholder="Paste a Ghostty theme file or OpenCode theme JSON…"></textarea><button id="importTheme" class="btn" type="button">Import theme</button><span id="importStatus" class="fine" aria-live="polite"></span></details>
+      <div class="preview-footer"><span>↑ ↓ preview · ↵ apply · esc close</span><button id="applyTheme" class="btn primary" type="button">Use this theme</button></div>
+    </div></div>
+</section><div class="theme-scrim" id="themeScrim"></div>
+
+<script>window.DATA = {"info": [{"label": "=", "row": 0, "col": 0, "x": 0, "y": 0.25, "w": 1.25}, {"label": "1", "row": 0, "col": 1, "x": 1.25, "y": 0.25}, {"label": "2", "row": 0, "col": 2, "x": 2.25, "y": 0}, {"label": "3", "row": 0, "col": 3, "x": 3.25, "y": 0}, {"label": "4", "row": 0, "col": 4, "x": 4.25, "y": 0}, {"label": "5", "row": 0, "col": 5, "x": 5.25, "y": 0}, {"label": "mod1", "row": 0, "col": 6, "x": 6.25, "y": 0}, {"label": "mod2", "row": 0, "col": 13, "x": 10.75, "y": 0}, {"label": "6", "row": 0, "col": 14, "x": 11.75, "y": 0}, {"label": "7", "row": 0, "col": 15, "x": 12.75, "y": 0}, {"label": "8", "row": 0, "col": 16, "x": 13.75, "y": 0}, {"label": "9", "row": 0, "col": 17, "x": 14.75, "y": 0}, {"label": "0", "row": 0, "col": 18, "x": 15.75, "y": 0.25}, {"label": "-", "row": 0, "col": 19, "x": 16.75, "y": 0.25, "w": 1.25}, {"label": "Tab", "row": 1, "col": 0, "x": 0, "y": 1.25, "w": 1.25}, {"label": "Q", "row": 1, "col": 1, "x": 1.25, "y": 1.25}, {"label": "W", "row": 1, "col": 2, "x": 2.25, "y": 1}, {"label": "E", "row": 1, "col": 3, "x": 3.25, "y": 1}, {"label": "R", "row": 1, "col": 4, "x": 4.25, "y": 1}, {"label": "T", "row": 1, "col": 5, "x": 5.25, "y": 1}, {"label": "mod3", "row": 1, "col": 6, "x": 6.25, "y": 1}, {"label": "mod4", "row": 1, "col": 13, "x": 10.75, "y": 1}, {"label": "Y", "row": 1, "col": 14, "x": 11.75, "y": 1}, {"label": "U", "row": 1, "col": 15, "x": 12.75, "y": 1}, {"label": "I", "row": 1, "col": 16, "x": 13.75, "y": 1}, {"label": "O", "row": 1, "col": 17, "x": 14.75, "y": 1}, {"label": "P", "row": 1, "col": 18, "x": 15.75, "y": 1.25}, {"label": "\\", "row": 1, "col": 19, "x": 16.75, "y": 1.25, "w": 1.25}, {"label": "Caps", "row": 2, "col": 0, "x": 0, "y": 2.25, "w": 1.25}, {"label": "A", "row": 2, "col": 1, "x": 1.25, "y": 2.25}, {"label": "S", "row": 2, "col": 2, "x": 2.25, "y": 2}, {"label": "D", "row": 2, "col": 3, "x": 3.25, "y": 2}, {"label": "F", "row": 2, "col": 4, "x": 4.25, "y": 2}, {"label": "G", "row": 2, "col": 5, "x": 5.25, "y": 2}, {"label": "mod5", "row": 2, "col": 6, "x": 6.25, "y": 2}, {"label": "LCtrl", "row": 2, "col": 7, "x": 6.75, "y": 4, "r": 15, "rx": 5.25, "ry": 4}, {"label": "LAlt", "row": 2, "col": 8, "x": 7.75, "y": 4, "r": 15, "rx": 5.25, "ry": 4}, {"label": "LGui", "row": 2, "col": 11, "x": 9.25, "y": 4, "r": -15, "rx": 12.75, "ry": 4}, {"label": "RCtrl", "row": 2, "col": 12, "x": 10.25, "y": 4, "r": -15, "rx": 12.75, "ry": 4}, {"label": "mod6", "row": 2, "col": 13, "x": 10.75, "y": 2}, {"label": "H", "row": 2, "col": 14, "x": 11.75, "y": 2}, {"label": "J", "row": 2, "col": 15, "x": 12.75, "y": 2}, {"label": "K", "row": 2, "col": 16, "x": 13.75, "y": 2}, {"label": "L", "row": 2, "col": 17, "x": 14.75, "y": 2}, {"label": ";", "row": 2, "col": 18, "x": 15.75, "y": 2.25}, {"label": "'", "row": 2, "col": 19, "x": 16.75, "y": 2.25, "w": 1.25}, {"label": "LShift", "row": 3, "col": 0, "x": 0, "y": 3.25, "w": 1.25}, {"label": "Z", "row": 3, "col": 1, "x": 1.25, "y": 3.25}, {"label": "X", "row": 3, "col": 2, "x": 2.25, "y": 3}, {"label": "C", "row": 3, "col": 3, "x": 3.25, "y": 3}, {"label": "V", "row": 3, "col": 4, "x": 4.25, "y": 3}, {"label": "B", "row": 3, "col": 5, "x": 5.25, "y": 3}, {"label": "Home", "row": 3, "col": 8, "x": 7.75, "y": 5, "r": 15, "rx": 5.25, "ry": 4}, {"label": "PgUp", "row": 3, "col": 11, "x": 9.25, "y": 5, "r": -15, "rx": 12.75, "ry": 4}, {"label": "N", "row": 3, "col": 14, "x": 11.75, "y": 3}, {"label": "M", "row": 3, "col": 15, "x": 12.75, "y": 3}, {"label": ",", "row": 3, "col": 16, "x": 13.75, "y": 3}, {"label": ".", "row": 3, "col": 17, "x": 14.75, "y": 3}, {"label": "/", "row": 3, "col": 18, "x": 15.75, "y": 3.25}, {"label": "RShift", "row": 3, "col": 19, "x": 16.75, "y": 3.25, "w": 1.25}, {"label": "mod7", "row": 4, "col": 0, "x": 0, "y": 4.25, "w": 1.25}, {"label": "`", "row": 4, "col": 1, "x": 1.25, "y": 4.25}, {"label": "Caps", "row": 4, "col": 2, "x": 2.25, "y": 4}, {"label": "Left", "row": 4, "col": 3, "x": 3.25, "y": 4}, {"label": "Right", "row": 4, "col": 4, "x": 4.25, "y": 4}, {"label": "Bksp", "row": 4, "col": 6, "x": 5.75, "y": 5, "r": 15, "rx": 5.25, "ry": 4, "h": 2}, {"label": "Del", "row": 4, "col": 7, "x": 6.75, "y": 5, "r": 15, "rx": 5.25, "ry": 4, "h": 2}, {"label": "End", "row": 4, "col": 8, "x": 7.75, "y": 6, "r": 15, "rx": 5.25, "ry": 4}, {"label": "PgDn", "row": 4, "col": 11, "x": 9.25, "y": 6, "r": -15, "rx": 12.75, "ry": 4}, {"label": "RET", "row": 4, "col": 12, "x": 10.25, "y": 5, "r": -15, "rx": 12.75, "ry": 4, "h": 2}, {"label": "SPC", "row": 4, "col": 13, "x": 11.25, "y": 5, "r": -15, "rx": 12.75, "ry": 4, "h": 2}, {"label": "Up", "row": 4, "col": 15, "x": 12.75, "y": 4}, {"label": "Down", "row": 4, "col": 16, "x": 13.75, "y": 4}, {"label": ",", "row": 4, "col": 17, "x": 14.75, "y": 4}, {"label": ".", "row": 4, "col": 18, "x": 15.75, "y": 4.25}, {"label": "mod8", "row": 4, "col": 19, "x": 16.75, "y": 4.25, "w": 1.25}], "layers": [{"name": "default_layer", "keys": [{"raw": "&kp EQUAL", "line": 77, "start": 0, "end": 9}, {"raw": "&tpf F1 NUMBER_1", "line": 77, "start": 11, "end": 27}, {"raw": "&tpf F2 NUMBER_2", "line": 77, "start": 29, "end": 45}, {"raw": "&tpf F3 NUMBER_3", "line": 77, "start": 47, "end": 63}, {"raw": "&tpf F4 NUMBER_4", "line": 77, "start": 69, "end": 85}, {"raw": "&tpf F5 N5", "line": 77, "start": 87, "end": 97}, {"raw": "&kp LG(LC(NUMBER_4))", "line": 77, "start": 99, "end": 119}, {"raw": "&tog 1", "line": 77, "start": 209, "end": 215}, {"raw": "&tpf F6 NUMBER_6", "line": 77, "start": 231, "end": 247}, {"raw": "&tpf F7 N7", "line": 77, "start": 249, "end": 259}, {"raw": "&tpf F8 NUMBER_8", "line": 77, "start": 261, "end": 277}, {"raw": "&tpf F9 N9", "line": 77, "start": 279, "end": 289}, {"raw": "&tpf F10 NUMBER_0", "line": 77, "start": 291, "end": 308}, {"raw": "&tpf F11 MINUS", "line": 77, "start": 310, "end": 324}, {"raw": "&kp TAB", "line": 78, "start": 0, "end": 7}, {"raw": "&kp Q", "line": 78, "start": 11, "end": 16}, {"raw": "&tpf LG(LS(W)) W", "line": 78, "start": 29, "end": 45}, {"raw": "&kp E", "line": 78, "start": 47, "end": 52}, {"raw": "&kp R", "line": 78, "start": 69, "end": 74}, {"raw": "&kp T", "line": 78, "start": 87, "end": 92}, {"raw": "&tpf F12 C_MENU", "line": 78, "start": 99, "end": 114}, {"raw": "&kp C_PLAY_PAUSE", "line": 78, "start": 209, "end": 225}, {"raw": "&kp Y", "line": 78, "start": 231, "end": 236}, {"raw": "&kp U", "line": 78, "start": 249, "end": 254}, {"raw": "&kp I", "line": 78, "start": 261, "end": 266}, {"raw": "&kp O", "line": 78, "start": 279, "end": 284}, {"raw": "&kp P", "line": 78, "start": 291, "end": 296}, {"raw": "&tpf F12 BACKSLASH", "line": 78, "start": 310, "end": 328}, {"raw": "&kp ESC", "line": 79, "start": 0, "end": 7}, {"raw": "&kp A", "line": 79, "start": 11, "end": 16}, {"raw": "&kp S", "line": 79, "start": 29, "end": 34}, {"raw": "&kp D", "line": 79, "start": 47, "end": 52}, {"raw": "&kp F", "line": 79, "start": 69, "end": 74}, {"raw": "&kp G", "line": 79, "start": 87, "end": 92}, {"raw": "&kp RC(SPACE)", "line": 79, "start": 99, "end": 112}, {"raw": "&kp LEFT_ALT", "line": 79, "start": 121, "end": 133}, {"raw": "&kp LC(E)", "line": 79, "start": 135, "end": 144}, {"raw": "&kp RIGHT_CONTROL", "line": 79, "start": 157, "end": 174}, {"raw": "&tpf INT_KATAKANAHIRAGANA COLON", "line": 79, "start": 176, "end": 207}, {"raw": "&tpf LC(GRAVE) GRAVE", "line": 79, "start": 209, "end": 229}, {"raw": "&kp H", "line": 79, "start": 231, "end": 236}, {"raw": "&kp J", "line": 79, "start": 249, "end": 254}, {"raw": "&kp K", "line": 79, "start": 261, "end": 266}, {"raw": "&kp L", "line": 79, "start": 279, "end": 284}, {"raw": "&kp SEMI", "line": 79, "start": 291, "end": 299}, {"raw": "&kp SQT", "line": 79, "start": 310, "end": 317}, {"raw": "&kp LSHFT", "line": 80, "start": 0, "end": 9}, {"raw": "&kp Z", "line": 80, "start": 11, "end": 16}, {"raw": "&kp X", "line": 80, "start": 29, "end": 34}, {"raw": "&tpf LS(LG(LA(C))) C", "line": 80, "start": 47, "end": 67}, {"raw": "&kp V", "line": 80, "start": 69, "end": 74}, {"raw": "&kp B", "line": 80, "start": 87, "end": 92}, {"raw": "&kp LEFT_CONTROL", "line": 80, "start": 135, "end": 151}, {"raw": "&kp RIGHT_ALT", "line": 80, "start": 157, "end": 170}, {"raw": "&kp N", "line": 80, "start": 231, "end": 236}, {"raw": "&kp M", "line": 80, "start": 249, "end": 254}, {"raw": "&kp COMMA", "line": 80, "start": 261, "end": 270}, {"raw": "&kp DOT", "line": 80, "start": 279, "end": 286}, {"raw": "&kp FSLH", "line": 80, "start": 291, "end": 299}, {"raw": "&kp RSHFT", "line": 80, "start": 310, "end": 319}, {"raw": "&mo 1", "line": 81, "start": 0, "end": 5}, {"raw": "&kp K_MENU", "line": 81, "start": 11, "end": 21}, {"raw": "&kp DELETE", "line": 81, "start": 29, "end": 39}, {"raw": "&kp LEFT", "line": 81, "start": 47, "end": 55}, {"raw": "&kp RIGHT", "line": 81, "start": 69, "end": 78}, {"raw": "&kp SPACE", "line": 81, "start": 99, "end": 108}, {"raw": "&kp CAPSLOCK", "line": 81, "start": 121, "end": 133}, {"raw": "&kp LGUI", "line": 81, "start": 135, "end": 143}, {"raw": "&kp LGUI", "line": 81, "start": 157, "end": 165}, {"raw": "&kp ENTER", "line": 81, "start": 176, "end": 185}, {"raw": "&kp BACKSPACE", "line": 81, "start": 209, "end": 222}, {"raw": "&kp UP", "line": 81, "start": 249, "end": 255}, {"raw": "&kp DOWN", "line": 81, "start": 261, "end": 269}, {"raw": "&kp LBKT", "line": 81, "start": 279, "end": 287}, {"raw": "&kp RBKT", "line": 81, "start": 291, "end": 299}, {"raw": "&mo 3", "line": 81, "start": 310, "end": 315}]}, {"name": "keypad", "keys": [{"raw": "&kp EQUAL", "line": 87, "start": 0, "end": 9}, {"raw": "&kp N1", "line": 87, "start": 11, "end": 17}, {"raw": "&kp N2", "line": 87, "start": 22, "end": 28}, {"raw": "&kp N3", "line": 87, "start": 32, "end": 38}, {"raw": "&kp N4", "line": 87, "start": 42, "end": 48}, {"raw": "&kp N5", "line": 87, "start": 53, "end": 59}, {"raw": "&trans", "line": 87, "start": 61, "end": 67}, {"raw": "&tog 0", "line": 87, "start": 122, "end": 128}, {"raw": "&kp N6", "line": 87, "start": 133, "end": 139}, {"raw": "&kp KP_NUM", "line": 87, "start": 141, "end": 151}, {"raw": "&kp KP_EQUAL", "line": 87, "start": 153, "end": 165}, {"raw": "&kp KP_DIVIDE", "line": 87, "start": 167, "end": 180}, {"raw": "&kp KP_MULTIPLY", "line": 87, "start": 182, "end": 197}, {"raw": "&kp MINUS", "line": 87, "start": 199, "end": 208}, {"raw": "&kp TAB", "line": 88, "start": 0, "end": 7}, {"raw": "&kp Q", "line": 88, "start": 11, "end": 16}, {"raw": "&kp W", "line": 88, "start": 22, "end": 27}, {"raw": "&kp E", "line": 88, "start": 32, "end": 37}, {"raw": "&kp R", "line": 88, "start": 42, "end": 47}, {"raw": "&kp T", "line": 88, "start": 53, "end": 58}, {"raw": "&none", "line": 88, "start": 61, "end": 66}, {"raw": "&none", "line": 88, "start": 122, "end": 127}, {"raw": "&kp Y", "line": 88, "start": 133, "end": 138}, {"raw": "&kp KP_N7", "line": 88, "start": 141, "end": 150}, {"raw": "&kp KP_N8", "line": 88, "start": 153, "end": 162}, {"raw": "&kp KP_N9", "line": 88, "start": 167, "end": 176}, {"raw": "&kp KP_MINUS", "line": 88, "start": 182, "end": 194}, {"raw": "&kp BSLH", "line": 88, "start": 199, "end": 207}, {"raw": "&kp ESC", "line": 89, "start": 0, "end": 7}, {"raw": "&kp A", "line": 89, "start": 11, "end": 16}, {"raw": "&kp S", "line": 89, "start": 22, "end": 27}, {"raw": "&kp D", "line": 89, "start": 32, "end": 37}, {"raw": "&kp F", "line": 89, "start": 42, "end": 47}, {"raw": "&kp G", "line": 89, "start": 53, "end": 58}, {"raw": "&none", "line": 89, "start": 61, "end": 66}, {"raw": "&kp LCTRL", "line": 89, "start": 71, "end": 80}, {"raw": "&kp LALT", "line": 89, "start": 82, "end": 90}, {"raw": "&kp LGUI", "line": 89, "start": 96, "end": 104}, {"raw": "&kp BACKSPACE", "line": 89, "start": 107, "end": 120}, {"raw": "&none", "line": 89, "start": 122, "end": 127}, {"raw": "&kp H", "line": 89, "start": 133, "end": 138}, {"raw": "&kp KP_N4", "line": 89, "start": 141, "end": 150}, {"raw": "&kp KP_N5", "line": 89, "start": 153, "end": 162}, {"raw": "&kp KP_N6", "line": 89, "start": 167, "end": 176}, {"raw": "&kp KP_PLUS", "line": 89, "start": 182, "end": 193}, {"raw": "&kp SQT", "line": 89, "start": 199, "end": 206}, {"raw": "&kp LSHFT", "line": 90, "start": 0, "end": 9}, {"raw": "&kp Z", "line": 90, "start": 11, "end": 16}, {"raw": "&kp X", "line": 90, "start": 22, "end": 27}, {"raw": "&kp C", "line": 90, "start": 32, "end": 37}, {"raw": "&kp V", "line": 90, "start": 42, "end": 47}, {"raw": "&kp B", "line": 90, "start": 53, "end": 58}, {"raw": "&kp HOME", "line": 90, "start": 82, "end": 90}, {"raw": "&kp PG_UP", "line": 90, "start": 96, "end": 105}, {"raw": "&kp N", "line": 90, "start": 133, "end": 138}, {"raw": "&kp KP_N1", "line": 90, "start": 141, "end": 150}, {"raw": "&kp KP_N2", "line": 90, "start": 153, "end": 162}, {"raw": "&kp KP_N3", "line": 90, "start": 167, "end": 176}, {"raw": "&kp KP_ENTER", "line": 90, "start": 182, "end": 194}, {"raw": "&kp RSHFT", "line": 90, "start": 199, "end": 208}, {"raw": "&mo 0", "line": 91, "start": 0, "end": 5}, {"raw": "&kp GRAVE", "line": 91, "start": 11, "end": 20}, {"raw": "&kp CAPS", "line": 91, "start": 22, "end": 30}, {"raw": "&kp LEFT", "line": 91, "start": 32, "end": 40}, {"raw": "&kp RIGHT", "line": 91, "start": 42, "end": 51}, {"raw": "&kp BSPC", "line": 91, "start": 61, "end": 69}, {"raw": "&kp DEL", "line": 91, "start": 71, "end": 78}, {"raw": "&kp END", "line": 91, "start": 82, "end": 89}, {"raw": "&kp PG_DN", "line": 91, "start": 96, "end": 105}, {"raw": "&kp BACKSPACE", "line": 91, "start": 107, "end": 120}, {"raw": "&kp KP_N0", "line": 91, "start": 122, "end": 131}, {"raw": "&kp UP", "line": 91, "start": 141, "end": 147}, {"raw": "&kp DOWN", "line": 91, "start": 153, "end": 161}, {"raw": "&kp KP_DOT", "line": 91, "start": 167, "end": 177}, {"raw": "&kp RBKT", "line": 91, "start": 182, "end": 190}, {"raw": "&mo 0", "line": 91, "start": 199, "end": 204}]}, {"name": "mod", "keys": [{"raw": "&none", "line": 97, "start": 0, "end": 5}, {"raw": "&bt BT_SEL 0", "line": 97, "start": 7, "end": 19}, {"raw": "&bt BT_SEL 1", "line": 97, "start": 21, "end": 33}, {"raw": "&bt BT_SEL 2", "line": 97, "start": 35, "end": 47}, {"raw": "&bt BT_SEL 3", "line": 97, "start": 49, "end": 61}, {"raw": "&bt BT_SEL 4", "line": 97, "start": 63, "end": 75}, {"raw": "&none", "line": 97, "start": 77, "end": 82}, {"raw": "&trans", "line": 97, "start": 132, "end": 138}, {"raw": "&none", "line": 97, "start": 156, "end": 161}, {"raw": "&none", "line": 97, "start": 163, "end": 168}, {"raw": "&none", "line": 97, "start": 175, "end": 180}, {"raw": "&none", "line": 97, "start": 187, "end": 192}, {"raw": "&none", "line": 97, "start": 194, "end": 199}, {"raw": "&none", "line": 97, "start": 201, "end": 206}, {"raw": "&none", "line": 98, "start": 0, "end": 5}, {"raw": "&none", "line": 98, "start": 7, "end": 12}, {"raw": "&none", "line": 98, "start": 21, "end": 26}, {"raw": "&none", "line": 98, "start": 35, "end": 40}, {"raw": "&kp Z", "line": 98, "start": 49, "end": 54}, {"raw": "&none", "line": 98, "start": 63, "end": 68}, {"raw": "&bootloader", "line": 98, "start": 77, "end": 88}, {"raw": "&bootloader", "line": 98, "start": 132, "end": 143}, {"raw": "&none", "line": 98, "start": 156, "end": 161}, {"raw": "&none", "line": 98, "start": 163, "end": 168}, {"raw": "&none", "line": 98, "start": 175, "end": 180}, {"raw": "&none", "line": 98, "start": 187, "end": 192}, {"raw": "&none", "line": 98, "start": 194, "end": 199}, {"raw": "&none", "line": 98, "start": 201, "end": 206}, {"raw": "&none", "line": 99, "start": 0, "end": 5}, {"raw": "&macro_ver", "line": 99, "start": 7, "end": 17}, {"raw": "&none", "line": 99, "start": 21, "end": 26}, {"raw": "&none", "line": 99, "start": 35, "end": 40}, {"raw": "&none", "line": 99, "start": 49, "end": 54}, {"raw": "&none", "line": 99, "start": 63, "end": 68}, {"raw": "&none", "line": 99, "start": 77, "end": 82}, {"raw": "&none", "line": 99, "start": 90, "end": 95}, {"raw": "&none", "line": 99, "start": 97, "end": 102}, {"raw": "&bt BT_CLR", "line": 99, "start": 108, "end": 118}, {"raw": "&none", "line": 99, "start": 120, "end": 125}, {"raw": "&rgb_ug RGB_MEFS_CMD 5", "line": 99, "start": 132, "end": 154}, {"raw": "&none", "line": 99, "start": 156, "end": 161}, {"raw": "&none", "line": 99, "start": 163, "end": 168}, {"raw": "&none", "line": 99, "start": 175, "end": 180}, {"raw": "&none", "line": 99, "start": 187, "end": 192}, {"raw": "&none", "line": 99, "start": 194, "end": 199}, {"raw": "&none", "line": 99, "start": 201, "end": 206}, {"raw": "&none", "line": 100, "start": 0, "end": 5}, {"raw": "&none", "line": 100, "start": 7, "end": 12}, {"raw": "&none", "line": 100, "start": 21, "end": 26}, {"raw": "&none", "line": 100, "start": 35, "end": 40}, {"raw": "&macro_ver", "line": 100, "start": 49, "end": 59}, {"raw": "&none", "line": 100, "start": 63, "end": 68}, {"raw": "&none", "line": 100, "start": 97, "end": 102}, {"raw": "&none", "line": 100, "start": 108, "end": 113}, {"raw": "&none", "line": 100, "start": 156, "end": 161}, {"raw": "&none", "line": 100, "start": 163, "end": 168}, {"raw": "&none", "line": 100, "start": 175, "end": 180}, {"raw": "&none", "line": 100, "start": 187, "end": 192}, {"raw": "&none", "line": 100, "start": 194, "end": 199}, {"raw": "&none", "line": 100, "start": 201, "end": 206}, {"raw": "&none", "line": 101, "start": 0, "end": 5}, {"raw": "&none", "line": 101, "start": 7, "end": 12}, {"raw": "&none", "line": 101, "start": 21, "end": 26}, {"raw": "&none", "line": 101, "start": 35, "end": 40}, {"raw": "&none", "line": 101, "start": 49, "end": 54}, {"raw": "&none", "line": 101, "start": 77, "end": 82}, {"raw": "&none", "line": 101, "start": 90, "end": 95}, {"raw": "&none", "line": 101, "start": 97, "end": 102}, {"raw": "&none", "line": 101, "start": 108, "end": 113}, {"raw": "&bl BL_TOG", "line": 101, "start": 120, "end": 130}, {"raw": "&rgb_ug RGB_TOG", "line": 101, "start": 132, "end": 147}, {"raw": "&bl BL_INC", "line": 101, "start": 163, "end": 173}, {"raw": "&bl BL_DEC", "line": 101, "start": 175, "end": 185}, {"raw": "&none", "line": 101, "start": 187, "end": 192}, {"raw": "&none", "line": 101, "start": 194, "end": 199}, {"raw": "&none", "line": 101, "start": 201, "end": 206}]}, {"name": "macro", "keys": [{"raw": "&trans", "line": 107, "start": 0, "end": 6}, {"raw": "&trans", "line": 107, "start": 8, "end": 14}, {"raw": "&trans", "line": 107, "start": 20, "end": 26}, {"raw": "&trans", "line": 107, "start": 28, "end": 34}, {"raw": "&trans", "line": 107, "start": 40, "end": 46}, {"raw": "&trans", "line": 107, "start": 48, "end": 54}, {"raw": "&trans", "line": 107, "start": 60, "end": 66}, {"raw": "&trans", "line": 107, "start": 104, "end": 110}, {"raw": "&trans", "line": 107, "start": 112, "end": 118}, {"raw": "&trans", "line": 107, "start": 120, "end": 126}, {"raw": "&trans", "line": 107, "start": 128, "end": 134}, {"raw": "&trans", "line": 107, "start": 136, "end": 142}, {"raw": "&trans", "line": 107, "start": 144, "end": 150}, {"raw": "&trans", "line": 107, "start": 152, "end": 158}, {"raw": "&trans", "line": 108, "start": 0, "end": 6}, {"raw": "&kp C_PREV", "line": 108, "start": 8, "end": 18}, {"raw": "&trans", "line": 108, "start": 20, "end": 26}, {"raw": "&kp C_NEXT", "line": 108, "start": 28, "end": 38}, {"raw": "&trans", "line": 108, "start": 40, "end": 46}, {"raw": "&bl BL_OFF", "line": 108, "start": 48, "end": 58}, {"raw": "&trans", "line": 108, "start": 60, "end": 66}, {"raw": "&trans", "line": 108, "start": 104, "end": 110}, {"raw": "&trans", "line": 108, "start": 112, "end": 118}, {"raw": "&trans", "line": 108, "start": 120, "end": 126}, {"raw": "&trans", "line": 108, "start": 128, "end": 134}, {"raw": "&trans", "line": 108, "start": 136, "end": 142}, {"raw": "&trans", "line": 108, "start": 144, "end": 150}, {"raw": "&trans", "line": 108, "start": 152, "end": 158}, {"raw": "&trans", "line": 109, "start": 0, "end": 6}, {"raw": "&mail", "line": 109, "start": 8, "end": 13}, {"raw": "&name", "line": 109, "start": 20, "end": 25}, {"raw": "&trans", "line": 109, "start": 28, "end": 34}, {"raw": "&trans", "line": 109, "start": 40, "end": 46}, {"raw": "&trans", "line": 109, "start": 48, "end": 54}, {"raw": "&trans", "line": 109, "start": 60, "end": 66}, {"raw": "&trans", "line": 109, "start": 68, "end": 74}, {"raw": "&trans", "line": 109, "start": 76, "end": 82}, {"raw": "&trans", "line": 109, "start": 88, "end": 94}, {"raw": "&trans", "line": 109, "start": 96, "end": 102}, {"raw": "&trans", "line": 109, "start": 104, "end": 110}, {"raw": "&trans", "line": 109, "start": 112, "end": 118}, {"raw": "&trans", "line": 109, "start": 120, "end": 126}, {"raw": "&trans", "line": 109, "start": 128, "end": 134}, {"raw": "&trans", "line": 109, "start": 136, "end": 142}, {"raw": "&trans", "line": 109, "start": 144, "end": 150}, {"raw": "&trans", "line": 109, "start": 152, "end": 158}, {"raw": "&trans", "line": 110, "start": 0, "end": 6}, {"raw": "&trans", "line": 110, "start": 8, "end": 14}, {"raw": "&trans", "line": 110, "start": 20, "end": 26}, {"raw": "&trans", "line": 110, "start": 28, "end": 34}, {"raw": "&trans", "line": 110, "start": 40, "end": 46}, {"raw": "&trans", "line": 110, "start": 48, "end": 54}, {"raw": "&trans", "line": 110, "start": 76, "end": 82}, {"raw": "&trans", "line": 110, "start": 88, "end": 94}, {"raw": "&trans", "line": 110, "start": 112, "end": 118}, {"raw": "&trans", "line": 110, "start": 120, "end": 126}, {"raw": "&trans", "line": 110, "start": 128, "end": 134}, {"raw": "&trans", "line": 110, "start": 136, "end": 142}, {"raw": "&trans", "line": 110, "start": 144, "end": 150}, {"raw": "&trans", "line": 110, "start": 152, "end": 158}, {"raw": "&trans", "line": 111, "start": 0, "end": 6}, {"raw": "&trans", "line": 111, "start": 8, "end": 14}, {"raw": "&trans", "line": 111, "start": 20, "end": 26}, {"raw": "&trans", "line": 111, "start": 28, "end": 34}, {"raw": "&trans", "line": 111, "start": 40, "end": 46}, {"raw": "&trans", "line": 111, "start": 60, "end": 66}, {"raw": "&trans", "line": 111, "start": 68, "end": 74}, {"raw": "&trans", "line": 111, "start": 76, "end": 82}, {"raw": "&trans", "line": 111, "start": 88, "end": 94}, {"raw": "&trans", "line": 111, "start": 96, "end": 102}, {"raw": "&trans", "line": 111, "start": 104, "end": 110}, {"raw": "&trans", "line": 111, "start": 120, "end": 126}, {"raw": "&trans", "line": 111, "start": 128, "end": 134}, {"raw": "&trans", "line": 111, "start": 136, "end": 142}, {"raw": "&trans", "line": 111, "start": 144, "end": 150}, {"raw": "&trans", "line": 111, "start": 152, "end": 158}]}], "macros": [{"id": "mail", "label": "MAIL", "display": "MAIL", "file": "adv360.keymap", "line": 35, "steps": ["&none", "&kp M", "&kp E", "&kp AT", "&kp A", "&kp L", "&kp J", "&kp U", "&kp F", "&kp A", "&kp I", "&kp R", "&kp I", "&kp DOT", "&kp O", "&kp R", "&kp G"]}, {"id": "name", "label": "NAME", "display": "NAME", "file": "adv360.keymap", "line": 42, "steps": ["&none", "&kp LS(A)", "&kp L", "&kp I", "&kp SPACE", "&kp LS(R)", "&kp E", "&kp D", "&kp H", "&kp A", "&kp SPACE", "&kp LS(A)", "&kp L", "&kp I", "&kp SPACE", "&kp LS(A)", "&kp B", "&kp D", "&kp U", "&kp L", "&kp L", "&kp A", "&kp SPACE", "&kp LS(A)", "&kp L", "&kp J", "&kp U", "&kp F", "&kp A", "&kp I", "&kp R", "&kp I"]}, {"id": "macro_quotes", "label": "macro_quotes", "display": "macro_quotes", "file": "macros.dtsi", "line": 5, "steps": ["&kp SQT", "&kp SQT", "&kp LEFT"]}, {"id": "macro_dquotes", "label": "macro_dquotes", "display": "macro_dquotes", "file": "macros.dtsi", "line": 11, "steps": ["&kp DQT", "&kp DQT", "&kp LEFT"]}, {"id": "macro_braces", "label": "macro_braces", "display": "macro_braces", "file": "macros.dtsi", "line": 17, "steps": ["&kp LBRC", "&kp RBRC", "&kp LEFT"]}, {"id": "macro_parens", "label": "macro_parens", "display": "macro_parens", "file": "macros.dtsi", "line": 23, "steps": ["&kp LPAR", "&kp RPAR", "&kp LEFT"]}, {"id": "macro_brackets", "label": "macro_brackets", "display": "macro_brackets", "file": "macros.dtsi", "line": 29, "steps": ["&kp LBKT", "&kp RBKT", "&kp LEFT"]}, {"id": "macro_kinesis", "label": "macro_kinesis", "display": "macro_kinesis", "file": "macros.dtsi", "line": 35, "steps": ["&kp LS(K)", "&kp I", "&kp N", "&kp E", "&kp S", "&kp I", "&kp S"]}, {"id": "Win_Cut", "label": "Win_Cut", "display": "Windows Cut", "file": "macros.dtsi", "line": 40, "steps": ["&kp LC(X)"]}, {"id": "Win_Copy", "label": "Win_Copy", "display": "Windows Copy", "file": "macros.dtsi", "line": 47, "steps": ["&kp LC(C)"]}, {"id": "Win_Paste", "label": "Win_Paste", "display": "Windows Paste", "file": "macros.dtsi", "line": 54, "steps": ["&kp LC(V)"]}, {"id": "Win_Select_All", "label": "Win_Select_All", "display": "Windows Select All", "file": "macros.dtsi", "line": 61, "steps": ["&kp LC(A)"]}, {"id": "Win_Undo", "label": "Win_Undo", "display": "Windows Undo", "file": "macros.dtsi", "line": 68, "steps": ["&kp LC(Z)"]}, {"id": "Win_Desktop", "label": "Win_Desktop", "display": "Windows Desktop", "file": "macros.dtsi", "line": 75, "steps": ["&kp LG(D)"]}, {"id": "Win_File_Explorer", "label": "Win_File_Explorer", "display": "Windows Explorer", "file": "macros.dtsi", "line": 82, "steps": ["&kp LG(E)"]}, {"id": "Win_Snip_Tool", "label": "Win_Snip_Tool", "display": "Windows Screen Snip", "file": "macros.dtsi", "line": 89, "steps": ["&kp LS(LG(S))"]}, {"id": "Win_Show_All_Windows", "label": "Win_Show_All_Windows", "display": "Windows Show All Windows", "file": "macros.dtsi", "line": 96, "steps": ["&kp LG(TAB)"]}, {"id": "Mac_Cut", "label": "Mac_Cut", "display": "Mac Cut", "file": "macros.dtsi", "line": 103, "steps": ["&kp LG(X)"]}, {"id": "Mac_Copy", "label": "Mac_Copy", "display": "Mac Copy", "file": "macros.dtsi", "line": 110, "steps": ["&kp LG(C)"]}, {"id": "Mac_Paste", "label": "Mac_Paste", "display": "Mac Paste", "file": "macros.dtsi", "line": 117, "steps": ["&kp LG(V)"]}, {"id": "Mac_Undo", "label": "Mac_Undo", "display": "Mac Undo", "file": "macros.dtsi", "line": 124, "steps": ["&kp LG(Z)"]}, {"id": "Mac_Select_All", "label": "Mac_Select_All", "display": "Mac Select All", "file": "macros.dtsi", "line": 131, "steps": ["&kp LG(A)"]}, {"id": "Mac_Mission_Control", "label": "Mac_Mission_Control", "display": "Mac Show All Windows", "file": "macros.dtsi", "line": 138, "steps": ["&kp LC(UP_ARROW)"]}, {"id": "Mac_Snip_Tool", "label": "Mac_Snip_Tool", "display": "Mac Screen Snip", "file": "macros.dtsi", "line": 145, "steps": ["&kp LC(LG(LS(NUMBER_4)))"]}, {"id": "Win_Close_Program", "label": "Win_Close_Program", "display": "Windows Close", "file": "macros.dtsi", "line": 152, "steps": ["&kp LA(F4)"]}, {"id": "Win_Settings_Menu", "label": "Win_Settings_Menu", "display": "Windows Settings", "file": "macros.dtsi", "line": 159, "steps": ["&kp LG(I)"]}, {"id": "Win_Lock_PC", "label": "Win_Lock_PC", "display": "Windows Lock", "file": "macros.dtsi", "line": 166, "steps": ["&kp LG(L)"]}, {"id": "Win_Tile_Left", "label": "Win_Tile_Left", "display": "Windows Tile Left", "file": "macros.dtsi", "line": 173, "steps": ["&kp LG(LEFT)"]}, {"id": "Win_Tile_Up", "label": "Win_Tile_Up", "display": "Windows Tile Up", "file": "macros.dtsi", "line": 180, "steps": ["&kp LG(UP_ARROW)"]}, {"id": "Win_Tile_Down", "label": "Win_Tile_Down", "display": "Windows Tile Down", "file": "macros.dtsi", "line": 187, "steps": ["&kp LG(DOWN)"]}, {"id": "Win_Tile_Right", "label": "Win_Tile_Right", "display": "Windows Tile Right", "file": "macros.dtsi", "line": 194, "steps": ["&kp LG(RIGHT)"]}, {"id": "Mac_Spotlight_Search", "label": "Mac_Spotlight_Search", "display": "Mac Spotlight Search", "file": "macros.dtsi", "line": 201, "steps": ["&kp LG(SPACE)"]}, {"id": "Mac_Close_Program", "label": "Mac_Close_Program", "display": "Mac Close Program", "file": "macros.dtsi", "line": 208, "steps": ["&kp LG(Q)"]}, {"id": "Mac_Strike_Through_Text", "label": "Mac_Strike_Through_Text", "display": "Mac Strikethrough Text", "file": "macros.dtsi", "line": 215, "steps": ["&kp LG(LS(X))"]}, {"id": "Double_Click", "label": "Double_Click", "display": "Double Click", "file": "macros.dtsi", "line": 222, "steps": ["&mkp MB1", "&mkp MB1"]}], "combos": [{"name": "combo_studio_unlock", "bindings": "&studio_unlock", "positions": [46, 59], "layers": [0], "timeout": 50, "studio": true, "line": 52}, {"name": "combo", "bindings": "&kp K_SCREENSAVER", "positions": [61], "layers": [0], "timeout": null, "studio": false, "line": 60}, {"name": "Dfffsdfa", "bindings": "&kp D", "positions": [35, 37], "layers": null, "timeout": null, "studio": false, "line": 66}], "tpf": {"term": 200, "termLine": 27, "hold": [1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 27], "holdLine": 26, "flavor": "balanced", "flavorLine": null}, "lastSha": "e46bd74", "lastRun": 214, "files": {"adv360.keymap": "#include <dt-bindings/zmk/mouse.h>\n#include <behaviors.dtsi>\n#include <dt-bindings/zmk/backlight.h>\n#include <dt-bindings/zmk/bt.h>\n#include <dt-bindings/zmk/keys.h>\n#include <dt-bindings/zmk/rgb.h>\n\n/ {\n    behaviors {\n        #include \"macros.dtsi\"\n      #include \"version.dtsi\"\n      #ifndef VERSION_MACRO\n\n\n\n\n\n        #endif\n\n        tpf: tpf {\n            compatible = \"zmk,behavior-hold-tap\";\n            label = \"TPF\";\n            bindings = <&kp>, <&kp>;\n\n            #binding-cells = <2>;\n            hold-trigger-key-positions = <1 2 3 4 5 8 9 10 11 12 13 27>;\n            tapping-term-ms = <200>;\n        };\n    };\n\n    macros {\n        mail: mail {\n            compatible = \"zmk,behavior-macro\";\n            #binding-cells = <0>;\n            bindings = <&none &kp M &kp E &kp AT &kp A &kp L &kp J &kp U &kp F &kp A &kp I &kp R &kp I &kp DOT &kp O &kp R &kp G>;\n            label = \"MAIL\";\n        };\n\n        name: name {\n            compatible = \"zmk,behavior-macro\";\n            #binding-cells = <0>;\n            bindings = <&none &kp LS(A) &kp L &kp I &kp SPACE &kp LS(R) &kp E &kp D &kp H &kp A &kp SPACE &kp LS(A) &kp L &kp I &kp SPACE &kp LS(A) &kp B &kp D &kp U &kp L &kp L &kp A &kp SPACE &kp LS(A) &kp L &kp J &kp U &kp F &kp A &kp I &kp R &kp I>;\n            label = \"NAME\";\n        };\n    };\n\n    combos {\n        compatible = \"zmk,combos\";\n\n#if defined(CONFIG_ZMK_STUDIO)\n        // Unlock Studio without replacing any existing key assignments.\n        combo_studio_unlock {\n            bindings = <&studio_unlock>;\n            key-positions = <46 59>;\n            timeout-ms = <50>;\n            layers = <0>;\n        };\n#endif\n\n        combo {\n            bindings = <&kp K_SCREENSAVER>;\n            key-positions = <61>;\n            layers = <0>;\n        };\n\n        Dfffsdfa {\n            bindings = <&kp D>;\n            key-positions = <35 37>;\n        };\n    };\n\n    keymap {\n        compatible = \"zmk,keymap\";\n\n        default_layer {\n            bindings = <\n&kp EQUAL  &tpf F1 NUMBER_1  &tpf F2 NUMBER_2  &tpf F3 NUMBER_3      &tpf F4 NUMBER_4  &tpf F5 N5  &kp LG(LC(NUMBER_4))                                                                                          &tog 1                &tpf F6 NUMBER_6  &tpf F7 N7  &tpf F8 NUMBER_8  &tpf F9 N9  &tpf F10 NUMBER_0  &tpf F11 MINUS\n&kp TAB    &kp Q             &tpf LG(LS(W)) W  &kp E                 &kp R             &kp T       &tpf F12 C_MENU                                                                                               &kp C_PLAY_PAUSE      &kp Y             &kp U       &kp I             &kp O       &kp P              &tpf F12 BACKSLASH\n&kp ESC    &kp A             &kp S             &kp D                 &kp F             &kp G       &kp RC(SPACE)         &kp LEFT_ALT  &kp LC(E)             &kp RIGHT_CONTROL  &tpf INT_KATAKANAHIRAGANA COLON  &tpf LC(GRAVE) GRAVE  &kp H             &kp J       &kp K             &kp L       &kp SEMI           &kp SQT\n&kp LSHFT  &kp Z             &kp X             &tpf LS(LG(LA(C))) C  &kp V             &kp B                                           &kp LEFT_CONTROL      &kp RIGHT_ALT                                                             &kp N             &kp M       &kp COMMA         &kp DOT     &kp FSLH           &kp RSHFT\n&mo 1      &kp K_MENU        &kp DELETE        &kp LEFT              &kp RIGHT                     &kp SPACE             &kp CAPSLOCK  &kp LGUI              &kp LGUI           &kp ENTER                        &kp BACKSPACE                           &kp UP      &kp DOWN          &kp LBKT    &kp RBKT           &mo 3\n            >;\n        };\n\n        keypad {\n            bindings = <\n&kp EQUAL  &kp N1     &kp N2    &kp N3    &kp N4     &kp N5  &trans                                                       &tog 0     &kp N6  &kp KP_NUM  &kp KP_EQUAL  &kp KP_DIVIDE  &kp KP_MULTIPLY  &kp MINUS\n&kp TAB    &kp Q      &kp W     &kp E     &kp R      &kp T   &none                                                        &none      &kp Y   &kp KP_N7   &kp KP_N8     &kp KP_N9      &kp KP_MINUS     &kp BSLH\n&kp ESC    &kp A      &kp S     &kp D     &kp F      &kp G   &none     &kp LCTRL  &kp LALT      &kp LGUI   &kp BACKSPACE  &none      &kp H   &kp KP_N4   &kp KP_N5     &kp KP_N6      &kp KP_PLUS      &kp SQT\n&kp LSHFT  &kp Z      &kp X     &kp C     &kp V      &kp B                        &kp HOME      &kp PG_UP                            &kp N   &kp KP_N1   &kp KP_N2     &kp KP_N3      &kp KP_ENTER     &kp RSHFT\n&mo 0      &kp GRAVE  &kp CAPS  &kp LEFT  &kp RIGHT          &kp BSPC  &kp DEL    &kp END       &kp PG_DN  &kp BACKSPACE  &kp KP_N0          &kp UP      &kp DOWN      &kp KP_DOT     &kp RBKT         &mo 0\n            >;\n        };\n\n        mod {\n            bindings = <\n&none  &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4  &none                                                  &trans                  &none  &none       &none       &none  &none  &none\n&none  &none         &none         &none         &kp Z         &none         &bootloader                                            &bootloader             &none  &none       &none       &none  &none  &none\n&none  &macro_ver    &none         &none         &none         &none         &none        &none  &none      &bt BT_CLR  &none       &rgb_ug RGB_MEFS_CMD 5  &none  &none       &none       &none  &none  &none\n&none  &none         &none         &none         &macro_ver    &none                             &none      &none                                           &none  &none       &none       &none  &none  &none\n&none  &none         &none         &none         &none                       &none        &none  &none      &none       &bl BL_TOG  &rgb_ug RGB_TOG                &bl BL_INC  &bl BL_DEC  &none  &none  &none\n            >;\n        };\n\n        macro {\n            bindings = <\n&trans  &trans      &trans  &trans      &trans  &trans      &trans                                      &trans  &trans  &trans  &trans  &trans  &trans  &trans\n&trans  &kp C_PREV  &trans  &kp C_NEXT  &trans  &bl BL_OFF  &trans                                      &trans  &trans  &trans  &trans  &trans  &trans  &trans\n&trans  &mail       &name   &trans      &trans  &trans      &trans  &trans  &trans      &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans\n&trans  &trans      &trans  &trans      &trans  &trans                      &trans      &trans                  &trans  &trans  &trans  &trans  &trans  &trans\n&trans  &trans      &trans  &trans      &trans              &trans  &trans  &trans      &trans  &trans  &trans          &trans  &trans  &trans  &trans  &trans\n            >;\n        };\n    };\n};\n", "macros.dtsi": "  macro_quotes: macro_quotes {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_quotes\";\n    #binding-cells = <0>;\n    bindings = <&kp SQT>, <&kp SQT>, <&kp LEFT>;\n  };\n  macro_dquotes: macro_dquotes {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_dquotes\";\n    #binding-cells = <0>;\n    bindings = <&kp DQT>, <&kp DQT>, <&kp LEFT>;\n  };\n  macro_braces: macro_braces {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_braces\";\n    #binding-cells = <0>;\n    bindings = <&kp LBRC>, <&kp RBRC>, <&kp LEFT>;\n  };\n  macro_parens: macro_parens {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_parens\";\n    #binding-cells = <0>;\n    bindings = <&kp LPAR>, <&kp RPAR>, <&kp LEFT>;\n  };\n  macro_brackets: macro_brackets {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_brackets\";\n    #binding-cells = <0>;\n    bindings = <&kp LBKT>, <&kp RBKT>, <&kp LEFT>;\n  };\n  macro_kinesis: macro_kinesis {\n    compatible = \"zmk,behavior-macro\";\n    label = \"macro_kinesis\";\n    #binding-cells = <0>;\n    bindings = <&kp LS(K)>, <&kp I>, <&kp N>, <&kp E>, <&kp S>, <&kp I>, <&kp S>;\n  };\n  Win_Cut: Windows_Cut {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(X)>;\n    display-name = \"Windows Cut\";\n  };\n\n  Win_Copy: Windows_Copy {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(C)>;\n    display-name = \"Windows Copy\";\n  };\n\n  Win_Paste: Windows_Paste {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(V)>;\n    display-name = \"Windows Paste\";\n  };\n\n  Win_Select_All: Windows_SelectAll {\n      compatible = \"zmk,behavior-macro\";\n      #binding-cells = <0>;\n      bindings = <&kp LC(A)>;\n      display-name = \"Windows Select All\";\n  };\n\n  Win_Undo: Windows_Undo {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(Z)>;\n    display-name = \"Windows Undo\";\n  };\n\n  Win_Desktop: Win_Desk {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(D)>;\n    display-name = \"Windows Desktop\";\n  };\n\n  Win_File_Explorer: Win_Explr {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(E)>;\n    display-name = \"Windows Explorer\";\n  };\n\n  Win_Snip_Tool: Win_Snip {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LS(LG(S))>;\n    display-name = \"Windows Screen Snip\";\n  };\n\n  Win_Show_All_Windows: Win_ShowAW {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(TAB)>;\n    display-name = \"Windows Show All Windows\";\n  };\n\n  Mac_Cut: Mac_Cut {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(X)>;\n    display-name = \"Mac Cut\";\n  };\n\n  Mac_Copy: Mac_Copy {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(C)>;\n    display-name = \"Mac Copy\";\n  };\n\n  Mac_Paste: Mac_Paste {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(V)>;\n    display-name = \"Mac Paste\";\n  };\n\n  Mac_Undo: Mac_Undo {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(Z)>;\n    display-name = \"Mac Undo\";\n  };\n\n  Mac_Select_All: Mac_SelAll {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(A)>;\n    display-name = \"Mac Select All\";\n  };\n\n  Mac_Mission_Control: Mac_ShowAW {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(UP_ARROW)>;\n    display-name = \"Mac Show All Windows\";\n  };\n\n  Mac_Snip_Tool: Mac_Snip {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LC(LG(LS(NUMBER_4)))>;\n    display-name = \"Mac Screen Snip\";\n  };\n\n  Win_Close_Program: Win_Close_Program {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LA(F4)>;\n    display-name = \"Windows Close\";\n  };\n\n  Win_Settings_Menu: Win_Settings_Menu {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(I)>;\n    display-name = \"Windows Settings\";\n  };\n\n  Win_Lock_PC: Win_Lock_PC {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(L)>;\n    display-name = \"Windows Lock\";\n  };\n\n  Win_Tile_Left: Win_Tile_Left {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(LEFT)>;\n    display-name = \"Windows Tile Left\";\n  };\n\n  Win_Tile_Up: Win_Tile_Up {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(UP_ARROW)>;\n    display-name = \"Windows Tile Up\";\n  };\n\n  Win_Tile_Down: Win_Tile_Down {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(DOWN)>;\n    display-name = \"Windows Tile Down\";\n  };\n\n  Win_Tile_Right: Win_Tile_Right {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(RIGHT)>;\n    display-name = \"Windows Tile Right\";\n  };\n\n  Mac_Spotlight_Search: Mac_Spotlight_Search {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(SPACE)>;\n    display-name = \"Mac Spotlight Search\";\n  };\n\n  Mac_Close_Program: Mac_Close_Program {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(Q)>;\n    display-name = \"Mac Close Program\";\n  };\n\n  Mac_Strike_Through_Text: Mac_Strike_Through_Text {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&kp LG(LS(X))>;\n    display-name = \"Mac Strikethrough Text\";\n  };\n\n  Double_Click: Double_Click {\n    compatible = \"zmk,behavior-macro\";\n    #binding-cells = <0>;\n    bindings = <&mkp MB1 &mkp MB1>;\n    display-name = \"Double Click\";\n  };"}};</script>
+<script>
+(() => {
+'use strict';
+const D = window.DATA;
+const KF = 'adv360.keymap';
+const FILES = {};
+Object.keys(D.files).forEach(k => FILES[k] = D.files[k].split('\n'));
+const TOKRE = /&\S+(?:[ \t]+(?!&)\S+)*/g;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LN = ['Default', 'Keypad', 'Mod', 'Macro'];
+const MODS = {LG:'⌘',RG:'⌘',LC:'⌃',RC:'⌃',LS:'⇧',RS:'⇧',LA:'⌥',RA:'⌥'};
+const MOD_NAME = {LG:'⌘ Cmd', LC:'⌃ Ctrl', LS:'⇧ Shift', LA:'⌥ Alt'};
+const KC = {EQUAL:'=',MINUS:'-',TAB:'Tab',ESC:'Esc',SPACE:'Space',ENTER:'Enter',RET:'Enter',BSPC:'⌫',BACKSPACE:'Bksp',DEL:'Del',DELETE:'Del',INS:'Ins',HOME:'Home',END:'End',PG_UP:'PgUp',PG_DN:'PgDn',LEFT:'←',RIGHT:'→',UP:'↑',DOWN:'↓',UP_ARROW:'↑',DOWN_ARROW:'↓',CAPS:'Caps',CAPSLOCK:'Caps',LSHFT:'Shift',RSHFT:'Shift',LSHIFT:'Shift',RSHIFT:'Shift',LCTRL:'Ctrl',RCTRL:'Ctrl',LEFT_CONTROL:'Ctrl',RIGHT_CONTROL:'Ctrl',LALT:'Alt',RALT:'Alt',LEFT_ALT:'Alt',RIGHT_ALT:'Alt',LGUI:'Cmd',RGUI:'Cmd',COMMA:',',DOT:'.',FSLH:'/',SEMI:';',SQT:"'",DQT:'"',LBKT:'[',RBKT:']',LBRC:'{',RBRC:'}',LPAR:'(',RPAR:')',BSLH:'\\',BACKSLASH:'\\',GRAVE:'`',COLON:':',AT:'@',K_MENU:'Menu',C_MENU:'Menu',C_PLAY_PAUSE:'Play',C_PREV:'Prev',C_NEXT:'Next',C_MUTE:'Mute',C_VOL_UP:'Vol+',C_VOL_DN:'Vol−',K_SCREENSAVER:'Screen',PSCRN:'PrtSc',INT_KATAKANAHIRAGANA:'かな',KP_NUM:'Num',KP_EQUAL:'=',KP_DIVIDE:'÷',KP_MULTIPLY:'×',KP_MINUS:'−',KP_PLUS:'+',KP_ENTER:'Enter',KP_DOT:'.'};
+const KEY_GROUPS = [
+  {name:'Letters', codes:'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')},
+  {name:'Numbers', codes:['NUMBER_1','NUMBER_2','NUMBER_3','NUMBER_4','NUMBER_5','NUMBER_6','NUMBER_7','NUMBER_8','NUMBER_9','NUMBER_0']},
+  {name:'Symbols', codes:['EQUAL','MINUS','LBKT','RBKT','BSLH','SEMI','SQT','COMMA','DOT','FSLH','GRAVE','LPAR','RPAR','LBRC','RBRC','DQT','COLON']},
+  {name:'Edit & nav', codes:['TAB','ESC','SPACE','ENTER','BSPC','DEL','INS','HOME','END','PG_UP','PG_DN','LEFT','RIGHT','UP','DOWN','CAPS']},
+  {name:'Modifiers', codes:['LSHFT','RSHFT','LCTRL','RCTRL','LALT','RALT','LGUI','RGUI']},
+  {name:'Function', codes:Array.from({length:12},(_,n)=>'F'+(n+1))},
+  {name:'Media & system', codes:['C_PLAY_PAUSE','C_PREV','C_NEXT','C_MUTE','C_VOL_UP','C_VOL_DN','K_MENU','K_SCREENSAVER','PSCRN']}
+];
+
+/* ---------- keycode + binding parsing ---------- */
+function kcLabel(c) {
+  if (!c) return '';
+  let m = /^(LG|RG|LC|RC|LS|RS|LA|RA)\((.*)\)$/.exec(c);
+  if (m) return MODS[m[1]] + kcLabel(m[2]);
+  if (Object.prototype.hasOwnProperty.call(KC, c)) return KC[c];
+  if (/^[A-Z]$/.test(c)) return c;
+  if ((m = /^(?:KP_)?N(?:UMBER_)?(\d)$/.exec(c))) return m[1];
+  if (/^F\d+$/.test(c)) return c;
+  return c.toLowerCase().replace(/_/g, ' ');
+}
+function wrapMods(code, mods) { return mods.slice().reverse().reduce((acc, m) => `${m}(${acc})`, code); }
+function parse(raw) {
+  const p = String(raw || '&none').trim().split(/\s+/);
+  const beh = p[0].replace(/^&/, '');
+  const a = p.slice(1);
+  const base = {beh, args: a, raw: p.join(' ')};
+  switch (beh) {
+    case 'kp': {
+      let c = a[0] || 'NONE', mods = [], m;
+      while ((m = /^(LG|RG|LC|RC|LS|RS|LA|RA)\((.*)\)$/.exec(c))) { mods.push(m[1].replace(/^R/, 'L')); c = m[2]; }
+      return {...base, kind:'kp', code:c, mods, label: kcLabel(a[0])};
+    }
+    case 'tpf': return {...base, kind:'hold', hold:a[0], tap:a[1], label:kcLabel(a[1]), sub: kcLabel(a[0]) + ' hold'};
+    case 'mo': case 'tog': {
+      const t = +a[0];
+      return {...base, kind:'layer', target:t, mode:beh, label: LN[t], sub: beh === 'mo' ? '(hold)' : 'toggle'};
+    }
+    case 'trans': return {...base, kind:'trans', label:'▽'};
+    case 'none': return {...base, kind:'none', label:''};
+    case 'bt': {
+      const c = a[0];
+      if (c === 'BT_SEL') return {...base, kind:'bt', bt:'BT_SEL ' + a[1], label:'BT ' + a[1], sub:'select'};
+      if (c === 'BT_CLR') return {...base, kind:'bt', bt:'BT_CLR', label:'BT', sub:'clear'};
+      return {...base, kind:'bt', bt:c, label:'BT', sub:c.replace('BT_','').toLowerCase()};
+    }
+    case 'bl': return {...base, kind:'other', label:'BL', sub:(a[0]||'').replace('BL_','').toLowerCase()};
+    case 'rgb_ug': return {...base, kind:'other', label:'RGB', sub:a.join(' ').replace('RGB_','').toLowerCase()};
+    case 'bootloader': return {...base, kind:'danger', label:'Boot', sub:'bootloader'};
+    case 'studio_unlock': return {...base, kind:'other', label:'Studio', sub:'unlock'};
+    default:
+      if (D.macros.some(m => m.id === beh) || beh.startsWith('macro_')) {
+        return {...base, kind:'macro', macro:beh, label: beh.replace(/^macro_/, '').replace(/_/g,' ').replace(/^./, c => c.toUpperCase()), sub:'macro'};
+      }
+      return {...base, kind:'other', label:beh, sub:''};
+  }
+}
+
+/* ---------- state ---------- */
+const S = {
+  layer: 0,
+  edits: {},                                       // "l:i" -> raw
+  tpf: {term: 180, flavor: D.tpf.flavor, hold: D.tpf.hold.slice()}, // seeded: term 200 -> 180 pending
+  macros: {},                                      // id -> steps draft
+  pick: null, pop: null, mdl: null,
+  sheet: false, sheetTab: 'diff',
+  branch: 'keymap/layer-tweaks', backup: true, msg: '',
+  build: {stage: 'idle'}, showCombos: true
+};
+const curRaw = (l, i) => (S.edits[l + ':' + i] !== undefined ? S.edits[l + ':' + i] : D.layers[l].keys[i].raw);
+const macroById = id => D.macros.find(m => m.id === id);
+
+/* ---------- geometry (KLE-style rotation, tented halves) ---------- */
+const SPLAY = 8, CTR = [9.1, 2.6], PAD = 0.45, BULGE = {combo_studio_unlock: 8.2, Dfffsdfa: -1.5};
+const rad = d => d * Math.PI / 180;
+const rotPt = ([x, y], [cx, cy], deg) => { const t = rad(deg), c = Math.cos(t), s = Math.sin(t), dx = x - cx, dy = y - cy; return [cx + dx * c - dy * s, cy + dx * s + dy * c]; };
+const G = D.info.map((k, i) => {
+  let p = [k.x, k.y];
+  const r = k.r || 0;
+  if (r) p = rotPt(p, [k.rx, k.ry], r);
+  const hang = k.col <= 8 ? SPLAY : -SPLAY;
+  p = rotPt(p, CTR, hang);
+  return {i, x: p[0], y: p[1], w: k.w || 1, h: k.h || 1, rot: r + hang, row: k.row, col: k.col};
+});
+const corners = g => { const t = rad(g.rot), c = Math.cos(t), s = Math.sin(t); return [[0,0],[g.w,0],[g.w,g.h],[0,g.h]].map(([u,v]) => [g.x + u*c - v*s, g.y + u*s + v*c]); };
+const center = g => { const t = rad(g.rot), c = Math.cos(t), s = Math.sin(t); return [g.x + (g.w/2)*c - (g.h/2)*s, g.y + (g.w/2)*s + (g.h/2)*c]; };
+let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+const grow = (x, y) => { minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); };
+G.forEach(g => corners(g).forEach(([x, y]) => grow(x, y)));
+const hasCombo = new Set();
+let ARCS = D.combos.map((c, n) => {
+  const single = c.positions.length < 2;
+  const A = center(G[c.positions[0]]);
+  const B = single ? A : center(G[c.positions[1]]);
+  const bulge = single ? 0 : (BULGE[c.name] ?? 1.2);
+  const mid = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2];
+  const peak = single ? [A[0], A[1] - 0.8] : [mid[0], mid[1] + bulge / 2];
+  if (single) hasCombo.add(c.positions[0]);
+  grow(peak[0], peak[1] + (single ? 0 : 0.7));
+  return {n, c, A, B, mid, bulge, peak, single, studio: c.studio, name: c.studio ? 'Studio unlock · Studio builds only' : (parse(c.bindings).label + (c.positions.length ? '' : ''))};
+});
+const ox = PAD - minX, oy = PAD - minY;
+const BW = (maxX - minX) + 2 * PAD, BH = (maxY - minY) + 2 * PAD;
+G.forEach(g => { g.x += ox; g.y += oy; });
+const sh = p => [p[0] + ox, p[1] + oy];
+ARCS.forEach(a => { a.A = sh(a.A); a.B = sh(a.B); a.mid = sh(a.mid); a.peak = sh(a.peak); });
+
+/* ---------- reachability + validation ---------- */
+function reach(t) {
+  const out = [];
+  for (let l = 0; l < 4; l++) D.layers[l].keys.forEach((K, i) => {
+    const p = parse(curRaw(l, i));
+    if (p.kind === 'layer' && p.target === t) out.push({l, i, p});
+  });
+  return out;
+}
+function unreachable() { return [1, 2, 3].filter(t => reach(t).length === 0); }
+
+/* ---------- changes + diff ---------- */
+function changes() {
+  const out = [];
+  Object.keys(S.edits).forEach(k => {
+    const [l, i] = k.split(':').map(Number);
+    if (S.edits[k] !== D.layers[l].keys[i].raw) out.push({t:'key', l, i});
+  });
+  if (S.tpf.term !== D.tpf.term) out.push({t:'term'});
+  if (S.tpf.flavor !== D.tpf.flavor) out.push({t:'flavor'});
+  if (S.tpf.hold.slice().sort((a,b)=>a-b).join() !== D.tpf.hold.slice().sort((a,b)=>a-b).join()) out.push({t:'hold'});
+  Object.keys(S.macros).forEach(id => {
+    const m = macroById(id);
+    if (S.macros[id].join('|') !== m.steps.join('|')) out.push({t:'macro', id});
+  });
+  return out;
+}
+const macroLine = (text, steps) => text.replace(/bindings = .*;/, 'bindings = ' + steps.map(s => `<${s}>`).join(', ') + ';');
+function hunks() {
+  const H = [], lines = new Set(), ch = changes();
+  const groups = {};
+  ch.filter(c => c.t === 'key').forEach(c => {
+    const K = D.layers[c.l].keys[c.i];
+    (groups[K.line] ||= []).push({c, K});
+  });
+  Object.keys(groups).forEach(ln => {
+    const items = groups[ln].slice().sort((a, b) => b.K.start - a.K.start);
+    const orig = FILES[KF][ln - 1];
+    let text = orig;
+    items.forEach(({c, K}) => { text = text.slice(0, K.start) + S.edits[c.l + ':' + c.i] + text.slice(K.end); });
+    const title = items.slice().reverse().map(({c, K}) => `${LN[c.l]} #${c.i} ${parse(K.raw).label} → ${parse(S.edits[c.l + ':' + c.i]).label}`).join(' · ');
+    H.push({file: KF, ln: +ln, title, minus: [orig], plus: [text]});
+    lines.add(KF + ':' + ln);
+  });
+  ch.filter(c => c.t === 'term').forEach(() => {
+    const o = FILES[KF][D.tpf.termLine - 1];
+    H.push({file: KF, ln: D.tpf.termLine, title: 'tpf · tapping-term-ms', minus: [o], plus: [o.replace(/<\d+>/, `<${S.tpf.term}>`)]});
+    lines.add(KF + ':' + D.tpf.termLine);
+  });
+  ch.filter(c => c.t === 'flavor').forEach(() => {
+    const ind = FILES[KF][D.tpf.termLine - 1].match(/^\s*/)[0];
+    const line = ind + `flavor = "${S.tpf.flavor}";`;
+    if (D.tpf.flavorLine == null) H.push({file: KF, ln: D.tpf.termLine, title: 'tpf · flavor (new line)', minus: [], plus: [line]});
+    else H.push({file: KF, ln: D.tpf.flavorLine, title: 'tpf · flavor', minus: [FILES[KF][D.tpf.flavorLine - 1]], plus: [line]});
+    lines.add(KF + ':flavor');
+  });
+  ch.filter(c => c.t === 'hold').forEach(() => {
+    const o = FILES[KF][D.tpf.holdLine - 1];
+    const list = S.tpf.hold.slice().sort((a,b)=>a-b).join(' ');
+    H.push({file: KF, ln: D.tpf.holdLine, title: 'tpf · hold-trigger-key-positions', minus: [o], plus: [o.replace(/=\s*<[^>]*>/, `= <${list}>`)]});
+    lines.add(KF + ':' + D.tpf.holdLine);
+  });
+  ch.filter(c => c.t === 'macro').forEach(c => {
+    const m = macroById(c.id);
+    const o = FILES[m.file][m.line - 1];
+    H.push({file: m.file, ln: m.line, title: `macro · ${c.id}`, minus: [o], plus: [macroLine(o, S.macros[c.id])]});
+    lines.add(m.file + ':' + m.line);
+  });
+  return {H, lines: lines.size};
+}
+
+/* ---------- bake (commit) ---------- */
+function bake() {
+  const byLine = {};
+  Object.keys(S.edits).forEach(k => {
+    const [l, i] = k.split(':').map(Number);
+    const K = D.layers[l].keys[i];
+    if (S.edits[k] !== K.raw) (byLine[K.line] ||= []).push({K, raw: S.edits[k]});
+  });
+  const kf = FILES[KF];
+  Object.keys(byLine).forEach(ln => {
+    const items = byLine[ln].slice().sort((a, b) => b.K.start - a.K.start);
+    let text = kf[ln - 1];
+    items.forEach(it => { text = text.slice(0, it.K.start) + it.raw + text.slice(it.K.end); });
+    kf[ln - 1] = text;
+    const toks = [...text.matchAll(TOKRE)];
+    const all = [];
+    D.layers.forEach(L => L.keys.forEach(K => { if (K.line === +ln) all.push(K); }));
+    all.forEach((K, idx) => { const t = toks[idx]; K.raw = t[0]; K.start = t.index; K.end = t.index + t[0].length; });
+  });
+  if (S.tpf.term !== D.tpf.term) {
+    kf[D.tpf.termLine - 1] = kf[D.tpf.termLine - 1].replace(/<\d+>/, `<${S.tpf.term}>`);
+    D.tpf.term = S.tpf.term;
+  }
+  const holdSorted = S.tpf.hold.slice().sort((a,b)=>a-b);
+  if (holdSorted.join() !== D.tpf.hold.slice().sort((a,b)=>a-b).join()) {
+    kf[D.tpf.holdLine - 1] = kf[D.tpf.holdLine - 1].replace(/=\s*<[^>]*>/, `= <${holdSorted.join(' ')}>`);
+    D.tpf.hold = holdSorted;
+  }
+  if (S.tpf.flavor !== D.tpf.flavor) {
+    const ind = kf[D.tpf.termLine - 1].match(/^\s*/)[0];
+    const line = ind + `flavor = "${S.tpf.flavor}";`;
+    if (D.tpf.flavorLine == null) {
+      const at = D.tpf.termLine;
+      kf.splice(at, 0, line);
+      D.layers.forEach(L => L.keys.forEach(K => { if (K.line > at) K.line++; }));
+      D.macros.forEach(m => { if (m.file === KF && m.line > at) m.line++; });
+      if (D.tpf.holdLine > at) D.tpf.holdLine++;
+      D.tpf.flavorLine = at + 1;
+    } else kf[D.tpf.flavorLine - 1] = line;
+    D.tpf.flavor = S.tpf.flavor;
+  }
+  Object.keys(S.macros).forEach(id => {
+    const m = macroById(id), steps = S.macros[id];
+    if (steps.join('|') === m.steps.join('|')) return;
+    FILES[m.file][m.line - 1] = macroLine(FILES[m.file][m.line - 1], steps);
+    m.steps = steps.slice();
+  });
+  S.edits = {}; S.macros = {};
+}
+
+/* ---------- rendering: pills, board, validator, changes ---------- */
+function renderPills() {
+  const un = new Set(unreachable());
+  $('#pills').innerHTML = [0,1,2,3].map(t => {
+    const warn = un.has(t);
+    const n = Object.keys(S.edits).filter(k => k.startsWith(t + ':')).length;
+    return `<button class="pill${warn ? ' warn' : ''}" type="button" data-l="${t}" aria-pressed="${S.layer === t}" style="--pc:var(--layer-${t + 1});--on-pc:var(--on-layer-${t + 1})">` +
+      `<i class="sw"></i>${LN[t]}${warn ? '<b class="wmark" title="unreachable">!</b>' : ''}${n ? `<span class="cnt">${n}</span>` : ''}</button>`;
+  }).join('');
+  $('#comboCount').textContent = D.combos.length;
+  $('#combosBtn').setAttribute('aria-pressed', String(S.showCombos));
+  $('#board').classList.toggle('nocombos', !S.showCombos);
+}
+function renderBoard() {
+  const L = S.layer, board = $('#board');
+  let h = '';
+  G.forEach(g => {
+    const raw = curRaw(L, g.i), p = parse(raw), dirty = S.edits[L + ':' + g.i] !== undefined;
+    const cls = ['key', 'kind-' + p.kind, dirty ? 'dirty' : '', hasCombo.has(g.i) ? 'has-combo' : ''].join(' ');
+    const glow = p.kind === 'layer' ? `--glow:var(--layer-${p.target + 1});` : '';
+    h += `<button type="button" class="${cls}" data-i="${g.i}" title="#${g.i}  ${esc(raw)}" aria-label="${esc(LN[L] + ' #' + g.i + ': ' + p.label + ' ' + p.sub)}" ` +
+      `style="--x:${g.x.toFixed(3)};--y:${g.y.toFixed(3)};--w:${g.w};--h:${g.h};--r:${g.rot.toFixed(3)};${glow}">` +
+      `<span class="cap">${p.sub ? `<span class="sub">${esc(p.sub)}</span>` : ''}<span class="legend">${esc(p.label)}</span></span></button>`;
+  });
+  h += `<svg class="arcs" viewBox="0 0 ${BW.toFixed(3)} ${BH.toFixed(3)}">`;
+  ARCS.forEach(a => {
+    if (a.single) return;
+    const d = `M${a.A[0].toFixed(3)} ${a.A[1].toFixed(3)} Q${a.mid[0].toFixed(3)} ${(a.mid[1] + a.bulge).toFixed(3)} ${a.B[0].toFixed(3)} ${a.B[1].toFixed(3)}`;
+    h += `<path class="arc${a.studio ? ' studio' : ''}" d="${d}"/><path class="arc-hit" data-combo="${a.n}" d="${d}"/>`;
+  });
+  h += '</svg>';
+  ARCS.forEach(a => {
+    const label = a.studio ? `⋈ Studio unlock <em>· Studio builds only</em>` : `⋈ ${esc(parse(a.c.bindings).label)}`;
+    h += `<button type="button" class="ctag${a.studio ? ' studio' : ''}" data-combo="${a.n}" style="--tx:${a.peak[0].toFixed(3)};--ty:${a.peak[1].toFixed(3)}">${label}</button>`;
+  });
+  board.innerHTML = h;
+  board.style.setProperty('--bw', BW.toFixed(3));
+  board.style.setProperty('--bh', BH.toFixed(3));
+  board.classList.toggle('picking', !!S.pick);
+  layoutBoard();
+}
+function layoutBoard() {
+  const wrap = $('#boardwrap'), board = $('#board');
+  const avail = wrap.clientWidth - 12;
+  const byH = (innerHeight - 250) / BH;
+  let U = Math.min(avail / BW, 62, Math.max(byH, 30));
+  U = Math.max(U, window.innerWidth <= 720 ? 30 : 40);
+  board.style.setProperty('--u', U.toFixed(1) + 'px');
+}
+function tipFor(t) {
+  const r = reach(t);
+  if (!r.length) return `Nothing reaches ${LN[t]}: no key on any layer switches to it.`;
+  return `Reached from ${r.map(x => `${LN[x.l]} #${x.i} (${x.p.label}${x.p.sub ? ' ' + x.p.sub : ''})`).join(' · ')}`;
+}
+function highlightReach(t) {
+  const board = $('#board');
+  if (t == null) {
+    board.classList.remove('reaching');
+    $$('.key', board).forEach(k => k.classList.remove('hl'));
+    $('#tip').classList.remove('on');
+    return;
+  }
+  board.style.setProperty('--hl', `var(--layer-${t + 1})`);
+  const set = new Set(reach(t).filter(x => x.l === S.layer).map(x => x.i));
+  board.classList.add('reaching');
+  $$('.key', board).forEach(k => k.classList.toggle('hl', set.has(+k.dataset.i)));
+  const tip = $('#tip');
+  tip.textContent = tipFor(t);
+  tip.classList.add('on');
+}
+function renderValidator() {
+  const bad = unreachable().filter(t => t === 2);
+  const el = $('#validator');
+  if (bad.length) {
+    el.className = 'card-float warn';
+    el.innerHTML = `<div class="v-head"><span class="v-ico">!</span><b>Layer 2 'mod' (Bluetooth, bootloader) is unreachable — no key activates it</b></div>` +
+      `<p>Nothing on Default, Keypad or Macro switches to Mod, so its Bluetooth and bootloader keys can't be reached from the board.</p>` +
+      `<div class="v-act"><button class="btn primary" type="button" data-act="fix">Fix: assign a key…</button></div>` +
+      `<div class="v-info">ⓘ Combo ⋈ 46+59 (Studio unlock) only exists in Studio builds.</div>`;
+  } else {
+    el.className = 'card-float';
+    el.innerHTML = `<div class="v-head"><span class="v-ico ok">✓</span><b>All 4 layers reachable</b></div>` +
+      `<div class="v-info">ⓘ Combo ⋈ 46+59 (Studio unlock) only exists in Studio builds.</div>`;
+  }
+  $('#pickbar').hidden = !S.pick;
+  if (S.pick) $('#pickText').textContent = `Pick a key on Default to switch to ${LN[S.pick.target]} (${S.pick.target === 2 ? 'Bluetooth, bootloader' : ''})`;
+}
+function renderChanges() {
+  const n = changes().length, b = S.build, el = $('#changes');
+  let html;
+  if (b.stage && b.stage !== 'idle' && b.stage !== 'done') {
+    html = `<i class="spin"></i>Build #${b.run} <span>· ${b.stage === 'building' ? b.pct + '%' : b.stage}</span>`;
+  } else if (n) {
+    html = `<i class="dot-accent"></i><b>${n} change${n > 1 ? 's' : ''}</b><span>Review & commit</span>`;
+  } else {
+    html = `<i class="dot-ok"></i><b>No pending changes</b><span>· ${D.lastSha}</span>`;
+  }
+  el.innerHTML = html;
+}
+function renderAll() {
+  renderPills(); renderBoard(); renderValidator(); renderChanges();
+  if (S.sheet) renderSheet();
+}
+function setLayer(t) {
+  S.layer = t; S.pick = null; closePop(); highlightReach(null); renderAll();
+}
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast._h); toast._h = setTimeout(() => t.classList.remove('on'), 2200);
+}
+
+/* ---------- key popover ---------- */
+const TABS = [['kp','Key press'],['hold','Hold-tap'],['layer','Layer'],['macro','Macro'],['bt','Bluetooth'],['trans','Transparent'],['none','None']];
+function draftFrom(l, i) {
+  const p = parse(curRaw(l, i));
+  const d = {tab: p.kind === 'kp' ? 'kp' : p.kind === 'hold' ? 'hold' : p.kind === 'layer' ? 'layer' : p.kind === 'macro' ? 'macro' : p.kind === 'bt' ? 'bt' : p.kind === 'trans' ? 'trans' : p.kind === 'none' ? 'none' : 'kp',
+    kpCode: p.kind === 'kp' ? p.code : 'A', mods: p.kind === 'kp' ? p.mods.slice() : [],
+    hold: p.kind === 'hold' ? p.hold : 'F1', tap: p.kind === 'hold' ? p.tap : 'A', field: 'tap',
+    layerT: p.kind === 'layer' ? p.target : 1, layerMode: p.kind === 'layer' && p.mode === 'tog' ? 'tog' : 'mo',
+    macroId: p.kind === 'macro' ? p.macro : (D.macros[0] || {}).id, bt: p.kind === 'bt' ? p.bt : 'BT_SEL 0',
+    search: '', touched: false};
+  return d;
+}
+function buildRaw(d) {
+  switch (d.tab) {
+    case 'kp': return '&kp ' + wrapMods(d.kpCode, d.mods);
+    case 'hold': return `&tpf ${d.hold} ${d.tap}`;
+    case 'layer': return d.layerMode === 'mo' ? `&mo ${d.layerT}` : `&tog ${d.layerT}`;
+    case 'macro': return '&' + d.macroId;
+    case 'bt': return '&bt ' + d.bt;
+    case 'trans': return '&trans';
+    default: return '&none';
+  }
+}
+function keyGrid(d) {
+  const q = d.search.trim().toLowerCase();
+  const target = d.tab === 'hold' ? d[d.field] : d.kpCode;
+  return KEY_GROUPS.map(g => {
+    const codes = g.codes.filter(c => !q || c.toLowerCase().includes(q) || kcLabel(c).toLowerCase().includes(q));
+    if (!codes.length) return '';
+    return `<div class="kg-h">${g.name}</div><div class="kgrid">` + codes.map(c =>
+      `<button type="button" class="kc" data-kc="${c}" aria-pressed="${c === target}" title="${c}">${esc(kcLabel(c))}</button>`).join('') + '</div>';
+  }).join('') || '<p class="fine">No matching keys. Try a shorter search.</p>';
+}
+function popBody(P) {
+  const d = P.d;
+  switch (d.tab) {
+    case 'kp': return `<input class="search" type="search" placeholder="Search keys, e.g. ctrl, F5, bspc" value="${esc(d.search)}" data-role="search">
+      <div class="mods">${MODS_LIST.map(m => `<button type="button" data-mod="${m}" aria-pressed="${d.mods.includes(m)}">${MOD_NAME[m]}</button>`).join('')}</div>
+      <div id="keygrid">${keyGrid(d)}</div>`;
+    case 'hold': return `<div class="fieldsel">
+        <button type="button" data-field="hold" aria-pressed="${d.field === 'hold'}"><small>Hold</small><b>${esc(kcLabel(d.hold))}</b></button>
+        <button type="button" data-field="tap" aria-pressed="${d.field === 'tap'}"><small>Tap</small><b>${esc(kcLabel(d.tap))}</b></button></div>
+      <input class="search" type="search" placeholder="Search keys for ${d.field}" value="${esc(d.search)}" data-role="search">
+      <div id="keygrid">${keyGrid(d)}</div>
+      <button class="link" type="button" data-act="open-tpf">Hold-tap settings: timing, flavor, positions →</button>`;
+    case 'layer': return `<div class="lcards">${[0,1,2,3].map(t => `<button type="button" class="lc" style="--pc:var(--layer-${t + 1});--on-pc:var(--on-layer-${t + 1})" data-lt="${t}" aria-pressed="${d.layerT === t}"><i></i>${LN[t]}<small>${t === 2 ? 'Bluetooth, bootloader' : t === 0 ? 'base layer' : ''}</small></button>`).join('')}</div>
+      <div class="lmode"><button type="button" data-lm="mo" aria-pressed="${d.layerMode === 'mo'}">Hold (momentary)</button><button type="button" data-lm="tog" aria-pressed="${d.layerMode === 'tog'}">Toggle</button></div>
+      <p class="fine">Layer keys glow in the target layer's color on the board. Momentary keys return to the previous layer on release.</p>`;
+    case 'macro': {
+      const q = d.search.trim().toLowerCase();
+      const ms = D.macros.filter(m => !q || m.id.toLowerCase().includes(q) || m.display.toLowerCase().includes(q));
+      return `<input class="search" type="search" placeholder="Search macros" value="${esc(d.search)}" data-role="search">
+        <div class="list">${ms.map(m => `<button type="button" class="li" data-mac="${m.id}" aria-pressed="${d.macroId === m.id}"><span>${esc(m.display)}</span><code>&amp;${m.id}</code></button>`).join('')}</div>
+        <button class="link" type="button" data-act="open-macro">Edit steps of ${esc(d.macroId)} →</button>`;
+    }
+    case 'bt': {
+      const opts = ['BT_SEL 0','BT_SEL 1','BT_SEL 2','BT_SEL 3','BT_SEL 4','BT_NXT','BT_PRV','BT_CLR'];
+      return `<div class="kgrid" style="margin-top:4px">${opts.map(o => `<button type="button" class="kc" style="min-width:64px" data-bt="${o}" aria-pressed="${d.bt === o}">${o.replace('BT_','').replace('SEL ', 'Profile ')}</button>`).join('')}</div>
+        <p class="fine">Bluetooth controls live on Mod in this keymap. Those keys are unreachable until a key switches to Mod.</p>`;
+    }
+    case 'trans': return `<p class="fine" style="font-size:13px;color:var(--text-secondary)">Transparent passes the key through to the layer below. Use it on Keypad and Macro, where most keys fall through to Default.</p>`;
+    default: return `<p class="fine" style="font-size:13px;color:var(--text-secondary)">None disables the key. It does nothing on this layer and does not pass through.</p>`;
+  }
+}
+const MODS_LIST = ['LG','LC','LS','LA'];
+function renderPop() {
+  const P = S.pop, el = $('#pop');
+  if (P.mode === 'combo') {
+    const c = D.combos[P.idx];
+    el.innerHTML = `<div class="pop-head"><div><div class="eyebrow">Combo ${c.name}</div><h3>${c.studio ? 'Studio unlock' : esc(parse(c.bindings).label)}</h3>` +
+      `<div class="pop-now">positions ${c.positions.join(' + ')} · ${esc(c.bindings)}</div></div><button class="icon" type="button" data-act="close">×</button></div>` +
+      `<div class="pop-body"><p class="fine" style="font-size:13px;color:var(--text-secondary);margin-top:0">Presses of ${c.positions.map(p => '#' + p).join(' and ')} within ${c.timeout || 30} ms trigger ${esc(c.bindings)}.</p>` +
+      `<p class="fine" style="font-size:13px;color:var(--text-secondary)">Layers: ${c.layers ? c.layers.map(x => LN[x]).join(', ') : 'all'}</p>` +
+      (c.studio ? `<div class="okbar"><span>ⓘ</span><span>Lives inside <code>#if defined(CONFIG_ZMK_STUDIO)</code>. It only exists in Studio builds, so a plain build has no unlock combo.</span></div>` : '') +
+      `</div><div class="pop-foot"><span class="preview">read-only in this concept</span><button class="btn" type="button" data-act="close">Done</button></div>`;
+    el.classList.add('open');
+    return;
+  }
+  const d = P.d, cur = curRaw(P.l, P.i), info = D.info[P.i];
+  const nowLabel = parse(cur).label;
+  el.innerHTML = `<div class="pop-head"><div><div class="eyebrow">#${P.i} · ${LN[P.l]} · row ${info.row} col ${info.col}${P.assign ? ' · assign' : ''}</div>` +
+    `<h3>${esc(nowLabel)}</h3><div class="pop-now">${esc(cur)}</div></div><button class="icon" type="button" data-act="close">×</button></div>` +
+    `<div class="seg">${TABS.map(([id, label]) => `<button type="button" data-tab="${id}" aria-pressed="${d.tab === id}">${label}</button>`).join('')}</div>` +
+    `<div class="pop-body" id="popBody">${popBody(P)}</div>` +
+    `<div class="pop-foot"><span class="preview">→ <b>${esc(buildRaw(d))}</b></span><span style="display:flex;gap:6px"><button class="btn ghost" type="button" data-act="reset">Reset</button><button class="btn primary" type="button" data-act="apply">Apply</button></span></div>`;
+  el.classList.add('open');
+}
+function placePop(anchor) {
+  const el = $('#pop');
+  const mobile = window.innerWidth <= 720;
+  el.classList.toggle('m', mobile);
+  if (mobile || !anchor) return;
+  const r = anchor.getBoundingClientRect(), pw = 356, ph = el.offsetHeight;
+  let x = r.right + 16;
+  if (x + pw > innerWidth - 12) x = r.left - pw - 16;
+  if (x < 12) x = Math.max(12, (innerWidth - pw) / 2);
+  const y = Math.min(Math.max(r.top + r.height / 2 - ph / 2, 70), innerHeight - ph - 12);
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+}
+function openKey(l, i, anchor, preset) {
+  S.pop = {mode: 'key', l, i, d: draftFrom(l, i), assign: !!(preset && preset.assign)};
+  if (preset) Object.assign(S.pop.d, preset.draft, {touched: true, tab: 'layer'});
+  renderPop(); placePop(anchor);
+}
+function openCombo(idx, anchor) {
+  S.pop = {mode: 'combo', idx}; renderPop(); placePop(anchor);
+}
+function closePop() { S.pop = null; $('#pop').classList.remove('open'); }
+function applyPop() {
+  const P = S.pop, d = P.d;
+  if (!d.touched && !P.assign) return closePop();
+  const raw = buildRaw(d), orig = D.layers[P.l].keys[P.i].raw, key = P.l + ':' + P.i;
+  if (raw === orig) delete S.edits[key]; else S.edits[key] = raw;
+  const label = parse(raw).label;
+  if (S.pick && P.assign) {
+    S.pick = null;
+    toast(`Layer 2 'mod' is reachable again via #${P.i} on Default`);
+  } else toast(`#${P.i} on ${LN[P.l]} → ${label}`);
+  closePop(); renderAll();
+}
+
+/* ---------- sheet: diff / commit / build ---------- */
+function renderSheet() {
+  const ch = changes(), sheet = $('#sheet'), t = S.sheetTab, b = S.build;
+  const title = ch.length ? `${ch.length} pending change${ch.length > 1 ? 's' : ''}` : 'Nothing pending';
+  let body = '', foot = '';
+  if (t === 'diff') {
+    const {H, lines} = hunks();
+    body = H.length ? H.map(h => `<div class="file"><span>${h.file}</span><span class="muted">line ${h.ln}</span></div>
+        <div class="hunk"><div class="hh"><b>${esc(h.title)}</b><span>@@ ${h.ln} @@</span></div>
+        ${h.minus.map(x => `<div class="dl minus">- ${esc(x)}</div>`).join('')}${h.plus.map(x => `<div class="dl plus">+ ${esc(x)}</div>`).join('')}</div>`).join('') +
+        `<div class="okbar"><span>✓</span><span><b>Round-trip safe.</b> Only ${lines} line${lines > 1 ? 's' : ''} of ${FILES[KF].length} changed. Comments, <code>#include</code>, <code>#if/#endif</code> and column alignment elsewhere are byte-identical.</span></div>`
+      : `<p class="fine" style="font-size:13px">The board matches the committed keymap. Edit a key to see its patch here.</p>` +
+        `<div class="okbar"><span>✓</span><span><b>Round-trip safe.</b> Parse and serialize with no edits give back the same bytes.</span></div>`;
+    body += `<div class="chips"><span class="chip">raw, read-only: #include "version.dtsi"</span><span class="chip">raw: #ifndef VERSION_MACRO</span></div>`;
+    foot = `<button class="btn ghost" type="button" data-act="discard" ${ch.length ? '' : 'disabled'}>Discard</button>` +
+      `<button class="btn primary" type="button" data-tab="commit" ${ch.length ? '' : 'disabled'}>Continue to commit →</button>`;
+  } else if (t === 'commit') {
+    if (!S.msg) S.msg = `keymap: ${ch.filter(c => c.t === 'key').length} key edit${ch.filter(c => c.t === 'key').length === 1 ? '' : 's'}${ch.some(c => c.t !== 'key') ? ', tpf tuning' : ''}`;
+    body = `<label class="field"><span>Branch</span><input type="text" data-role="branch" value="${esc(S.branch)}"></label>
+      <label class="field"><span>Commit message</span><textarea data-role="msg">${esc(S.msg)}</textarea></label>
+      <label class="check"><input type="checkbox" data-role="backup" ${S.backup ? 'checked' : ''}> Create backup branch <code>backup/V3.0-${D.lastSha}</code> first</label>
+      <p class="fine">Base <code>V3.0</code> · author Ali Aljufairi · ${ch.length} change${ch.length === 1 ? '' : 's'} to <code>adv360.keymap</code>${ch.some(c => c.t === 'macro') ? ' and <code>macros.dtsi</code>' : ''}</p>
+      <button class="btn primary wide" type="button" data-act="commit" ${ch.length ? '' : 'disabled'}>Commit and push to ${esc(S.branch)}</button>
+      <p class="fine">Pushing starts <code>build.yml</code>. It never flashes your keyboard.</p>`;
+  } else {
+    const done = b.stage === 'done';
+    const committed = b.stage && b.stage !== 'idle';
+    const pushed = committed && b.stage !== 'committing';
+    const built = b.stage === 'done';
+    const step = (ico, title, sub, extra = '') => `<div class="build-step"><span class="bs-ico ${ico}">${ico === 'done' ? '✓' : ico === 'run' ? '' : '·'}</span><div><b>${title}</b><div class="fine" style="margin:2px 0 0">${sub}</div>${extra}</div></div>`;
+    if (!committed) {
+      body = `<p class="fine" style="font-size:13px">Last build: <b>run #${D.lastRun}</b> · success · V3.0 <code>${D.lastSha}</code></p>` +
+        step('', 'Commit', 'Commit your changes to a branch to start a build.') +
+        step('', 'Build', 'GitHub Actions <code>build.yml</code> compiles both halves: <code>firmware-clique</code> and <code>firmware-no-clique</code>.') +
+        lockNote();
+    } else {
+      body = step(committed ? 'done' : 'run', 'Committed', `<code>${b.sha}</code> on <code>${esc(b.branch)}</code>`) +
+        step(pushed ? 'done' : 'run', 'Pushed', `to <code>origin/${esc(b.branch)}</code>`) +
+        step(built ? 'done' : pushed ? 'run' : '', `Build #${b.run} · build.yml`, built ? 'success · 3m 12s' : `running · ${b.pct || 0}%`,
+          pushed ? `<div class="bar"><i style="width:${built ? 100 : b.pct || 0}%"></i></div>` : '') +
+        (built ? `<div class="art"><button class="btn" type="button">firmware-clique ↓</button><button class="btn" type="button">firmware-no-clique ↓</button></div>` : '') +
+        (built ? `<p class="fine">Artifacts link to the run. Download the .uf2 and flash it yourself.</p>` : '') +
+        lockNote();
+    }
+    foot = `<span class="fine" style="margin:0">Last sync: GitHub App · ali-aljufairi only</span>`;
+  }
+  sheet.innerHTML = `<header class="sh-head"><div><div class="eyebrow">adv360.keymap · ${esc(S.branch)}</div><h2>${title}</h2></div><button class="icon" type="button" data-act="close-sheet" aria-label="Close">×</button></header>
+    <nav class="tabs" role="tablist">${[['diff','Diff'],['commit','Commit'],['build','Build']].map(([id, l]) => `<button type="button" role="tab" data-tab="${id}" aria-selected="${t === id}">${l}</button>`).join('')}</nav>
+    <div class="sh-body">${body}</div>${foot ? `<footer class="sh-foot">${foot}</footer>` : ''}`;
+  sheet.classList.toggle('open', S.sheet);
+}
+function lockNote() {
+  return `<div class="lock"><span>🔒</span><span><b>Never flashes your keyboard.</b> Flashing is a separate step you do yourself: put the keyboard in bootloader, copy the .uf2 over. ZMK Studio edits on the keyboard can override this build until you flash.</span></div>`;
+}
+let buildTimer = null;
+function commit() {
+  if (!changes().length) return;
+  const sha = 'b71d4e2';
+  bake();
+  S.build = {stage: 'committing', sha, branch: S.branch, run: D.lastRun + 1, pct: 0};
+  S.msg = '';
+  S.sheetTab = 'build';
+  renderAll();
+  setTimeout(() => { S.build.stage = 'pushing'; renderAll(); }, 650);
+  setTimeout(() => {
+    S.build.stage = 'building'; renderAll();
+    clearInterval(buildTimer);
+    buildTimer = setInterval(() => {
+      S.build.pct = Math.min(100, S.build.pct + 4);
+      if (S.build.pct >= 100) { clearInterval(buildTimer); S.build.stage = 'done'; toast('Build succeeded · artifacts ready. Nothing was flashed.'); }
+      renderAll();
+    }, 120);
+  }, 1500);
+}
+function discard() {
+  S.edits = {}; S.tpf = {term: D.tpf.term, flavor: D.tpf.flavor, hold: D.tpf.hold.slice()}; S.macros = {};
+  toast('Discarded pending changes');
+  renderAll();
+}
+
+/* ---------- modal: macro + hold-tap ---------- */
+const KEY_OPTS = () => KEY_GROUPS.map(g => `<optgroup label="${g.name}">` + g.codes.map(c => `<option value="${c}">${esc(kcLabel(c))}  (${c})</option>`).join('') + '</optgroup>').join('');
+function simulate(steps) {
+  let buf = '', caret = 0;
+  const CH = {LPAR:'(',RPAR:')',LBKT:'[',RBKT:']',LBRC:'{',RBRC:'}',SQT:"'",DQT:'"',SPACE:' ',COMMA:',',DOT:'.',EQUAL:'=',MINUS:'-',FSLH:'/',SEMI:';',GRAVE:'`',BSLH:'\\'};
+  steps.forEach(s => {
+    const code = s.replace(/^&kp\s+/, '');
+    if (code === 'LEFT') { caret = Math.max(0, caret - 1); return; }
+    if (code === 'RIGHT') { caret = Math.min(buf.length, caret + 1); return; }
+    if (code === 'BSPC') { if (caret > 0) { buf = buf.slice(0, caret - 1) + buf.slice(caret); caret--; } return; }
+    let ch = null;
+    if (CH[code] !== undefined) ch = CH[code];
+    else if (/^[A-Z]$/.test(code)) ch = code.toLowerCase();
+    else if (/^NUMBER_\d$/.test(code)) ch = code.slice(7);
+    if (ch !== null) { buf = buf.slice(0, caret) + ch + buf.slice(caret); caret += ch.length; }
+  });
+  return [buf.slice(0, caret), buf.slice(caret)];
+}
+function openMacro(id) {
+  const m = macroById(id);
+  if (!m) return;
+  S.pop = null; closePop();
+  S.mdl = {type: 'macro', id, steps: (S.macros[id] || m.steps).slice()};
+  renderModal(); showModal(true);
+}
+function openTpf() {
+  S.mdl = {type: 'tpf', term: S.tpf.term, flavor: S.tpf.flavor, hold: S.tpf.hold.slice(), padPos: 15, tap: 0, t0: 0};
+  closePop(); renderModal(); showModal(true);
+}
+function showModal(on) { $('#modalbg').classList.toggle('open', on); if (!on) S.mdl = null; }
+const FLAVOR_DESC = {
+  'balanced': 'ZMK default. A hold is decided by timing, and a tap is decided when another key is pressed.',
+  'hold-preferred': 'Holds win as soon as another key is pressed while this key is down.',
+  'tap-preferred': 'Taps win if another key is pressed before the term expires. Good for home-row mods.',
+  'tap-unless-interrupted': 'Taps win unless another key is pressed while this key is held. The strictest tap default.'
+};
+function macroModalHTML(M) {
+  const m = macroById(M.id);
+  const [before, after] = simulate(M.steps);
+  const origLine = FILES[m.file][m.line - 1];
+  const newLine = macroLine(origLine, M.steps);
+  const changed = M.steps.join('|') !== m.steps.join('|');
+  return `<div class="m-head"><div><div class="eyebrow">Macro · zmk,behavior-macro · ${m.file} line ${m.line}</div><h2>${esc(m.display)}</h2>` +
+    `<code class="muted">&amp;${esc(M.id)} · ${M.steps.length} steps</code></div><button class="icon" type="button" data-m="close" aria-label="Close">×</button></div>
+    <div class="m-body">
+      <section>
+        <div class="sec-title">Steps <span>taps in order, top to bottom</span></div>
+        <ol class="steps">${M.steps.map((s, idx) => {
+          const code = s.replace(/^&kp\s+/, '');
+          const lab = s.startsWith('&kp ') ? kcLabel(code) : s.replace('&', '');
+          return `<li class="step" draggable="true" data-si="${idx}"><span class="grip">⠿</span><span class="idx">${idx + 1}</span>` +
+            `<span style="display:flex;align-items:center;gap:8px"><span class="chip-k">${esc(lab)}</span><span class="code">${esc(s)}</span></span>` +
+            `<span class="sx"><button type="button" data-m="up" data-si="${idx}" ${idx === 0 ? 'disabled' : ''} aria-label="Move up">↑</button><button type="button" data-m="down" data-si="${idx}" ${idx === M.steps.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button></span>` +
+            `<span class="sx"><button type="button" data-m="del" data-si="${idx}" aria-label="Remove">×</button></span></li>`;
+        }).join('')}</ol>
+        <div class="addrow"><select id="addSel">${KEY_OPTS()}</select><button class="btn" type="button" data-m="add">+ Add tap</button></div>
+      </section>
+      <section>
+        <div class="sec-title">Result preview</div>
+        <div class="preview-box"><span>${esc(before)}</span><i class="caret"></i><span>${esc(after)}</span></div>
+        <p class="fine">Simulated in a plain text field. Reorder the steps and the result changes, so the order is part of the macro.</p>
+        <div class="sec-title">Raw diff <span>${changed ? 'pending' : 'no change'}</span></div>
+        <pre class="raw">${changed ? `<span class="m">- ${esc(origLine)}</span>\n<span class="p">+ ${esc(newLine)}</span>` : `  ${esc(origLine)}`}</pre>
+      </section>
+    </div>
+    <div class="m-foot"><span class="fine">Saved into <code>${m.file}</code>. Nothing is flashed.</span><button class="btn ghost" type="button" data-m="close">Cancel</button><button class="btn primary" type="button" data-m="save-macro" ${changed ? '' : 'disabled'}>Save macro</button></div>`;
+}
+function tpfModalHTML(M) {
+  const used = D.layers.reduce((n, L) => n + L.keys.filter(K => parse(K.raw).kind === 'hold').length, 0);
+  const origTerm = FILES[KF][D.tpf.termLine - 1];
+  const newTerm = origTerm.replace(/<\d+>/, `<${M.term}>`);
+  return `<div class="m-head"><div><div class="eyebrow">Hold-tap · zmk,behavior-hold-tap · ${KF} line ${D.tpf.termLine}</div><h2>tpf</h2>` +
+    `<code class="muted">&amp;tpf · ${used} keys use it across layers</code></div><button class="icon" type="button" data-m="close" aria-label="Close">×</button></div>
+    <div class="m-body">
+      <section>
+        <div class="sec-title">Timing</div>
+        <div class="slider-row"><input type="range" id="term" min="100" max="400" step="5" value="${M.term}"><output id="termOut">${M.term} ms</output></div>
+        <div class="ticks"><span>100</span><span>ZMK default 200</span><span>400</span></div>
+        <label class="field" style="margin-top:4px"><span>Flavor</span><select id="flavor">${Object.keys(FLAVOR_DESC).map(f => `<option value="${f}" ${M.flavor === f ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
+        <p class="seg-flavor" id="flavorDesc">${FLAVOR_DESC[M.flavor]}</p>
+        <div class="sec-title">Hold-trigger positions <span id="holdCount">${M.hold.length} keys</span></div>
+        <div class="mini-wrap" id="mini">${miniBoard(M.hold)}</div>
+        <p class="fine">Tap a key to toggle whether a press on it can become a hold. Keys outside the set always tap.</p>
+      </section>
+      <section>
+        <div class="sec-title">Try it <span>simulated</span></div>
+        <div class="pair"><div><small>Hold</small><b>per key</b></div><div><small>Tap</small><b>per key</b></div></div>
+        <p class="fine" style="margin-top:-4px">Each <code>&amp;tpf</code> key sets its own hold and tap, e.g. <code>&amp;tpf F1 NUMBER_1</code>.</p>
+        <label class="field" style="margin-top:6px"><span>Simulated press on</span><select id="padPos">${G.map(g => `<option value="${g.i}" ${M.padPos === g.i ? 'selected' : ''}>#${g.i} ${esc(parse(curRaw(0, g.i)).label)}</option>`).join('')}</select></label>
+        <button class="pad" id="pad" type="button">Press and hold</button>
+        <div class="pad-bar"><i id="padFill"></i></div>
+        <div class="pad-out" id="padOut">Press and release quickly for a tap, or hold past the term.</div>
+        <div class="sec-title" style="margin-top:14px">Raw diff</div>
+        <pre class="raw" id="rawTpf">${M.term !== D.tpf.term ? `<span class="m">- ${esc(origTerm)}</span>\n<span class="p">+ ${esc(newTerm)}</span>` : `  ${esc(origTerm)}`}</pre>
+      </section>
+    </div>
+    <div class="m-foot"><span class="fine">Global to every <code>&amp;tpf</code> key. Nothing is flashed.</span><button class="btn ghost" type="button" data-m="close">Cancel</button><button class="btn primary" type="button" data-m="save-tpf">Save hold-tap</button></div>`;
+}
+function miniBoard(holdSet) {
+  let h = `<div class="board mini" style="--bw:${BW.toFixed(3)};--bh:${BH.toFixed(3)};--u:19px;width:calc(var(--bw)*var(--u));height:calc(var(--bh)*var(--u));margin:0 auto">`;
+  G.forEach(g => {
+    h += `<button type="button" class="key${holdSet.includes(g.i) ? ' on' : ''}" data-pos="${g.i}" aria-label="position ${g.i}" aria-pressed="${holdSet.includes(g.i)}" style="--x:${g.x.toFixed(3)};--y:${g.y.toFixed(3)};--w:${g.w};--h:${g.h};--r:${g.rot.toFixed(3)}"><span class="cap"><span class="legend"></span></span></button>`;
+  });
+  return h + '</div>';
+}
+function renderModal() {
+  const M = S.mdl;
+  if (!M) return;
+  $('#modal').innerHTML = M.type === 'macro' ? macroModalHTML(M) : tpfModalHTML(M);
+}
+function padTick() {
+  const M = S.mdl; if (!M || !M.down) return;
+  const el = performance.now() - M.t0;
+  $('#padFill').style.width = Math.min(100, el / M.term * 100) + '%';
+  $('#padOut').innerHTML = `${Math.round(el)} ms`;
+  M.raf = requestAnimationFrame(padTick);
+}
+function padResult() {
+  const M = S.mdl, el = performance.now() - M.t0;
+  const p = parse(curRaw(0, M.padPos));
+  const isHold = M.hold.includes(M.padPos) && el >= M.term && p.kind === 'hold';
+  const isTpf = p.kind === 'hold';
+  if (!isTpf) return `<b>Not a hold-tap key.</b> #${M.padPos} on Default is ${esc(p.label)}, so it just sends its key.`;
+  return isHold ? `<b>Hold</b> after ${Math.round(el)} ms → <code>&amp;kp ${esc(p.hold)}</code>` : `<b>Tap</b> after ${Math.round(el)} ms → <code>&amp;kp ${esc(p.tap)}</code>`;
+}
+
+/* ---------- events ---------- */
+const board = $('#board');
+board.addEventListener('click', e => {
+  const k = e.target.closest('.key');
+  if (k) {
+    const i = +k.dataset.i;
+    if (S.pick) { openKey(S.layer, i, k, {assign: true, draft: {tab: 'layer', layerT: S.pick.target, layerMode: 'mo'}}); return; }
+    openKey(S.layer, i, k); return;
+  }
+  const c = e.target.closest('[data-combo]');
+  if (c) { openCombo(+c.dataset.combo, c); }
+});
+$('#pills').addEventListener('click', e => {
+  const b = e.target.closest('[data-l]'); if (b) setLayer(+b.dataset.l);
+});
+$('#pills').addEventListener('pointerover', e => {
+  const b = e.target.closest('[data-l]'); if (b) highlightReach(+b.dataset.l);
+});
+$('#pills').addEventListener('pointerleave', () => highlightReach(null));
+$('#combosBtn').addEventListener('click', () => { S.showCombos = !S.showCombos; renderPills(); });
+$('#pickCancel').addEventListener('click', () => { S.pick = null; renderAll(); });
+$('#validator').addEventListener('click', e => {
+  if (e.target.closest('[data-act="fix"]')) { S.layer = 0; S.pick = {target: 2}; closePop(); renderAll(); toast('Pick any key on Default'); }
+});
+$('#changes').addEventListener('click', () => { S.sheet = !S.sheet; if (S.sheet) renderSheet(); else $('#sheet').classList.remove('open'); });
+$('#sheet').addEventListener('click', e => {
+  const t = e.target.closest('[data-tab]');
+  if (t) { S.sheetTab = t.dataset.tab; renderSheet(); return; }
+  const a = e.target.closest('[data-act]'); if (!a) return;
+  const act = a.dataset.act;
+  if (act === 'close-sheet') { S.sheet = false; $('#sheet').classList.remove('open'); }
+  if (act === 'discard') discard();
+  if (act === 'commit') commit();
+});
+$('#sheet').addEventListener('input', e => {
+  if (e.target.dataset.role === 'branch') S.branch = e.target.value;
+  if (e.target.dataset.role === 'msg') S.msg = e.target.value;
+});
+$('#sheet').addEventListener('change', e => {
+  if (e.target.dataset.role === 'backup') S.backup = e.target.checked;
+});
+$('#pop').addEventListener('input', e => {
+  if (!S.pop || S.pop.mode !== 'key' || e.target.dataset.role !== 'search') return;
+  S.pop.d.search = e.target.value;
+  const g = $('#keygrid'); if (g) g.innerHTML = keyGrid(S.pop.d);
+});
+$('#pop').addEventListener('click', e => {
+  const P = S.pop; if (!P) return;
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.act === 'close') return closePop();
+  if (P.mode !== 'key') return;
+  const d = P.d;
+  const set = fn => { fn(); d.touched = true; renderPop(); };
+  if (b.dataset.tab) return set(() => { d.tab = b.dataset.tab; });
+  if (b.dataset.kc) return set(() => { if (d.tab === 'hold') d[d.field] = b.dataset.kc; else d.kpCode = b.dataset.kc; });
+  if (b.dataset.mod) return set(() => { d.mods = d.mods.includes(b.dataset.mod) ? d.mods.filter(x => x !== b.dataset.mod) : [...d.mods, b.dataset.mod]; });
+  if (b.dataset.field) return set(() => { d.field = b.dataset.field; d.search = ''; });
+  if (b.dataset.lt) return set(() => { d.layerT = +b.dataset.lt; });
+  if (b.dataset.lm) return set(() => { d.layerMode = b.dataset.lm; });
+  if (b.dataset.mac) return set(() => { d.macroId = b.dataset.mac; });
+  if (b.dataset.bt) return set(() => { d.bt = b.dataset.bt; });
+  switch (b.dataset.act) {
+    case 'apply': return applyPop();
+    case 'reset': P.d = draftFrom(P.l, P.i); return renderPop();
+    case 'open-tpf': return openTpf();
+    case 'open-macro': return openMacro(d.macroId);
+  }
+});
+$('#modalbg').addEventListener('click', e => {
+  if (e.target.id === 'modalbg') return showModal(false);
+  const M = S.mdl; if (!M) return;
+  const pos = e.target.closest('[data-pos]');
+  if (pos && M.type === 'tpf') {
+    const i = +pos.dataset.pos;
+    M.hold = M.hold.includes(i) ? M.hold.filter(x => x !== i) : [...M.hold, i];
+    $('#mini').innerHTML = miniBoard(M.hold);
+    $('#holdCount').textContent = M.hold.length + ' keys';
+    return;
+  }
+  const b = e.target.closest('[data-m]'); if (!b || b.disabled) return;
+  const act = b.dataset.m, si = +b.dataset.si;
+  if (act === 'close') return showModal(false);
+  if (M.type === 'macro') {
+    if (act === 'up') { [M.steps[si - 1], M.steps[si]] = [M.steps[si], M.steps[si - 1]]; }
+    if (act === 'down') { [M.steps[si + 1], M.steps[si]] = [M.steps[si], M.steps[si + 1]]; }
+    if (act === 'del') M.steps.splice(si, 1);
+    if (act === 'add') M.steps.push('&kp ' + $('#addSel').value);
+    if (act === 'save-macro') {
+      S.macros[M.id] = M.steps.slice();
+      if (S.macros[M.id].join('|') === macroById(M.id).steps.join('|')) delete S.macros[M.id];
+      showModal(false); toast(`${M.id} updated`); renderAll(); return;
+    }
+    if (['up','down','del','add'].includes(act)) renderModal();
+  } else {
+    if (act === 'save-tpf') {
+      S.tpf = {term: M.term, flavor: M.flavor, hold: M.hold.slice()};
+      showModal(false); toast(`tpf: tapping-term ${M.term} ms · ${M.flavor}`); renderAll(); return;
+    }
+  }
+});
+// macro drag reorder
+let dragFrom = null;
+$('#modal').addEventListener('dragstart', e => {
+  const s = e.target.closest('.step'); if (!s) return;
+  dragFrom = +s.dataset.si; s.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(dragFrom));
+});
+$('#modal').addEventListener('dragover', e => {
+  const s = e.target.closest('.step'); if (!s) return;
+  e.preventDefault();
+  $$('.step').forEach(x => x.classList.toggle('over', x === s));
+});
+$('#modal').addEventListener('dragend', () => { $$('.step').forEach(x => x.classList.remove('dragging', 'over')); dragFrom = null; });
+$('#modal').addEventListener('drop', e => {
+  const s = e.target.closest('.step'); const M = S.mdl;
+  if (!s || !M || M.type !== 'macro' || dragFrom == null) return;
+  e.preventDefault();
+  const to = +s.dataset.si;
+  const [item] = M.steps.splice(dragFrom, 1);
+  M.steps.splice(to, 0, item);
+  dragFrom = null; renderModal();
+});
+// modal: range + flavor (in-place updates so the slider stays smooth)
+$('#modal').addEventListener('input', e => {
+  const M = S.mdl; if (!M || M.type !== 'tpf') return;
+  if (e.target.id === 'term') {
+    M.term = +e.target.value;
+    $('#termOut').textContent = M.term + ' ms';
+    const orig = FILES[KF][D.tpf.termLine - 1];
+    $('#rawTpf').innerHTML = M.term !== D.tpf.term ? `<span class="m">- ${esc(orig)}</span>\n<span class="p">+ ${esc(orig.replace(/<\d+>/, `<${M.term}>`))}</span>` : `  ${esc(orig)}`;
+  }
+});
+$('#modal').addEventListener('change', e => {
+  const M = S.mdl; if (!M || M.type !== 'tpf') return;
+  if (e.target.id === 'flavor') { M.flavor = e.target.value; $('#flavorDesc').textContent = FLAVOR_DESC[M.flavor]; }
+  if (e.target.id === 'padPos') M.padPos = +e.target.value;
+});
+document.addEventListener('pointerdown', e => {
+  const p = e.target.closest && e.target.closest('#pad');
+  if (!p || !S.mdl) return;
+  const M = S.mdl; M.down = true; M.t0 = performance.now(); p.classList.add('down');
+  cancelAnimationFrame(M.raf); padTick();
+});
+document.addEventListener('pointerup', () => {
+  const M = S.mdl; if (!M || !M.down) return;
+  M.down = false; cancelAnimationFrame(M.raf);
+  $('#pad').classList.remove('down'); $('#padFill').style.width = '0';
+  $('#padOut').innerHTML = padResult();
+});
+document.addEventListener('pointerdown', e => {
+  if (!S.pop) return;
+  if (e.target.closest('#pop, .key, [data-combo], #modal')) return;
+  closePop();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (S.mdl) return showModal(false);
+    if (S.pop) return closePop();
+    if (S.pick) { S.pick = null; renderAll(); return; }
+    if (S.sheet) { S.sheet = false; $('#sheet').classList.remove('open'); }
+    return;
+  }
+  if (/input|textarea|select/i.test(document.activeElement.tagName) || S.mdl) return;
+  if (['1','2','3','4'].includes(e.key)) setLayer(+e.key - 1);
+});
+
+window.addEventListener('resize', () => { layoutBoard(); if (S.pop && S.pop.mode) placePop(board.querySelector(`[data-i="${S.pop.i}"]`)); });
+
+/* seed with the real layer-0 layout and open the sheet state consistently */
+renderAll();
+})();
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p class="license-note">Ghostty palette samples come from the bundled iTerm2-Color-Schemes collection. The collection is MIT, but each palette keeps its author’s license. This scratchpad is a research catalog; before shipping, bundle only verified permissive entries and their required notices. Exclude <code>unknown</code> and <code>nonfree</code> palettes.</p>
+<script id="theme-catalog" type="application/json">[{"id":"ghostty:catppuccin-mocha","name":"Catppuccin Mocha","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Catppuccin Mocha","license":"MIT","licenseSource":"https://github.com/catppuccin/palette","type":"terminal","palette":{"background":"#1e1e2e","foreground":"#cdd6f4","cursor":"#f5e0dc","selection":"#f5e0dc","ansi":["#45475a","#f38ba8","#a6e3a1","#f9e2af","#89b4fa","#f5c2e7","#94e2d5","#bac2de","#585b70","#f7aec2","#c2ecbf","#fcd682","#aeccfc","#f398da","#b1eae1","#a6adc8"]},"pairKey":"catppuccin","pairMode":"dark"},{"id":"ghostty:catppuccin-latte","name":"Catppuccin Latte","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Catppuccin Latte","license":"MIT","licenseSource":"https://github.com/catppuccin/palette","type":"terminal","palette":{"background":"#eff1f5","foreground":"#4c4f69","cursor":"#dc8a78","selection":"#dc8a78","ansi":["#bcc0cc","#d20f39","#40a02b","#df8e1d","#1e66f5","#ea76cb","#179299","#5c5f77","#acb0be","#e7103f","#46b02f","#e49931","#3878f6","#ef95d7","#19a1a8","#6c6f85"]},"pairKey":"catppuccin","pairMode":"dark"},{"id":"ghostty:catppuccin-frappe","name":"Catppuccin Frappe","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Catppuccin Frappe","license":"MIT","licenseSource":"https://github.com/catppuccin/palette","type":"terminal","palette":{"background":"#303446","foreground":"#c6d0f5","cursor":"#f2d5cf","selection":"#f2d5cf","ansi":["#51576d","#e78284","#a6d189","#e5c890","#8caaee","#f4b8e4","#81c8be","#b5bfe2","#626880","#eda0a2","#b9dba2","#ecd7ae","#adc2f3","#f38ed8","#98d2ca","#a5adce"]},"pairKey":"catppuccin","pairMode":"dark"},{"id":"ghostty:catppuccin-macchiato","name":"Catppuccin Macchiato","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Catppuccin Macchiato","license":"MIT","licenseSource":"https://github.com/catppuccin/palette","type":"terminal","palette":{"background":"#24273a","foreground":"#cad3f5","cursor":"#f4dbd6","selection":"#f4dbd6","ansi":["#494d64","#ed8796","#a6da95","#eed49f","#8aadf4","#f5bde6","#8bd5ca","#b8c0e0","#5b6078","#f2a7b2","#bde3b0","#f4e3c1","#adc5f7","#f493da","#a5ded6","#a5adcb"]},"pairKey":"catppuccin","pairMode":"dark"},{"id":"ghostty:tokyonight","name":"TokyoNight","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"TokyoNight","license":"Apache-2.0","licenseSource":"https://github.com/folke/tokyonight.nvim","type":"terminal","palette":{"background":"#1a1b26","foreground":"#c0caf5","cursor":"#c0caf5","selection":"#33467c","ansi":["#15161e","#f7768e","#9ece6a","#e0af68","#7aa2f7","#bb9af7","#7dcfff","#a9b1d6","#414868","#f7768e","#9ece6a","#e0af68","#7aa2f7","#bb9af7","#7dcfff","#c0caf5"]},"pairKey":"tokyonight","pairMode":"dark"},{"id":"ghostty:tokyonight-day","name":"TokyoNight Day","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"TokyoNight Day","license":"Apache-2.0","licenseSource":"https://github.com/folke/tokyonight.nvim","type":"terminal","palette":{"background":"#e1e2e7","foreground":"#3760bf","cursor":"#3760bf","selection":"#99a7df","ansi":["#e9e9ed","#f52a65","#587539","#8c6c3e","#2e7de9","#9854f1","#007197","#6172b0","#a1a6c5","#f52a65","#587539","#8c6c3e","#2e7de9","#9854f1","#007197","#3760bf"]},"pairKey":"tokyonight","pairMode":"light"},{"id":"ghostty:tokyonight-moon","name":"TokyoNight Moon","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"TokyoNight Moon","license":"Apache-2.0","licenseSource":"https://github.com/folke/tokyonight.nvim","type":"terminal","palette":{"background":"#222436","foreground":"#c8d3f5","cursor":"#c8d3f5","selection":"#2d3f76","ansi":["#1b1d2b","#ff757f","#c3e88d","#ffc777","#82aaff","#c099ff","#86e1fc","#828bb8","#444a73","#ff757f","#c3e88d","#ffc777","#82aaff","#c099ff","#86e1fc","#c8d3f5"]},"pairKey":"tokyonight","pairMode":"dark"},{"id":"ghostty:tokyonight-storm","name":"TokyoNight Storm","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"TokyoNight Storm","license":"Apache-2.0","licenseSource":"https://github.com/folke/tokyonight.nvim","type":"terminal","palette":{"background":"#24283b","foreground":"#c0caf5","cursor":"#c0caf5","selection":"#364a82","ansi":["#1d202f","#f7768e","#9ece6a","#e0af68","#7aa2f7","#bb9af7","#7dcfff","#a9b1d6","#4e5575","#f7768e","#9ece6a","#e0af68","#7aa2f7","#bb9af7","#7dcfff","#c0caf5"]},"pairKey":"tokyonight","pairMode":"dark"},{"id":"ghostty:dracula","name":"Dracula","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Dracula","license":"unknown","licenseSource":"https://github.com/mbadolato/iTerm2-Color-Schemes/commit/e89464b73ef5301d13dafaddbb139d7562e700a9","type":"terminal","palette":{"background":"#282a36","foreground":"#f8f8f2","cursor":"#f8f8f2","selection":"#44475a","ansi":["#21222c","#ff5555","#50fa7b","#f1fa8c","#bd93f9","#ff79c6","#8be9fd","#f8f8f2","#6272a4","#ff6e6e","#69ff94","#ffffa5","#d6acff","#ff92df","#a4ffff","#ffffff"]}},{"id":"ghostty:nord","name":"Nord","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Nord","license":"MIT","licenseSource":"https://github.com/nordtheme/iterm2","type":"terminal","palette":{"background":"#2e3440","foreground":"#d8dee9","cursor":"#eceff4","selection":"#eceff4","ansi":["#3b4252","#bf616a","#a3be8c","#ebcb8b","#81a1c1","#b48ead","#88c0d0","#e5e9f0","#596377","#bf616a","#a3be8c","#ebcb8b","#81a1c1","#b48ead","#8fbcbb","#eceff4"]},"pairKey":"nord","pairMode":"dark"},{"id":"ghostty:nord-light","name":"Nord Light","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Nord Light","license":"MIT","licenseSource":"https://github.com/nordtheme/iterm2","type":"terminal","palette":{"background":"#e5e9f0","foreground":"#414858","cursor":"#7bb3c3","selection":"#d8dee9","ansi":["#3b4252","#bf616a","#96b17f","#c5a565","#81a1c1","#b48ead","#7bb3c3","#a5abb6","#4c566a","#bf616a","#96b17f","#c5a565","#81a1c1","#b48ead","#82afae","#eceff4"]},"pairKey":"nord","pairMode":"light"},{"id":"ghostty:gruvbox-dark","name":"Gruvbox Dark","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Gruvbox Dark","license":"MIT","licenseSource":"https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6","type":"terminal","palette":{"background":"#282828","foreground":"#ebdbb2","cursor":"#ebdbb2","selection":"#665c54","ansi":["#282828","#cc241d","#98971a","#d79921","#458588","#b16286","#689d6a","#a89984","#928374","#fb4934","#b8bb26","#fabd2f","#83a598","#d3869b","#8ec07c","#ebdbb2"]},"pairKey":"gruvbox","pairMode":"dark"},{"id":"ghostty:gruvbox-dark-hard","name":"Gruvbox Dark Hard","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Gruvbox Dark Hard","license":"MIT","licenseSource":"https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6","type":"terminal","palette":{"background":"#1d2021","foreground":"#ebdbb2","cursor":"#ebdbb2","selection":"#665c54","ansi":["#1d2021","#cc241d","#98971a","#d79921","#458588","#b16286","#689d6a","#a89984","#928374","#fb4934","#b8bb26","#fabd2f","#83a598","#d3869b","#8ec07c","#ebdbb2"]},"pairKey":"gruvbox","pairMode":"dark"},{"id":"ghostty:gruvbox-light","name":"Gruvbox Light","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Gruvbox Light","license":"MIT","licenseSource":"https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6","type":"terminal","palette":{"background":"#fbf1c7","foreground":"#3c3836","cursor":"#3c3836","selection":"#3c3836","ansi":["#fbf1c7","#cc241d","#98971a","#d79921","#458588","#b16286","#689d6a","#7c6f64","#928374","#9d0006","#79740e","#b57614","#076678","#8f3f71","#427b58","#3c3836"]},"pairKey":"gruvbox","pairMode":"light"},{"id":"ghostty:gruvbox-light-hard","name":"Gruvbox Light Hard","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Gruvbox Light Hard","license":"MIT","licenseSource":"https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6","type":"terminal","palette":{"background":"#f9f5d7","foreground":"#3c3836","cursor":"#3c3836","selection":"#3c3836","ansi":["#f9f5d7","#cc241d","#98971a","#d79921","#458588","#b16286","#689d6a","#7c6f64","#928374","#9d0006","#79740e","#b57614","#076678","#8f3f71","#427b58","#3c3836"]},"pairKey":"gruvbox","pairMode":"light"},{"id":"ghostty:rose-pine","name":"Rose Pine","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Rose Pine","license":"MIT","licenseSource":"https://github.com/rose-pine/build","type":"terminal","palette":{"background":"#191724","foreground":"#e0def4","cursor":"#e0def4","selection":"#403d52","ansi":["#26233a","#eb6f92","#31748f","#f6c177","#9ccfd8","#c4a7e7","#ebbcba","#e0def4","#6e6a86","#eb6f92","#31748f","#f6c177","#9ccfd8","#c4a7e7","#ebbcba","#e0def4"]},"pairKey":"rose-pine","pairMode":"dark"},{"id":"ghostty:rose-pine-dawn","name":"Rose Pine Dawn","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Rose Pine Dawn","license":"MIT","licenseSource":"https://github.com/rose-pine/build","type":"terminal","palette":{"background":"#faf4ed","foreground":"#575279","cursor":"#575279","selection":"#dfdad9","ansi":["#f2e9e1","#b4637a","#286983","#ea9d34","#56949f","#907aa9","#d7827e","#575279","#9893a5","#b4637a","#286983","#ea9d34","#56949f","#907aa9","#d7827e","#575279"]},"pairKey":"rose-pine","pairMode":"light"},{"id":"ghostty:rose-pine-moon","name":"Rose Pine Moon","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Rose Pine Moon","license":"MIT","licenseSource":"https://github.com/rose-pine/build","type":"terminal","palette":{"background":"#232136","foreground":"#e0def4","cursor":"#e0def4","selection":"#44415a","ansi":["#393552","#eb6f92","#3e8fb0","#f6c177","#9ccfd8","#c4a7e7","#ea9a97","#e0def4","#6e6a86","#eb6f92","#3e8fb0","#f6c177","#9ccfd8","#c4a7e7","#ea9a97","#e0def4"]},"pairKey":"rose-pine","pairMode":"dark"},{"id":"ghostty:solarized-dark-patched","name":"Solarized Dark Patched","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Solarized Dark Patched","license":"unknown","licenseSource":"https://github.com/mbadolato/iTerm2-Color-Schemes/pull/63","type":"terminal","palette":{"background":"#001e27","foreground":"#708284","cursor":"#708284","selection":"#002831","ansi":["#002831","#d11c24","#738a05","#a57706","#2176c7","#c61c6f","#259286","#eae3cb","#475b62","#bd3613","#475b62","#536870","#708284","#5956ba","#819090","#fcf4dc"]},"pairKey":"solarized","pairMode":"dark"},{"id":"ghostty:kanagawa-wave","name":"Kanagawa Wave","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Kanagawa Wave","license":"MIT","licenseSource":"https://github.com/rebelot/kanagawa.nvim","type":"terminal","palette":{"background":"#1f1f28","foreground":"#dcd7ba","cursor":"#dcd7ba","selection":"#dcd7ba","ansi":["#090618","#c34043","#76946a","#c0a36e","#7e9cd8","#957fb8","#6a9589","#c8c093","#727169","#e82424","#98bb6c","#e6c384","#7fb4ca","#938aa9","#7aa89f","#dcd7ba"]},"pairKey":"kanagawa","pairMode":"dark"},{"id":"ghostty:kanagawa-lotus","name":"Kanagawa Lotus","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Kanagawa Lotus","license":"unknown","licenseSource":"","type":"terminal","palette":{"background":"#f2ecbc","foreground":"#545464","cursor":"#43436c","selection":"#545464","ansi":["#1f1f28","#c84053","#6f894e","#77713f","#4d699b","#b35b79","#597b75","#545464","#8a8980","#d7474b","#6e915f","#836f4a","#6693bf","#624c83","#5e857a","#43436c"]},"pairKey":"kanagawa","pairMode":"light"},{"id":"ghostty:kanagawa-dragon","name":"Kanagawa Dragon","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Kanagawa Dragon","license":"MIT","licenseSource":"https://github.com/rebelot/kanagawa.nvim","type":"terminal","palette":{"background":"#181616","foreground":"#c5c9c5","cursor":"#c8c093","selection":"#c5c9c5","ansi":["#0d0c0c","#c4746e","#8a9a7b","#c4b28a","#8ba4b0","#a292a3","#8ea4a2","#c8c093","#a6a69c","#e46876","#87a987","#e6c384","#7fb4ca","#938aa9","#7aa89f","#c5c9c5"]},"pairKey":"kanagawa","pairMode":"dark"},{"id":"ghostty:everforest-dark-hard","name":"Everforest Dark Hard","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Everforest Dark Hard","license":"MIT","licenseSource":"https://github.com/icewind/everforest.iterm2","type":"terminal","palette":{"background":"#1e2326","foreground":"#d3c6aa","cursor":"#e69875","selection":"#4c3743","ansi":["#7a8478","#e67e80","#a7c080","#dbbc7f","#7fbbb3","#d699b6","#83c092","#f2efdf","#a6b0a0","#f85552","#8da101","#dfa000","#3a94c5","#df69ba","#35a77c","#fffbef"]},"pairKey":"everforest-hard","pairMode":"dark"},{"id":"ghostty:everforest-dark-med","name":"Everforest Dark Med","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Everforest Dark Med","license":"unknown","licenseSource":"","type":"terminal","palette":{"background":"#232a2e","foreground":"#d3c6aa","cursor":"#e69875","selection":"#543a48","ansi":["#7a8478","#e67e80","#a7c080","#dbbc7f","#7fbbb3","#d699b6","#83c092","#f2efdf","#a6b0a0","#f85552","#8da101","#dfa000","#3a94c5","#df69ba","#35a77c","#fffbef"]},"pairKey":"everforest-med","pairMode":"dark"},{"id":"ghostty:everforest-dark-soft","name":"Everforest Dark Soft","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Everforest Dark Soft","license":"unknown","licenseSource":"","type":"terminal","palette":{"background":"#293136","foreground":"#d3c6aa","cursor":"#e69875","selection":"#5c3f4f","ansi":["#7a8478","#e67e80","#a7c080","#dbbc7f","#7fbbb3","#d699b6","#83c092","#f2efdf","#a6b0a0","#f85552","#8da101","#dfa000","#3a94c5","#df69ba","#35a77c","#fffbef"]},"pairKey":"everforest-soft","pairMode":"dark"},{"id":"ghostty:everforest-light-hard","name":"Everforest Light Hard","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Everforest Light Hard","license":"unknown","licenseSource":"","type":"terminal","palette":{"background":"#f2efdf","foreground":"#5c6a72","cursor":"#f57d26","selection":"#f0f2d4","ansi":["#7a8478","#e67e80","#9ab373","#ceaf72","#7fbbb3","#d699b6","#83c092","#b2af9f","#a6b0a0","#f85552","#8da101","#dfa000","#3a94c5","#df69ba","#35a77c","#fffbef"]},"pairKey":"everforest-hard","pairMode":"light"},{"id":"ghostty:everforest-light-med","name":"Everforest Light Med","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Everforest Light Med","license":"MIT","licenseSource":"https://github.com/icewind/everforest.iterm2","type":"terminal","palette":{"background":"#efebd4","foreground":"#5c6a72","cursor":"#f57d26","selection":"#eaedc8","ansi":["#7a8478","#e67e80","#9ab373","#c1a266","#7fbbb3","#d699b6","#83c092","#b2af9f","#a6b0a0","#f85552","#8da101","#dfa000","#3a94c5","#df69ba","#35a77c","#fffbef"]},"pairKey":"everforest-med","pairMode":"light"},{"id":"ghostty:everforest-light-soft","name":"Everforest Light Soft","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Everforest Light Soft","license":"unknown","licenseSource":"","type":"terminal","palette":{"background":"#e5dfc5","foreground":"#5c6a72","cursor":"#f57d26","selection":"#e1e4bd","ansi":["#7a8478","#e67e80","#8da666","#c1a266","#72aea6","#c98ca9","#76b385","#a5a292","#99a393","#f85552","#8da101","#d29300","#3a94c5","#df69ba","#35a77c","#fffbef"]},"pairKey":"everforest-soft","pairMode":"light"},{"id":"ghostty:atom-one-dark","name":"Atom One Dark","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Atom One Dark","license":"MIT","licenseSource":"https://github.com/atom/atom/tree/master/packages/one-dark-ui","type":"terminal","palette":{"background":"#21252b","foreground":"#abb2bf","cursor":"#abb2bf","selection":"#323844","ansi":["#21252b","#e06c75","#98c379","#e5c07b","#61afef","#c678dd","#56b6c2","#abb2bf","#767676","#e06c75","#98c379","#e5c07b","#61afef","#c678dd","#56b6c2","#abb2bf"]},"pairKey":"atom-one","pairMode":"dark"},{"id":"ghostty:atom-one-light","name":"Atom One Light","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Atom One Light","license":"MIT","licenseSource":"https://github.com/atom/atom/tree/master/packages/one-light-ui","type":"terminal","palette":{"background":"#f9f9f9","foreground":"#2a2c33","cursor":"#bbbbbb","selection":"#d0dffc","ansi":["#000000","#de3e35","#3f953a","#d2b67c","#2f5af3","#950095","#3f953a","#bbbbbb","#000000","#de3e35","#3f953a","#d2b67c","#2f5af3","#a00095","#3f953a","#ffffff"]},"pairKey":"atom-one","pairMode":"light"},{"id":"ghostty:github-dark","name":"GitHub Dark","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"GitHub Dark","license":"MIT","licenseSource":"https://github.com/primer/github-vscode-theme","type":"terminal","palette":{"background":"#101216","foreground":"#8b949e","cursor":"#c9d1d9","selection":"#3b5070","ansi":["#000000","#f78166","#56d364","#e3b341","#6ca4f8","#db61a2","#2b7489","#ffffff","#4d4d4d","#f78166","#56d364","#e3b341","#6ca4f8","#db61a2","#2b7489","#ffffff"]},"pairKey":"github","pairMode":"dark"},{"id":"ghostty:github-light-default","name":"GitHub Light Default","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"GitHub Light Default","license":"MIT","licenseSource":"https://github.com/primer/github-vscode-theme","type":"terminal","palette":{"background":"#ffffff","foreground":"#1f2328","cursor":"#0969da","selection":"#1f2328","ansi":["#24292f","#cf222e","#116329","#4d2d00","#0969da","#8250df","#1b7c83","#6e7781","#57606a","#a40e26","#1a7f37","#633c01","#218bff","#a475f9","#3192aa","#8c959f"]},"pairKey":"github","pairMode":"light"},{"id":"ghostty:github-dark-dimmed","name":"GitHub Dark Dimmed","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"GitHub Dark Dimmed","license":"MIT","licenseSource":"https://github.com/primer/github-vscode-theme","type":"terminal","palette":{"background":"#22272e","foreground":"#adbac7","cursor":"#539bf5","selection":"#adbac7","ansi":["#545d68","#f47067","#57ab5a","#c69026","#539bf5","#b083f0","#39c5cf","#909dab","#636e7b","#ff938a","#6bc46d","#daaa3f","#6cb6ff","#dcbdfb","#56d4dd","#cdd9e5"]}},{"id":"ghostty:github-dark-high-contrast","name":"GitHub Dark High Contrast","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"GitHub Dark High Contrast","license":"MIT","licenseSource":"https://github.com/primer/github-vscode-theme","type":"terminal","palette":{"background":"#0a0c10","foreground":"#f0f3f6","cursor":"#71b7ff","selection":"#f0f3f6","ansi":["#7a828e","#ff9492","#26cd4d","#f0b72f","#71b7ff","#cb9eff","#39c5cf","#d9dee3","#9ea7b3","#ffb1af","#4ae168","#f7c843","#91cbff","#dbb7ff","#56d4dd","#ffffff"]}},{"id":"ghostty:andromeda","name":"Andromeda","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Andromeda","license":"MIT","licenseSource":"https://github.com/mbadolato/iTerm2-Color-Schemes","type":"terminal","palette":{"background":"#262a33","foreground":"#e5e5e5","cursor":"#f8f8f0","selection":"#5a5c62","ansi":["#000000","#cd3131","#05bc79","#e5e512","#2472c8","#bc3fbc","#0fa8cd","#e5e5e5","#666666","#cd3131","#05bc79","#e5e512","#2472c8","#bc3fbc","#0fa8cd","#e5e5e5"]}},{"id":"ghostty:cobalt-next","name":"Cobalt Next","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Cobalt Next","license":"MIT","licenseSource":"https://github.com/davidleininger/cobaltnext-vscode","type":"terminal","palette":{"background":"#162c35","foreground":"#d7deea","cursor":"#ffc64c","selection":"#4c5b67","ansi":["#000000","#ff527b","#8cc98f","#ffc64c","#409dd4","#cba3c7","#37b5b4","#d7deea","#62747f","#e47e8b","#baddbb","#ffdc91","#7ac0eb","#f3ccef","#84e4e3","#ffffff"]}},{"id":"ghostty:ayu","name":"Ayu","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Ayu","license":"unknown","licenseSource":"https://github.com/mbadolato/iTerm2-Color-Schemes/pull/89","type":"terminal","palette":{"background":"#0b0e14","foreground":"#bfbdb6","cursor":"#e6b450","selection":"#409fff","ansi":["#11151c","#ea6c73","#7fd962","#f9af4f","#53bdfa","#cda1fa","#90e1c6","#c7c7c7","#686868","#f07178","#aad94c","#ffb454","#59c2ff","#d2a6ff","#95e6cb","#ffffff"]},"pairKey":"ayu","pairMode":"dark"},{"id":"ghostty:ayu-light","name":"Ayu Light","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Ayu Light","license":"unknown","licenseSource":"https://github.com/mbadolato/iTerm2-Color-Schemes/pull/262","type":"terminal","palette":{"background":"#f8f9fa","foreground":"#5c6166","cursor":"#ffaa33","selection":"#035bd6","ansi":["#000000","#ea6c6d","#6cbf43","#eca944","#3199e1","#9e75c7","#46ba94","#bababa","#686868","#f07171","#86b300","#f2ae49","#399ee6","#a37acc","#4cbf99","#d1d1d1"]},"pairKey":"ayu","pairMode":"light"},{"id":"ghostty:ayu-mirage","name":"Ayu Mirage","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Ayu Mirage","license":"MIT","licenseSource":"https://github.com/ayu-theme/vscode-ayu","type":"terminal","palette":{"background":"#1f2430","foreground":"#cccac2","cursor":"#ffcc66","selection":"#409fff","ansi":["#171b24","#ed8274","#87d96c","#facc6e","#6dcbfa","#dabafa","#90e1c6","#c7c7c7","#686868","#f28779","#d5ff80","#ffd173","#73d0ff","#dfbfff","#95e6cb","#ffffff"]}},{"id":"ghostty:one-dark-two","name":"One Dark Two","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"One Dark Two","license":"unknown","licenseSource":"","type":"terminal","palette":{"background":"#21252b","foreground":"#e6e6e6","cursor":"#e6e6e6","selection":"#393e47","ansi":["#1d1f23","#e27881","#98c379","#eac786","#71b9f4","#c88bda","#62bac6","#c9ccd3","#4a505a","#e68991","#a8cc8e","#edcf97","#8dc7f6","#d3a2e2","#78c4ce","#e6e6e6"]}},{"id":"ghostty:night-owl","name":"Night Owl","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Night Owl","license":"unknown","licenseSource":"https://github.com/mbadolato/iTerm2-Color-Schemes/pull/546","type":"terminal","palette":{"background":"#011627","foreground":"#d6deeb","cursor":"#7e57c2","selection":"#5f7e97","ansi":["#011627","#ef5350","#22da6e","#addb67","#82aaff","#c792ea","#21c7a8","#ffffff","#575656","#ef5350","#22da6e","#ffeb95","#82aaff","#c792ea","#7fdbca","#ffffff"]}},{"id":"ghostty:night-owlish-light","name":"Night Owlish Light","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Night Owlish Light","license":"MIT","licenseSource":"https://github.com/praveenpuglia/night-owlish-theme","type":"terminal","palette":{"background":"#ffffff","foreground":"#403f53","cursor":"#403f53","selection":"#f2f2f2","ansi":["#011627","#d3423e","#2aa298","#daaa01","#4876d6","#403f53","#08916a","#7a8181","#7a8181","#f76e6e","#49d0c5","#dac26b","#5ca7e4","#697098","#00c990","#989fb1"]}},{"id":"ghostty:flexoki-dark","name":"Flexoki Dark","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Flexoki Dark","license":"MIT","licenseSource":"https://github.com/kepano/flexoki","type":"terminal","palette":{"background":"#100f0f","foreground":"#cecdc3","cursor":"#cecdc3","selection":"#403e3c","ansi":["#100f0f","#d14d41","#879a39","#d0a215","#4385be","#ce5d97","#3aa99f","#878580","#575653","#af3029","#66800b","#ad8301","#205ea6","#a02f6f","#24837b","#cecdc3"]},"pairKey":"flexoki","pairMode":"dark"},{"id":"ghostty:flexoki-light","name":"Flexoki Light","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Flexoki Light","license":"MIT","licenseSource":"https://github.com/kepano/flexoki","type":"terminal","palette":{"background":"#fffcf0","foreground":"#100f0f","cursor":"#100f0f","selection":"#cecdc3","ansi":["#100f0f","#af3029","#66800b","#ad8301","#205ea6","#a02f6f","#24837b","#6f6e69","#b7b5ac","#d14d41","#879a39","#d0a215","#4385be","#ce5d97","#3aa99f","#cecdc3"]},"pairKey":"flexoki","pairMode":"light"},{"id":"ghostty:modus-vivendi","name":"Modus Vivendi","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Modus Vivendi","license":"unknown","licenseSource":"","type":"terminal","palette":{"background":"#000000","foreground":"#ffffff","cursor":"#ffffff","selection":"#5a5a5a","ansi":["#000000","#ff5f59","#44bc44","#d0bc00","#2fafff","#feacd0","#00d3d0","#a6a6a6","#595959","#ff7f9f","#00c06f","#fec43f","#79a8ff","#b6a0ff","#6ae4b9","#ffffff"]},"pairKey":"modus","pairMode":"dark"},{"id":"ghostty:modus-operandi","name":"Modus Operandi","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Modus Operandi","license":"unknown","licenseSource":"","type":"terminal","palette":{"background":"#ffffff","foreground":"#000000","cursor":"#000000","selection":"#bdbdbd","ansi":["#000000","#a60000","#006800","#6f5500","#0031a9","#721045","#005e8b","#a6a6a6","#595959","#972500","#00663f","#884900","#3548cf","#531ab6","#005f5f","#595959"]},"pairKey":"modus","pairMode":"light"},{"id":"ghostty:dawnfox","name":"Dawnfox","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Dawnfox","license":"MIT","licenseSource":"https://github.com/EdenEast/nightfox.nvim/tree/main/extra","type":"terminal","palette":{"background":"#faf4ed","foreground":"#575279","cursor":"#575279","selection":"#d0d8d8","ansi":["#575279","#b4637a","#618774","#ea9d34","#286983","#907aa9","#56949f","#b2b6bd","#5f5695","#c26d85","#629f81","#eea846","#2d81a3","#9a80b9","#5ca7b4","#e6ebf3"]},"pairKey":"fox","pairMode":"dark"},{"id":"ghostty:dayfox","name":"Dayfox","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Dayfox","license":"MIT","licenseSource":"https://github.com/edeneast/nightfox.nvim","type":"terminal","palette":{"background":"#f6f2ee","foreground":"#3d2b5a","cursor":"#3d2b5a","selection":"#e7d2be","ansi":["#352c24","#a5222f","#396847","#ac5402","#2848a9","#6e33ce","#287980","#bfb6ae","#534c45","#b3434e","#577f63","#b86e28","#4863b6","#8452d5","#488d93","#f4ece6"]},"pairKey":"fox","pairMode":"light"},{"id":"ghostty:everblush","name":"Everblush","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Everblush","license":"MIT","licenseSource":"https://github.com/Everblush/everblush","type":"terminal","palette":{"background":"#141b1e","foreground":"#dadada","cursor":"#dadada","selection":"#141b1e","ansi":["#232a2d","#e57474","#8ccf7e","#e5c76b","#67b0e8","#c47fd5","#6cbfbf","#b3b9b8","#464e50","#ef7e7e","#96d988","#f4d67a","#71baf2","#ce89df","#67cbe7","#bdc3c2"]}},{"id":"ghostty:zenburn","name":"Zenburn","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Zenburn","license":"unknown","licenseSource":"https://github.com/jnurmine/Zenburn","type":"terminal","palette":{"background":"#3f3f3f","foreground":"#dcdccc","cursor":"#73635a","selection":"#21322f","ansi":["#4d4d4d","#7d5d5d","#60b48a","#f0dfaf","#5d6d7d","#dc8cc3","#8cd0d3","#dcdccc","#709080","#dca3a3","#c3bf9f","#e0cf9f","#94bff3","#ec93d3","#93e0e3","#ffffff"]}},{"id":"ghostty:horizon","name":"Horizon","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Horizon","license":"MIT","licenseSource":"https://github.com/jolaleye/horizon-theme-vscode","type":"terminal","palette":{"background":"#1c1e26","foreground":"#d5d8da","cursor":"#6c6f93","selection":"#6c6f93","ansi":["#000000","#e95678","#29d398","#fab795","#26bbd9","#ee64ac","#59e1e3","#e5e5e5","#666666","#ec6a88","#3fdaa4","#fbc3a7","#3fc4de","#f075b5","#6be4e6","#e5e5e5"]}},{"id":"ghostty:snazzy","name":"Snazzy","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Snazzy","license":"MIT","licenseSource":"https://github.com/sindresorhus/iterm2-snazzy","type":"terminal","palette":{"background":"#1e1f29","foreground":"#ebece6","cursor":"#e4e4e4","selection":"#81aec6","ansi":["#000000","#fc4346","#50fb7c","#f0fb8c","#49baff","#fc4cb4","#8be9fe","#ededec","#555555","#fc4346","#50fb7c","#f0fb8c","#49baff","#fc4cb4","#8be9fe","#ededec"]}},{"id":"ghostty:carbonfox","name":"Carbonfox","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Carbonfox","license":"MIT","licenseSource":"https://github.com/EdenEast/nightfox.nvim/tree/main/extra","type":"terminal","palette":{"background":"#161616","foreground":"#f2f4f8","cursor":"#f2f4f8","selection":"#2a2a2a","ansi":["#282828","#ee5396","#25be6a","#08bdba","#78a9ff","#be95ff","#33b1ff","#dfdfe0","#484848","#f16da6","#46c880","#2dc7c4","#8cb6ff","#c8a5ff","#52bdff","#e4e4e5"]}},{"id":"ghostty:material-ocean","name":"Material Ocean","source":"Ghostty bundled / iTerm2-Color-Schemes","sourceFile":"Material Ocean","license":"MIT","licenseSource":"https://github.com/kaicataldo/material.vim","type":"terminal","palette":{"background":"#0f111a","foreground":"#8f93a2","cursor":"#ffcc00","selection":"#1f2233","ansi":["#546e7a","#ff5370","#c3e88d","#ffcb6b","#82aaff","#c792ea","#89ddff","#ffffff","#546e7a","#ff5370","#c3e88d","#ffcb6b","#82aaff","#c792ea","#89ddff","#ffffff"]}},{"id":"custom:harbor-signal","name":"Harbor Signal","source":"Hand-tuned OpenCode-style semantic JSON","type":"semantic","license":"Original prototype palette","defs":{"neutral2":"#33494b","neutral8":"#d4e6df"},"theme":{"borderActive":{"dark":"#69d4c4","light":"#247b72"},"success":{"dark":"#c3df7c","light":"#617b2c"},"text":{"dark":"#d7f0ed","light":"#173331"},"accent":{"dark":"#c3df7c","light":"#617b2c"},"error":{"dark":"#f18172","light":"#a63f3f"},"backgroundElement":{"dark":"#254247","light":"#d8e7df"},"diffRemoved":{"dark":"#f18172","light":"#a63f3f"},"info":{"dark":"#83b6e6","light":"#366a94"},"textMuted":{"dark":"#91aaa8","light":"#536e6a"},"backgroundPanel":{"dark":"#1b3438","light":"#e2ece4"},"diffAdded":{"dark":"#c3df7c","light":"#426b29"},"background":{"dark":"#102225","light":"#eef5ef"},"borderSubtle":{"dark":"#294143","light":"#cfddd4"},"primary":{"dark":"#69d4c4","light":"#247b72"},"secondary":{"dark":"#83b6e6","light":"#366a94"},"border":{"dark":"#3a5556","light":"#b8ccc1"},"diffAddedBg":{"dark":"#254332","light":"#d5e8d1"},"warning":{"dark":"#efc875","light":"#84621b"},"diffRemovedBg":{"dark":"#452d34","light":"#f1d9d5"}}},{"id":"custom:signal-amber","name":"Signal Amber","source":"Hand-tuned OpenCode-style semantic JSON","type":"semantic","license":"Original prototype palette","defs":{"neutral2":"#303034","neutral8":"#e8e5da"},"theme":{"borderActive":{"dark":"#ffc857","light":"#835300"},"success":{"dark":"#b9df78","light":"#526d14"},"text":{"dark":"#f5eedc","light":"#28251d"},"accent":{"dark":"#b9df78","light":"#526d14"},"error":{"dark":"#ff766e","light":"#a73330"},"backgroundElement":{"dark":"#2b2e32","light":"#e2d9c3"},"diffRemoved":{"dark":"#ff766e","light":"#a73330"},"info":{"dark":"#78c6c2","light":"#246e6c"},"textMuted":{"dark":"#aaa393","light":"#655f50"},"backgroundPanel":{"dark":"#202226","light":"#ebe4d3"},"diffAdded":{"dark":"#b9df78","light":"#4d641e"},"background":{"dark":"#17181b","light":"#f6f1e4"},"borderSubtle":{"dark":"#303236","light":"#ddd4c1"},"primary":{"dark":"#ffc857","light":"#835300"},"secondary":{"dark":"#78c6c2","light":"#246e6c"},"border":{"dark":"#43464a","light":"#cfc4aa"},"diffAddedBg":{"dark":"#293627","light":"#e0e9d2"},"warning":{"dark":"#ffc857","light":"#835300"},"diffRemovedBg":{"dark":"#3c2929","light":"#f2dcd5"}}},{"id":"custom:studio-slate","name":"Studio Slate","source":"Hand-tuned OpenCode-style semantic JSON","type":"semantic","license":"Original prototype palette","defs":{"neutral2":"#343b45","neutral8":"#e1e6eb"},"theme":{"borderActive":{"dark":"#8eafff","light":"#315997"},"success":{"dark":"#79d3bf","light":"#2c7568"},"text":{"dark":"#e8edf3","light":"#232b34"},"accent":{"dark":"#e5bf75","light":"#836116"},"error":{"dark":"#ff817d","light":"#a13d3d"},"backgroundElement":{"dark":"#2c3641","light":"#d9e0e7"},"diffRemoved":{"dark":"#ff817d","light":"#a13d3d"},"info":{"dark":"#8eafff","light":"#315997"},"textMuted":{"dark":"#a0aab7","light":"#5e6977"},"backgroundPanel":{"dark":"#222a33","light":"#e4e9ee"},"diffAdded":{"dark":"#79d3bf","light":"#2c7568"},"background":{"dark":"#181d24","light":"#f0f3f6"},"borderSubtle":{"dark":"#303943","light":"#d0d8e0"},"primary":{"dark":"#8eafff","light":"#315997"},"secondary":{"dark":"#79d3bf","light":"#2c7568"},"border":{"dark":"#404b58","light":"#c2ccd6"},"diffAddedBg":{"dark":"#283d3a","light":"#d6e7df"},"warning":{"dark":"#e5bf75","light":"#836116"},"diffRemovedBg":{"dark":"#432d32","light":"#f0d9d7"}}}]</script>
+<script>
+(() => {
+'use strict';
+const catalogEl = document.getElementById('theme-catalog');
+const builtIns = JSON.parse(catalogEl?.textContent || '[]');
+const STORE = 'adv360.theme-system.v1';
+const root = document.documentElement;
+const $ = (s) => document.querySelector(s);
+let saved = {}; try { saved = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch {}
+let custom = Array.isArray(saved.custom) ? saved.custom : [];
+let themes = [...builtIns, ...custom];
+let favoriteIds = new Set(saved.favorites || []);
+let activeId = new URLSearchParams(location.search).get('theme') || saved.active || 'ghostty:catppuccin-mocha';
+let modeSetting = new URLSearchParams(location.search).get('mode') || saved.mode || 'system';
+let effectiveMode = modeSetting === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : modeSetting;
+let filter = 'all', favoritesOnly = false, previewId = activeId, priorId = activeId, pickerOpen = false, focusIndex = 0;
+const picker = $('#themePicker'), list = $('#themeList'), search = $('#themeSearch');
+const cssNames = {
+ canvas:'surface-canvas', panel:'surface-panel', raised:'surface-raised', hover:'surface-hover',
+ text:'text-primary', secondary:'text-secondary', muted:'text-muted', border:'border-base', borderSubtle:'border-subtle',
+ keyTop:'keycap-top', keyFace:'keycap-face', keySide:'keycap-side', keyLegend:'keycap-legend', keySublegend:'keycap-sublegend',
+ layer1:'layer-1',layer2:'layer-2',layer3:'layer-3',layer4:'layer-4', warning:'status-warning',error:'status-error',success:'status-success',info:'status-info',
+ holdtap:'arc-holdtap',macro:'arc-macro',bluetooth:'arc-bluetooth',combo:'arc-combo',focus:'focus-ring',add:'diff-add',remove:'diff-remove',addBg:'diff-add-bg',removeBg:'diff-remove-bg',
+ accent:'accent-primary',onAccent:'on-accent',onLayer1:'on-layer-1',onLayer2:'on-layer-2',onLayer3:'on-layer-3',onLayer4:'on-layer-4',onWarning:'on-warning',onSuccess:'on-success',onCombo:'on-combo',
+ highlight:'keycap-highlight',keyShadow:'keycap-shadow',surfaceGlow:'surface-glow',surfaceDot:'surface-dot',line:'border-base',line2:'border-subtle',overlay:'overlay',shadowInk:'shadow-ink',shadowDialog:'shadow-dialog',shadowFloat:'shadow-float'
+};
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+function rgb(c){let h=String(c||'#888888').replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16)/255)}
+function hex(v){return '#'+v.map(x=>Math.round(clamp(x)*255).toString(16).padStart(2,'0')).join('')}
+function mix(a,b,t){let x=rgb(a),y=rgb(b);return hex(x.map((v,i)=>v*(1-t)+y[i]*t))}
+function lum(c){return rgb(c).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((a,v,i)=>a+v*[.2126,.7152,.0722][i],0)}
+function contrast(a,b){let x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)}
+function ensure(fg,bg,min){if(contrast(fg,bg)>=min)return fg;let toward=contrast('#000000',bg)>contrast('#ffffff',bg)?'#000000':'#ffffff';let lo=0,hi=1;for(let i=0;i<24;i++){let mid=(lo+hi)/2;if(contrast(mix(fg,toward,mid),bg)>=min)hi=mid;else lo=mid}return mix(fg,toward,hi)}
+function rgba(c,a){return `rgba(${rgb(c).map(v=>Math.round(v*255)).join(',')},${a})`}
+function isLight(c){return lum(c)>.42}
+function contrastInk(bg){return contrast('#ffffff',bg)>=contrast('#111111',bg)?'#ffffff':'#111111'}
+function resolveRef(v,defs,seen=new Set()){if(typeof v==='number')return v;if(typeof v!=='string')return v;if(v==='none'||v==='transparent')return null;if(v.startsWith('#'))return v;let key=v.replace(/^\$/,'');if(seen.has(key))return null;let next=defs?.[key];return next===undefined?v:resolveRef(next,defs,new Set([...seen,key]))}
+function semanticColors(theme,mode){let defs=theme.defs||{},colors={};for(const [k,pair]of Object.entries(theme.theme||{})){let v=typeof pair==='object'?(pair[mode]??pair.dark??pair.light):pair;colors[k]=resolveRef(v,defs)}return colors}
+function tokens(theme,mode){
+ let p=theme.palette, sem=theme.type==='semantic'?semanticColors(theme,mode):null;
+ let bg=sem?.background||p?.background||'#20242c', fg=sem?.text||p?.foreground||'#e5e7eb', dark=!isLight(bg);
+ const ansi=p?.ansi||[]; const pick=(n,fallback)=>ansi[n]||fallback;
+ const panel=sem?.backgroundPanel||mix(bg,fg,dark?.045:.035), raised=sem?.backgroundElement||mix(panel,fg,dark?.08:.055), top=mix(panel,dark?'#ffffff':'#ffffff',dark?.10:.35), side=mix(panel,dark?'#000000':'#000000',dark?.42:.12);
+ const layer=(semantic,key,idx,fb)=>ensure(sem?.[semantic]||pick(idx,fb),bg,3.15);
+ let t={canvas:bg,panel,raised,hover:mix(raised,fg,dark?.09:.06),text:ensure(fg,bg,4.5),secondary:ensure(mix(fg,bg,dark?.18:.25),panel,4.5),muted:ensure(mix(fg,bg,dark?.4:.43),panel,3),border:mix(bg,fg,dark?.18:.15),borderSubtle:mix(bg,fg,dark?.10:.08),keyTop:top,keyFace:panel,keySide:side,keyLegend:ensure(fg,panel,4.5),keySublegend:ensure(mix(fg,panel,dark?.29:.35),panel,3),
+ layer1:layer('primary',null,4,'#6688dd'),layer2:layer('secondary',null,2,'#46a888'),layer3:layer('accent',null,3,'#d69835'),layer4:layer('info',null,5,'#a275ce'),
+ warning:layer('warning',null,1,'#d65a47'),error:layer('error',null,1,'#cf4b55'),success:layer('success',null,2,'#26865f'),info:layer('info',null,6,'#5089d2'),holdtap:layer('secondary',null,6,'#28a899'),macro:layer('accent',null,5,'#a475d0'),bluetooth:layer('primary',null,4,'#6488df'),combo:layer('info',null,5,'#df5794'),focus:ensure(p?.cursor||pick(4,'#739bff'),bg,3),add:layer('success',null,2,'#2e9b69'),remove:layer('error',null,1,'#ca4b4b'),addBg:mix(bg,sem?.diffAdded||pick(2,'#45ad75'),dark?.22:.14),removeBg:mix(bg,sem?.diffRemoved||pick(1,'#d75c62'),dark?.22:.14),accent:layer('primary',null,4,'#6688dd')};
+ const overrideNames={primary:'layer1',secondary:'layer2',accent:'layer3',info:'info',error:'error',warning:'warning',success:'success',text:'text',textMuted:'muted',background:'canvas',backgroundPanel:'panel',backgroundElement:'raised',border:'border',borderActive:'focus',borderSubtle:'borderSubtle',diffAdded:'add',diffRemoved:'remove',diffAddedBg:'addBg',diffRemovedBg:'removeBg',surfaceCanvas:'canvas',surfacePanel:'panel',surfaceRaised:'raised',surfaceHover:'hover',textPrimary:'text',textSecondary:'secondary',borderBase:'border',keycapTop:'keyTop',keycapFace:'keyFace',keycapSide:'keySide',keycapHighlight:'highlight',keycapShadow:'keyShadow',keycapLegend:'keyLegend',keycapSublegend:'keySublegend',surfaceGlow:'surfaceGlow',surfaceDot:'surfaceDot',layer1:'layer1',layer2:'layer2',layer3:'layer3',layer4:'layer4',statusWarning:'warning',statusError:'error',statusSuccess:'success',statusInfo:'info',arcHoldtap:'holdtap',arcMacro:'macro',arcBluetooth:'bluetooth',arcCombo:'combo',focusRing:'focus',diffAdd:'add',diffRemove:'remove',diffAddBg:'addBg',diffRemoveBg:'removeBg',accentPrimary:'accent',onAccent:'onAccent',onWarning:'onWarning',onSuccess:'onSuccess',onCombo:'onCombo',onLayer1:'onLayer1',onLayer2:'onLayer2',onLayer3:'onLayer3',onLayer4:'onLayer4'};
+ if(sem)for(const [name,value] of Object.entries(sem)){const target=overrideNames[name]||overrideNames[name.replace(/-([a-z])/g,(_,c)=>c.toUpperCase())];if(target&&value)t[target]=value}
+ for(const key of ['layer1','layer2','layer3','layer4','warning','error','success','info','holdtap','macro','bluetooth','combo','accent','focus']) t[key]=ensure(t[key],bg,3.15);
+ t.keyLegend=ensure(t.keyLegend,panel,4.5);t.keySublegend=ensure(t.keySublegend,panel,3);t.text=ensure(t.text,bg,4.5);t.secondary=ensure(t.secondary,panel,4.5);t.muted=ensure(t.muted,panel,3);
+ t.onAccent=contrastInk(t.accent);t.onWarning=contrastInk(t.warning);t.onSuccess=contrastInk(t.success);t.onCombo=contrastInk(t.combo);
+ t.highlight=rgba(dark?'#ffffff':'#ffffff',dark?.17:.78);t.keyShadow=rgba(dark?'#000000':'#38312b',dark?.52:.24);t.surfaceGlow=rgba(p?.selection||t.layer1,.10);t.surfaceDot=rgba(fg,dark?.075:.12);t.overlay=rgba(dark?'#030609':'#12100d',.43);t.shadowInk=rgba(dark?'#000000':'#382f25',dark?.45:.12);
+ t.shadowDialog=`0 1px 0 ${rgba('#ffffff',dark?.055:.75)} inset,0 30px 65px -20px ${rgba('#000000',dark?.74:.37)},0 8px 22px ${rgba('#000000',dark?.3:.1)}`;
+ t.shadowFloat=`0 1px 0 ${rgba('#ffffff',dark?.06:.7)} inset,0 16px 36px -16px ${rgba('#000000',dark?.65:.28)},0 2px 6px ${rgba('#000000',dark?.28:.08)}`;
+ t.line=t.border;t.line2=t.borderSubtle;
+ for(let i=1;i<=4;i++)t[`onLayer${i}`]=contrastInk(t[`layer${i}`]);
+ if(sem)for(const [name,value] of Object.entries(sem)){const target=overrideNames[name]||overrideNames[name.replace(/-([a-z])/g,(_,c)=>c.toUpperCase())];if(target&&value)t[target]=value}
+ t.keyLegend=ensure(t.keyLegend,t.keyFace,4.5);t.keySublegend=ensure(t.keySublegend,t.keyFace,3);t.text=ensure(t.text,t.canvas,4.5);t.onAccent=ensure(t.onAccent||contrastInk(t.accent),t.accent,4.5);t.onWarning=ensure(t.onWarning||contrastInk(t.warning),t.warning,4.5);t.onSuccess=ensure(t.onSuccess||contrastInk(t.success),t.success,4.5);t.onCombo=ensure(t.onCombo||contrastInk(t.combo),t.combo,4.5);for(let i=1;i<=4;i++)t[`onLayer${i}`]=ensure(t[`onLayer${i}`]||contrastInk(t[`layer${i}`]),t[`layer${i}`],4.5);
+ return t;
+}
+function themeMode(theme){if(theme.type==='semantic')return effectiveMode;return isLight(theme.palette?.background||'#222')?'light':'dark'}
+function current(){return themes.find(x=>x.id===previewId)||themes[0]}
+function persist(){try{localStorage.setItem(STORE,JSON.stringify({active:activeId,mode:modeSetting,favorites:[...favoriteIds],custom}))}catch{}}
+function apply(id,commit=false){let selected=themes.find(x=>x.id===id)||themes[0],theme=selected;let targetMode=modeSetting==='system'?effectiveMode:modeSetting;if(selected.type==='terminal'&&selected.pairKey&&selected.pairMode!==targetMode)theme=themes.find(x=>x.pairKey===selected.pairKey&&x.pairMode===targetMode)||selected;let mode=theme.type==='terminal'?(theme.pairMode||themeMode(theme)):effectiveMode,ts=tokens(theme,mode);previewId=id;if(commit){activeId=id;persist()};root.dataset.theme=mode;root.style.colorScheme=mode;for(const [key,value] of Object.entries(ts))root.style.setProperty('--'+(cssNames[key]||key.replace(/[A-Z]/g,m=>'-'+m.toLowerCase())),value);$('#activeThemeLabel').textContent=theme.name;$('#previewName').textContent=theme.name;$('#previewMeta').textContent=theme.type==='semantic'?`Hand-tuned semantic JSON · ${theme.license}`:`${theme.sourceFile} · ${mode} · ${theme.license==='unknown'?'license unverified':theme.license}`;paintPreview(theme,ts);updateFavorite();renderList();}
+function paintPreview(theme,t){let colors=[t.canvas,t.panel,t.raised,t.layer1,t.layer2,t.layer3,t.layer4,t.combo,t.warning,t.success];$('#previewSwatches').innerHTML=colors.map(c=>`<i class="preview-swatch" style="background:${c}"></i>`).join('');$('#previewTokens').innerHTML=[['Layer 1',t.layer1],['Layer 2',t.layer2],['Hold-tap',t.holdtap],['Combo arc',t.combo],['Macro',t.macro],['Bluetooth',t.bluetooth]].map(([n,c])=>`<span class="token-chip"><i style="--chip:${c}"></i>${n}</span>`).join('');let keys=$$('.preview-key');keys.slice(0,4).forEach((el,i)=>el.style.setProperty('--keycap-legend',[t.keyLegend,t.layer2,t.layer3,t.layer1][i]));$('#followSystem').setAttribute('aria-pressed',modeSetting==='system');$('#lockDark').setAttribute('aria-pressed',modeSetting==='dark');$('#lockLight').setAttribute('aria-pressed',modeSetting==='light')}
+function $$(s){return [...document.querySelectorAll(s)]}
+function themeLightness(t){return t.type==='terminal'?(isLight(t.palette.background)?'light':'dark'):'both'}
+function visibleThemes(){let q=search.value.trim().toLowerCase();return themes.filter(t=>(filter==='all'||themeLightness(t)==='both'||themeLightness(t)===filter)&&(!favoritesOnly||favoriteIds.has(t.id))&&(!q||(t.name+' '+t.source).toLowerCase().includes(q)))}
+function renderList(){let arr=visibleThemes();$('#themeResultCount').textContent=`${arr.length} palette${arr.length===1?'':'s'}`;list.innerHTML=arr.length?arr.map(t=>{let x=tokens(t,themeMode(t));return `<button class="theme-row" role="option" aria-selected="${t.id===previewId}" data-theme-id="${t.id}"><i class="row-mark" style="background:linear-gradient(135deg,${x.layer1},${x.layer2} 36%,${x.layer3} 68%,${x.canvas})"></i><span class="row-name">${esc(t.name)}</span><span class="row-type">${t.type==='semantic'?'CUSTOM':themeLightness(t).toUpperCase()}</span>${favoriteIds.has(t.id)?'<span class="row-star">★</span>':''}</button>`}).join(''):'<div class="fine" style="padding:18px">No matching palettes. Try another search or filter.</div>';let selected=list.querySelector(`[data-theme-id="${CSS.escape(previewId)}"]`);if(selected&&pickerOpen)selected.scrollIntoView({block:'nearest'});}
+function esc(s){return String(s).replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]))}
+function openPicker(){priorId=activeId;previewId=activeId;pickerOpen=true;picker.classList.add('open');picker.setAttribute('aria-hidden','false');$('#themeScrim').classList.add('open');renderList();apply(previewId);setTimeout(()=>search.focus(),25)}
+function closePicker(commit=false){if(commit){activeId=previewId;persist()}else{previewId=activeId;apply(activeId)}pickerOpen=false;picker.classList.remove('open');picker.setAttribute('aria-hidden','true');$('#themeScrim').classList.remove('open');$('#themePickerBtn').focus()}
+function preview(id){previewId=id;apply(id);renderList()}
+function updateFavorite(){let yes=favoriteIds.has(previewId),b=$('#favoriteTheme');b.textContent=yes?'★':'☆';b.classList.toggle('on',yes);b.setAttribute('aria-label',yes?'Remove favorite':'Add favorite')}
+function switchMode(mode){modeSetting=mode;effectiveMode=mode==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):mode;apply(previewId);persist()}
+function parseGhostty(txt){let p={palette:[]},slots={},norm=v=>/^#?[0-9a-fA-F]{6}$/.test(v)?(v.startsWith('#')?v:'#'+v):null;for(let raw of txt.split(String.fromCharCode(10))){let line=raw.replace(/\r/g,'').trim();if(!line||line.startsWith('#')||!line.includes('='))continue;let [k,v]=line.split('=',2).map(x=>x.trim());if(k==='palette'){let m=v.match(/^(\d+)\s*=\s*(#?[0-9a-fA-F]{6})$/);if(m)slots[+m[1]]=norm(m[2])}else if(['background','foreground','cursor-color','selection-background'].includes(k)&&norm(v))p[k]=norm(v)}if(!p.background||!p.foreground)return null;p.ansi=Array.from({length:16},(_,i)=>slots[i]||p.foreground);p.cursor=p['cursor-color']||p.foreground;p.selection=p['selection-background']||p.ansi[4];return p}
+function parseOpenCode(obj){if(!obj||typeof obj!=='object'||!obj.theme)return null;let defs=obj.defs||{},ansi=themes.find(t=>t.id===previewId)?.palette?.ansi||[];const color=v=>{if(typeof v==='number')return ansi[v]||null;if(typeof v!=='string')return null;let seen=new Set();while(defs[v]!==undefined&&!seen.has(v)){seen.add(v);v=defs[v]}if(v==='none'||v==='transparent')return null;let m=v.match(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/);if(!m)return null;let h=m[1];if(h.length===3)h=h.split('').map(c=>c+c).join('');if(h.length===8)h=h.slice(0,6);return '#'+h};let theme={};for(let [k,pair]of Object.entries(obj.theme)){let darkVal,lightVal;if(pair&&typeof pair==='object'&&!Array.isArray(pair)){darkVal=color(pair.dark??pair.light);lightVal=color(pair.light??pair.dark)}else{darkVal=lightVal=color(pair)}if(darkVal||lightVal)theme[k]={dark:darkVal||lightVal,light:lightVal||darkVal}}if(!theme.background||!theme.text)return null;return {id:'import:'+Date.now(),name:obj.name||'Imported OpenCode theme',source:'Imported OpenCode JSON',type:'semantic',license:'User supplied',defs,theme}}
+$('#themePickerBtn').addEventListener('click',openPicker);$('#themeClose').addEventListener('click',()=>closePicker());$('#themeScrim').addEventListener('click',()=>closePicker());$('#applyTheme').addEventListener('click',()=>closePicker(true));
+$('#themeList').addEventListener('click',e=>{let row=e.target.closest('[data-theme-id]');if(row)preview(row.dataset.themeId)});
+$('#themeList').addEventListener('mousemove',e=>{let row=e.target.closest('[data-theme-id]');if(row&&row.dataset.themeId!==previewId)preview(row.dataset.themeId)});
+$('#themeList').addEventListener('keydown',e=>{let arr=visibleThemes();if(!arr.length)return;let i=arr.findIndex(x=>x.id===previewId);if(e.key==='ArrowDown'||e.key==='ArrowRight'){e.preventDefault();preview(arr[(i+1)%arr.length].id)}else if(e.key==='ArrowUp'||e.key==='ArrowLeft'){e.preventDefault();preview(arr[(i-1+arr.length)%arr.length].id)}else if(e.key==='Home'){e.preventDefault();preview(arr[0].id)}else if(e.key==='End'){e.preventDefault();preview(arr.at(-1).id)}else if(e.key==='Enter'){e.preventDefault();closePicker(true)}else if(e.key==='Escape'){e.preventDefault();closePicker()}});
+$('.theme-filters').addEventListener('click',e=>{let b=e.target.closest('[data-filter]');if(!b)return;filter=b.dataset.filter;$$('.theme-filters button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderList()});
+search.addEventListener('input',renderList);search.addEventListener('keydown',e=>{if(e.key==='ArrowDown'){e.preventDefault();list.focus();let arr=visibleThemes();if(arr[0])preview(arr[0].id)}if(e.key==='Escape')closePicker()});
+$('#favoritesOnly').addEventListener('click',e=>{favoritesOnly=!favoritesOnly;e.currentTarget.setAttribute('aria-pressed',favoritesOnly);renderList()});$('#favoriteTheme').addEventListener('click',()=>{favoriteIds.has(previewId)?favoriteIds.delete(previewId):favoriteIds.add(previewId);persist();updateFavorite();renderList()});
+$('#followSystem').addEventListener('click',()=>switchMode('system'));$('#lockDark').addEventListener('click',()=>switchMode('dark'));$('#lockLight').addEventListener('click',()=>switchMode('light'));
+$('#importTheme').addEventListener('click',()=>{let txt=$('#themeImportText').value.trim(),status=$('#importStatus'),theme=null;try{if(txt.startsWith('{'))theme=parseOpenCode(JSON.parse(txt));else{let pal=parseGhostty(txt);if(pal){let name='Imported Ghostty theme',m=txt.match(/^(?:name|theme)\s*=\s*(.+)$/m);if(m)name=m[1].trim();theme={id:'import:'+Date.now(),name,source:'Imported Ghostty theme file',type:'terminal',license:'User supplied',palette:pal}}}}catch{}if(!theme){status.textContent='Could not read this theme. Check its JSON or color entries.';return}themes.push(theme);if(theme.id.startsWith('import:'))custom.push(theme);persist();preview(theme.id);status.textContent='Imported. Preview it, then choose Use this theme.'});
+window.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();pickerOpen?closePicker():openPicker();return}if(e.key==='Escape'&&pickerOpen){e.preventDefault();closePicker();return}if(pickerOpen)return;if(e.key==='/'&&!/input|textarea|select/i.test(document.activeElement.tagName)){e.preventDefault();openPicker();search.focus()}});
+const media=matchMedia('(prefers-color-scheme: dark)');media.addEventListener?.('change',()=>{if(modeSetting==='system'){effectiveMode=media.matches?'dark':'light';apply(previewId);persist()}});
+// Importable metadata with computed contrast verification for the active surface.
+function auditContrast(){let t=tokens(current(),themeMode(current()));return {legend:contrast(t.keyLegend,t.keyFace),sublegend:contrast(t.keySublegend,t.keyFace),glyph:contrast(t.layer1,t.canvas),thresholds:'legend ≥ 4.5; UI glyph ≥ 3'}}
+window.themeSystem={themes,applyTheme:id=>apply(id,true),openPicker,contrastAudit:auditContrast,tokenSet:()=>tokens(current(),themeMode(current()))};
+let initial=themes.find(t=>t.id===activeId)||themes[0];activeId=initial.id;previewId=initial.id;apply(activeId);persist();
+if(new URLSearchParams(location.search).has('picker'))openPicker();
+if(new URLSearchParams(location.search).has('audit')){root.dataset.themeAudit=JSON.stringify(auditContrast());let reports=themes.flatMap(x=>(x.type==='semantic'?['dark','light']:[themeMode(x)]).map(m=>{let z=tokens(x,m);return {name:x.name,mode:m,legend:contrast(z.keyLegend,z.keyFace),sub:contrast(z.keySublegend,z.keyFace),glyph:contrast(z.layer1,z.canvas)}}));root.dataset.catalogAudit=JSON.stringify({count:reports.length,minLegend:Math.min(...reports.map(x=>x.legend)),minSublegend:Math.min(...reports.map(x=>x.sub)),minGlyph:Math.min(...reports.map(x=>x.glyph)),failed:reports.filter(x=>x.legend<4.5||x.sub<3||x.glyph<3)})}
+})();
+</script>
+</body>
+</html>

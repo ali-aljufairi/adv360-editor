@@ -1,0 +1,286 @@
+{
+  "upstream": "https://github.com/mbadolato/iTerm2-Color-Schemes/blob/master/licenses.yml",
+  "audited": "2026-11-05",
+  "themes": {
+    "Catppuccin Mocha": {
+      "license": "MIT",
+      "source": "https://github.com/catppuccin/palette",
+      "note": null
+    },
+    "Catppuccin Latte": {
+      "license": "MIT",
+      "source": "https://github.com/catppuccin/palette",
+      "note": null
+    },
+    "Catppuccin Frappe": {
+      "license": "MIT",
+      "source": "https://github.com/catppuccin/palette",
+      "note": null
+    },
+    "Catppuccin Macchiato": {
+      "license": "MIT",
+      "source": "https://github.com/catppuccin/palette",
+      "note": null
+    },
+    "TokyoNight": {
+      "license": "Apache-2.0",
+      "source": "https://github.com/folke/tokyonight.nvim",
+      "note": null
+    },
+    "TokyoNight Day": {
+      "license": "Apache-2.0",
+      "source": "https://github.com/folke/tokyonight.nvim",
+      "note": null
+    },
+    "TokyoNight Moon": {
+      "license": "Apache-2.0",
+      "source": "https://github.com/folke/tokyonight.nvim",
+      "note": null
+    },
+    "TokyoNight Storm": {
+      "license": "Apache-2.0",
+      "source": "https://github.com/folke/tokyonight.nvim",
+      "note": null
+    },
+    "Dracula": {
+      "license": "unknown",
+      "source": "https://github.com/mbadolato/iTerm2-Color-Schemes/commit/e89464b73ef5301d13dafaddbb139d7562e700a9",
+      "note": null
+    },
+    "Nord": {
+      "license": "MIT",
+      "source": "https://github.com/nordtheme/iterm2",
+      "note": "https://github.com/mbadolato/iTerm2-Color-Schemes/pull/243"
+    },
+    "Nord Light": {
+      "license": "MIT",
+      "source": "https://github.com/nordtheme/iterm2",
+      "note": null
+    },
+    "Gruvbox Dark": {
+      "license": "MIT",
+      "source": "https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6",
+      "note": null
+    },
+    "Gruvbox Dark Hard": {
+      "license": "MIT",
+      "source": "https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6",
+      "note": null
+    },
+    "Gruvbox Light": {
+      "license": "MIT",
+      "source": "https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6",
+      "note": null
+    },
+    "Gruvbox Light Hard": {
+      "license": "MIT",
+      "source": "https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6",
+      "note": null
+    },
+    "Rose Pine": {
+      "license": "MIT",
+      "source": "https://github.com/rose-pine/build",
+      "note": "Endorsed by upstream https://github.com/rose-pine/ghostty"
+    },
+    "Rose Pine Dawn": {
+      "license": "MIT",
+      "source": "https://github.com/rose-pine/build",
+      "note": "Endorsed by upstream https://github.com/rose-pine/ghostty"
+    },
+    "Rose Pine Moon": {
+      "license": "MIT",
+      "source": "https://github.com/rose-pine/build",
+      "note": "Endorsed by upstream https://github.com/rose-pine/ghostty"
+    },
+    "Solarized Dark Patched": {
+      "license": "unknown",
+      "source": "https://github.com/mbadolato/iTerm2-Color-Schemes/pull/63",
+      "note": "Modified Solarized Dark"
+    },
+    "Solarized Light": {
+      "license": "unknown",
+      "source": "",
+      "note": null
+    },
+    "Kanagawa Wave": {
+      "license": "MIT",
+      "source": "https://github.com/rebelot/kanagawa.nvim",
+      "note": null
+    },
+    "Kanagawa Lotus": {
+      "license": "unknown",
+      "source": "",
+      "note": "Not covered by the research in #638."
+    },
+    "Kanagawa Dragon": {
+      "license": "MIT",
+      "source": "https://github.com/rebelot/kanagawa.nvim",
+      "note": null
+    },
+    "Everforest Dark Hard": {
+      "license": "MIT",
+      "source": "https://github.com/icewind/everforest.iterm2",
+      "note": null
+    },
+    "Everforest Dark Med": {
+      "license": "unknown",
+      "source": "",
+      "note": "Not covered by the research in #638."
+    },
+    "Everforest Dark Soft": {
+      "license": "unknown",
+      "source": "",
+      "note": "Not covered by the research in #638."
+    },
+    "Everforest Light Hard": {
+      "license": "unknown",
+      "source": "",
+      "note": "Not covered by the research in #638."
+    },
+    "Everforest Light Med": {
+      "license": "MIT",
+      "source": "https://github.com/icewind/everforest.iterm2",
+      "note": null
+    },
+    "Everforest Light Soft": {
+      "license": "unknown",
+      "source": "",
+      "note": "Not covered by the research in #638."
+    },
+    "Atom One Dark": {
+      "license": "MIT",
+      "source": "https://github.com/atom/atom/tree/master/packages/one-dark-ui",
+      "note": null
+    },
+    "Atom One Light": {
+      "license": "MIT",
+      "source": "https://github.com/atom/atom/tree/master/packages/one-light-ui",
+      "note": null
+    },
+    "GitHub Dark": {
+      "license": "MIT",
+      "source": "https://github.com/primer/github-vscode-theme",
+      "note": null
+    },
+    "GitHub Light Default": {
+      "license": "MIT",
+      "source": "https://github.com/primer/github-vscode-theme",
+      "note": null
+    },
+    "GitHub Dark Dimmed": {
+      "license": "MIT",
+      "source": "https://github.com/primer/github-vscode-theme",
+      "note": null
+    },
+    "GitHub Dark High Contrast": {
+      "license": "MIT",
+      "source": "https://github.com/primer/github-vscode-theme",
+      "note": null
+    },
+    "Ayu": {
+      "license": "unknown",
+      "source": "https://github.com/mbadolato/iTerm2-Color-Schemes/pull/89",
+      "note": null
+    },
+    "Ayu Light": {
+      "license": "unknown",
+      "source": "https://github.com/mbadolato/iTerm2-Color-Schemes/pull/262",
+      "note": null
+    },
+    "Ayu Mirage": {
+      "license": "MIT",
+      "source": "https://github.com/ayu-theme/vscode-ayu",
+      "note": null
+    },
+    "One Dark Two": {
+      "license": "unknown",
+      "source": "",
+      "note": "Not covered by the research in #638."
+    },
+    "Night Owl": {
+      "license": "unknown",
+      "source": "https://github.com/mbadolato/iTerm2-Color-Schemes/pull/546",
+      "note": "Possibly based on https://github.com/sdras/night-owl-vscode-theme, also check for Light Owl"
+    },
+    "Night Owlish Light": {
+      "license": "MIT",
+      "source": "https://github.com/praveenpuglia/night-owlish-theme",
+      "note": "Based on https://github.com/sdras/night-owl-vscode-theme"
+    },
+    "Flexoki Dark": {
+      "license": "MIT",
+      "source": "https://github.com/kepano/flexoki",
+      "note": null
+    },
+    "Flexoki Light": {
+      "license": "MIT",
+      "source": "https://github.com/kepano/flexoki",
+      "note": null
+    },
+    "Modus Vivendi": {
+      "license": "unknown",
+      "source": "",
+      "note": "Not covered by the research in #638."
+    },
+    "Modus Operandi": {
+      "license": "unknown",
+      "source": "",
+      "note": "Not covered by the research in #638."
+    },
+    "Dawnfox": {
+      "license": "MIT",
+      "source": "https://github.com/EdenEast/nightfox.nvim/tree/main/extra",
+      "note": "No Credits entry"
+    },
+    "Dayfox": {
+      "license": "MIT",
+      "source": "https://github.com/edeneast/nightfox.nvim",
+      "note": null
+    },
+    "Monokai Pro": {
+      "license": "nonfree",
+      "source": "https://monokai.pro/license",
+      "note": "The research lists this row without a name, in the place where Monokai Pro sorts."
+    },
+    "Zenburn": {
+      "license": "unknown",
+      "source": "https://github.com/jnurmine/Zenburn",
+      "note": "Listed in the research as \"Unknown (\u201cGPL\u201d)\". License is only specified to be \u201cGPL\u201d and not which exact version, since its unclear what license its under I consider this invalid."
+    },
+    "Horizon": {
+      "license": "MIT",
+      "source": "https://github.com/jolaleye/horizon-theme-vscode",
+      "note": null
+    },
+    "Snazzy": {
+      "license": "MIT",
+      "source": "https://github.com/sindresorhus/iterm2-snazzy",
+      "note": "https://github.com/mbadolato/iTerm2-Color-Schemes/pull/97"
+    },
+    "Carbonfox": {
+      "license": "MIT",
+      "source": "https://github.com/EdenEast/nightfox.nvim/tree/main/extra",
+      "note": "No Credits entry"
+    },
+    "Material Ocean": {
+      "license": "MIT",
+      "source": "https://github.com/kaicataldo/material.vim",
+      "note": null
+    },
+    "Everblush": {
+      "license": "MIT",
+      "source": "https://github.com/Everblush/everblush",
+      "note": null
+    },
+    "Andromeda": {
+      "license": "MIT",
+      "source": "https://github.com/mbadolato/iTerm2-Color-Schemes",
+      "note": null
+    },
+    "Cobalt Next": {
+      "license": "MIT",
+      "source": "https://github.com/davidleininger/cobaltnext-vscode",
+      "note": null
+    }
+  }
+}
