@@ -61,7 +61,8 @@ export function formatNode(
   if ('keyPositions' in input) {
     fields.push(`key-positions = <${input.keyPositions.join(' ')}>;`)
     if (input.timeoutMs !== undefined) fields.push(`timeout-ms = <${input.timeoutMs}>;`)
-    if (input.layers !== undefined) fields.push(`layers = <${input.layers.join(' ')}>;`)
+    if (input.layers?.length && !input.layers.includes(-1))
+      fields.push(`layers = <${input.layers.join(' ')}>;`)
     if (input.requirePriorIdleMs !== undefined)
       fields.push(`require-prior-idle-ms = <${input.requirePriorIdleMs}>;`)
     if (input.slowRelease) fields.push('slow-release;')

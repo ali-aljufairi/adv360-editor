@@ -40,6 +40,10 @@ export interface Binding extends Span {
   behavior: string
   params: string[]
   text: string
+  /** False when the binding is an opaque preprocessor expression. */
+  editable: boolean
+  /** Why the editor cannot safely rewrite this binding. */
+  reason?: string
 }
 /** A keymap layer and its bindings. */
 export interface Layer extends Span {
@@ -69,15 +73,34 @@ export interface Combo extends Span {
   condition?: string
   node: Node
 }
+/** A conditional layer rule that activates a target layer when source layers are active. */
+export interface ConditionalLayer extends Span {
+  name: string
+  ifLayers: number[]
+  thenLayer?: number
+}
 /** The resolved keymap and its dependencies. */
 export interface Model {
   layers: Layer[]
   behaviors: Behavior[]
   macros: Behavior[]
   combos: Combo[]
+  conditionalLayers: ConditionalLayer[]
   files: Record<string, CST>
   missingIncludes: string[]
   boardBehaviors: string[]
+}
+
+/** Physical key from info.json layout metadata. */
+export interface PhysicalKey {
+  index: number
+  x: number
+  y: number
+  w: number
+  h: number
+  r: number
+  label?: string
+  [key: string]: unknown
 }
 
 /** A diagnostic with a source range. */
@@ -87,14 +110,4 @@ export interface Issue extends Span {
   message: string
   layer?: number
   key?: number
-}
-/** A key position and dimensions in the physical layout. */
-export interface PhysicalKey {
-  index: number
-  x: number
-  y: number
-  w: number
-  h: number
-  r: number
-  [key: string]: unknown
 }

@@ -1,4 +1,4 @@
-import type { Binding, Issue, Model, Span } from './types'
+import type { Binding, Issue, Model, PhysicalKey, Span } from './types'
 function collectIssues(
   model: Model,
   generated: Set<string>,
@@ -8,7 +8,7 @@ function collectIssues(
   const edges: number[][] = model.layers.map(() => [])
   const persistent: [number, number, Binding][] = []
   const add = (from: number, currentBinding: Binding) => {
-    if (!['mo', 'lt', 'tog', 'to', 'sl'].includes(currentBinding.behavior)) return
+    if (!currentBinding.editable || !['mo', 'lt', 'tog', 'to', 'sl'].includes(currentBinding.behavior)) return
     const target = Number(currentBinding.params[0])
     if (!Number.isInteger(target) || target < 0 || target >= count) return
     edges[from].push(target)
@@ -35,6 +35,25 @@ function collectIssues(
         })
     for (const i of active)
       if (edges[i]) entry.bindings.forEach((otherBinding) => add(i, otherBinding))
+  }
+  for (const rule of model.conditionalLayers) {
+    if (rule.thenLayer === undefined || rule.thenLayer < 0 || rule.thenLayer >= count) {
+      issues.push({
+        code: 'conditional-layer-reference',
+        message: `Conditional layer ${rule.name} references missing target layer ${rule.thenLayer ?? '(none)'}`,
+        span: rule,
+      })
+      continue
+    }
+    for (const from of rule.ifLayers) {
+      if (from < 0 || from >= count) {
+        issues.push({
+          code: 'conditional-layer-reference',
+          message: `Conditional layer ${rule.name} references missing source layer ${from}`,
+          span: rule,
+        })
+      } else edges[from].push(rule.thenLayer)
+    }
   }
   const reachable = (start: number) => {
     const seen = new Set<number>([start])
@@ -118,7 +137,12 @@ function collectIssues(
     ...model.layers.flatMap((candidateLayer) => candidateLayer.bindings),
     ...model.combos.flatMap((currentEntry) => currentEntry.bindings),
     ...model.behaviors.flatMap((currentItem) => currentItem.bindings),
-  ])
+  ]) {
+    if (
+      !resolvedBinding.editable ||
+      /^macro_param_\d+to\d+$/.test(resolvedBinding.behavior)
+    )
+      continue
     if (!known.has(resolvedBinding.behavior) && generated.has(resolvedBinding.behavior))
       issues.push({
         code: 'generated-behavior',
@@ -131,11 +155,30 @@ function collectIssues(
         message: `Undefined behavior &${resolvedBinding.behavior}`,
         span: resolvedBinding,
       })
+  }
   return issues
 }
 
+const keyLabels: Record<string, string> = {
+  LEFT_ALT: 'LALT',
+  RIGHT_ALT: 'RALT',
+  LEFT_CTRL: 'LCTRL',
+  LEFT_CONTROL: 'LCTRL',
+  RIGHT_CTRL: 'RCTRL',
+  RIGHT_CONTROL: 'RCTRL',
+  LEFT_SHIFT: 'LSHIFT',
+  RIGHT_SHIFT: 'RSHIFT',
+  LEFT_GUI: 'LGUI',
+  RIGHT_GUI: 'RGUI',
+}
+const normalizeKeyLabel = (value: string) =>
+  (keyLabels[value.toUpperCase()] ?? value).toUpperCase().replace(/[^A-Z0-9]/g, '')
+
 /** Validate layer reachability, bindings and combos with source locations. */
-export function validate(model: Model, options: { generatedBehaviors?: string[] } = {}): Issue[] {
+export function validate(
+  model: Model,
+  options: { generatedBehaviors?: string[]; physicalLayout?: PhysicalKey[] } = {},
+): Issue[] {
   const issues: Issue[] = collectIssues(
     model,
     new Set(options.generatedBehaviors ?? ['macro_ver']),
@@ -172,5 +215,42 @@ export function validate(model: Model, options: { generatedBehaviors?: string[] 
         start: combo.start,
         end: combo.end,
       })
+  if (options.physicalLayout) {
+    const layout = options.physicalLayout
+    for (let layer = 0; layer < model.layers.length; layer++) {
+      const currentLayer = model.layers[layer]
+      if (currentLayer.bindings.length !== layout.length)
+        issues.push({
+          code: 'info-key-count',
+          severity: 'warning',
+          message: `Layer ${layer} has ${currentLayer.bindings.length} bindings but info.json layout has ${layout.length} keys`,
+          file: currentLayer.file,
+          start: currentLayer.start,
+          end: currentLayer.end,
+          layer,
+        })
+    }
+    const firstLayer = model.layers[0]
+    if (firstLayer) {
+      for (const key of layout) {
+        const binding = firstLayer.bindings[key.index]
+        const keycode = binding?.behavior === 'kp' && binding.params.length === 1
+          ? binding.params[0].trim()
+          : undefined
+        if (!key.label || !keycode || /[()\s]/.test(keycode)) continue
+        if (normalizeKeyLabel(key.label) !== normalizeKeyLabel(keycode))
+          issues.push({
+            code: 'info-label-mismatch',
+            severity: 'info',
+            message: `info.json key ${key.index} is labeled ${key.label}, but layer 0 binds ${keycode}`,
+            file: firstLayer.file,
+            start: binding.start,
+            end: binding.end,
+            layer: 0,
+            key: key.index,
+          })
+      }
+    }
+  }
   return issues
 }

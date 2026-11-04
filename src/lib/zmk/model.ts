@@ -1,4 +1,15 @@
-import type { Binding, CST, FileMap, Model, Node, Property, Layer, Behavior, Combo } from './types'
+import type {
+  Binding,
+  CST,
+  FileMap,
+  Model,
+  Node,
+  Property,
+  Layer,
+  Behavior,
+  Combo,
+  ConditionalLayer,
+} from './types'
 import { tokenize } from './tokenize'
 import { parse } from './parse'
 /** Select node children from a mixed list. */
@@ -17,10 +28,12 @@ function bindings(currentProperty: Property | undefined, source: string): Bindin
     (token) => token.kind !== 'trivia' && token.kind !== 'directive',
   )
   const result: Binding[] = []
+  const absolute = currentProperty.valueSpan.start
   for (let i = 0; i < ts.length; i++) {
-    if (!ts[i].text.startsWith('&')) continue
+    if (ts[i].text === ',' || ts[i].text === '<' || ts[i].text === '>') continue
     const start = ts[i].start
-    const behavior = ts[i].text.slice(1)
+    const structured = ts[i].text.startsWith('&')
+    const behavior = structured ? ts[i].text.slice(1) : ts[i].text
     let end = ts[i].end
     const params: string[] = []
     let depth = 0
@@ -39,21 +52,31 @@ function bindings(currentProperty: Property | undefined, source: string): Bindin
       if (depth === 0 && part && currentToken.start > end) {
         params.push(part)
         part = ''
+        // An unprefixed expression is not a ZMK behavior binding. Keep it as
+        // a single opaque invocation, rather than guessing its parameter list.
+        if (!structured) {
+          i--
+          break
+        }
       }
+      if (depth > 0 && currentToken.start > end)
+        part += source.slice(absolute + end, absolute + currentToken.start)
       part += currentToken.text
       end = currentToken.end
       if (currentToken.text === '(') depth++
       if (currentToken.text === ')') depth--
     }
     if (part) params.push(part)
-    const absolute = currentProperty.valueSpan.start
+    const opaqueText = source.slice(absolute + start, absolute + end)
     result.push({
       file: currentProperty.file,
       start: absolute + start,
       end: absolute + end,
       behavior,
-      params,
-      text: source.slice(absolute + start, absolute + end),
+      params: structured ? params : [],
+      text: opaqueText,
+      editable: structured,
+      ...(structured ? {} : { reason: 'Preprocessor or raw binding expressions are preserved as-is' }),
     })
   }
   return result
@@ -113,6 +136,7 @@ export function resolve(files: FileMap, entry: string): Model {
   const layers: Layer[] = []
   const behaviors: Behavior[] = []
   const combos: Combo[] = []
+  const conditionalLayers: ConditionalLayer[] = []
   const visit = (file: string, context: string, active: Set<string>) => {
     if (active.has(file)) return
     const next = new Set(active).add(file)
@@ -146,6 +170,18 @@ export function resolve(files: FileMap, entry: string): Model {
         const get = (key: string) => prop(nextNode, key)?.value
         const bs = bindings(prop(nextNode, 'bindings'), cst.source)
         const compatible = unquote(get('compatible'))
+        if (compatible === 'zmk,conditional-layers') {
+          for (const rule of nodes(nextNode.children)) {
+            const values = (value: string | undefined) =>
+              (value?.match(/-?\d+/g) ?? []).map(Number)
+            conditionalLayers.push({
+              ...rule,
+              name: rule.name,
+              ifLayers: values(prop(rule, 'if-layers')?.value),
+              thenLayer: values(prop(rule, 'then-layer')?.value)[0],
+            })
+          }
+        }
         if (parent === 'keymap')
           layers.push({
             ...nextNode,
@@ -187,7 +223,10 @@ export function resolve(files: FileMap, entry: string): Model {
             bindings: bs,
             keyPositions: nums(get('key-positions')),
             timeoutMs: nums(get('timeout-ms'))[0],
-            layers: get('layers') === undefined ? undefined : nums(get('layers')),
+            layers:
+              get('layers') === undefined || nums(get('layers')).length === 0 || nums(get('layers')).includes(-1)
+                ? undefined
+                : nums(get('layers')),
             condition: conditions(cst, nextNode.start),
             node: nextNode,
           })
@@ -217,6 +256,7 @@ export function resolve(files: FileMap, entry: string): Model {
       (currentBinding) => currentBinding.compatible === 'zmk,behavior-macro',
     ),
     combos,
+    conditionalLayers,
     files: parsed,
     missingIncludes,
     boardBehaviors,

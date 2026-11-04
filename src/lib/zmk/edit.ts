@@ -87,6 +87,8 @@ export class ZmkEditor {
     const binding = formatBinding(bindingInput)
     const currentBinding = this.model.layers[layerIndex]?.bindings[keyIndex]
     if (!currentBinding) throw new RangeError('Binding not found')
+    if (!currentBinding.editable)
+      throw new Error(currentBinding.reason ?? 'This binding is opaque and cannot be edited structurally')
     if (!/^&[^\s<>;,{}]+(?:\s+[^<>;,{}]+)*$/.test(binding.trim()) || /[\r\n]/.test(binding))
       throw new Error('Expected a single binding')
     const nextSource = this.current[currentBinding.file]
@@ -147,11 +149,18 @@ export class ZmkEditor {
       const sibling = node.children[0]
       const siblingIndent =
         sibling && source.slice(source.lastIndexOf('\n', sibling.start - 1) + 1, sibling.start)
-      const indent =
-        siblingIndent && /^[ \t]*$/.test(siblingIndent) ? siblingIndent : `${closingIndent}    `
+      const multilineClosingIndent = /^[ \t]*$/.test(closingIndent)
+      const indent = siblingIndent && /^[ \t]*$/.test(siblingIndent)
+        ? siblingIndent
+        : multilineClosingIndent
+          ? `${closingIndent}    `
+          : ' '
       const eol = source.includes('\r\n') ? '\r\n' : '\n'
-      const at = /^[ \t]*$/.test(closingIndent) ? lineStart : node.bodyEnd
-      this.patch({ file: node.file, start: at, end: at }, `${indent}${declaration}${eol}`)
+      const at = multilineClosingIndent ? lineStart : node.bodyEnd
+      this.patch(
+        { file: node.file, start: at, end: at },
+        `${indent}${declaration}${multilineClosingIndent ? eol : ''}`,
+      )
     }
   }
   private findContainer(name: string): Node {
@@ -192,7 +201,13 @@ export class ZmkEditor {
   updateCombo(name: string, changes: Partial<ComboInput>) {
     const combo = this.model.combos.find((item) => item.name === name)
     if (!combo) throw new Error(`Combo ${name} not found`)
-    this.updateFields(combo.node, changes, {
+    const normalized = { ...changes }
+    if (
+      Array.isArray(changes.layers) &&
+      (changes.layers.length === 0 || changes.layers.includes(-1))
+    )
+      normalized.layers = undefined
+    this.updateFields(combo.node, normalized, {
       keyPositions: 'key-positions',
       timeoutMs: 'timeout-ms',
       layers: 'layers',
@@ -234,7 +249,13 @@ export class ZmkEditor {
       }
       if (key === 'label') throw new Error('Changing labels is not supported')
       const property = key === 'bindings' ? 'bindings' : names[key]
-      if (!property || value === undefined) continue
+      if (!property) continue
+      if (key === 'layers' && value === undefined) {
+        const existing = prop(current, property)
+        if (existing) this.patch(existing, '')
+        continue
+      }
+      if (value === undefined) continue
       if (typeof value === 'boolean') {
         const existing = prop(current, property)
         if (!value && existing) this.patch(existing, '')
