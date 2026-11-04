@@ -45,6 +45,10 @@ export interface EditorActions {
   redo(): void
   diff(): Record<string, string>
   reset(): void
+  /** Apply a stale draft found in storage on top of the current baseline. */
+  restoreDraft(): void
+  /** Forget a stale draft found in storage without applying it. */
+  discardDraft(): void
   load(files: FileMap, profile: KeyboardProfile): void
   changedKeys(layer: number): Set<number>
   summary(): string[]
@@ -257,6 +261,33 @@ export function createEditorStore(
       future = []
       lastEdit = null
       emit(true)
+    },
+    restoreDraft: () => {
+      const draft = staleDraft
+      if (!draft) return
+      derive(draft.files) // Throws when the draft no longer parses against this profile.
+      staleDraft = null
+      past = [...past, current]
+      future = []
+      lastEdit = null
+      current = { ...current, files: { ...draft.files } }
+      emit(true)
+    },
+    discardDraft: () => {
+      const draft = staleDraft
+      staleDraft = null
+      if (draft && typeof window !== 'undefined') {
+        try {
+          const storage = window.localStorage
+          const prefix = keyPrefix()
+          storage.removeItem(`${prefix}:${draft.baselineHash}`)
+          if (storage.getItem(`${prefix}:latest`) === draft.baselineHash)
+            storage.removeItem(`${prefix}:latest`)
+        } catch {
+          /* Storage can be blocked; the draft simply stays until the next save. */
+        }
+      }
+      emit()
     },
     load: (files, nextProfile) => {
       baseline = { ...files }
