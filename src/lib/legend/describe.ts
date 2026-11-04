@@ -17,7 +17,7 @@ export type LegendKind =
 export interface Legend {
   /** Main legend. Empty for &none. */
   primary: string
-  /** Small legend: hold action, layer name, or verb such as MO/TOG. */
+  /** Small legend: hold action, layer name, or verb such as hold/toggle. */
   secondary?: string
   /** Category of the binding this legend describes. */
   kind: LegendKind
@@ -96,7 +96,13 @@ alias('PrintScreen', 'key', ['PSCRN', 'PRINTSCREEN'])
 alias('ScrollLock', 'key', ['SLCK', 'SCROLLLOCK'])
 alias('Pause', 'key', ['PAUSE_BREAK', 'PAUSE'])
 alias('NumLock', 'key', ['NUMLOCK', 'NLCK', 'KP_NUMLOCK'])
-alias('Menu', 'key', ['K_APPLICATION', 'K_APP', 'APPLICATION'])
+alias('Menu', 'key', ['K_APPLICATION', 'K_APP', 'APPLICATION', 'K_MENU'])
+alias('Kana', 'key', ['INT_KATAKANAHIRAGANA', 'INTERNATIONAL_2', 'INT2', 'LANG_KANA'])
+alias('Eisu', 'key', ['LANG2', 'LANGUAGE_2', 'LANG_EISU'])
+alias('Henkan', 'key', ['INT_HENKAN', 'INTERNATIONAL_4', 'INT4'])
+alias('Muhenkan', 'key', ['INT_MUHENKAN', 'INTERNATIONAL_5', 'INT5'])
+alias('Yen', 'key', ['INT_YEN', 'INTERNATIONAL_3', 'INT3'])
+alias('Ro', 'key', ['INT_RO', 'INTERNATIONAL_1', 'INT1'])
 alias('←', 'key', ['LEFT', 'LEFT_ARROW'])
 alias('→', 'key', ['RIGHT', 'RIGHT_ARROW'])
 alias('↑', 'key', ['UP', 'UP_ARROW'])
@@ -156,7 +162,12 @@ modKey('Alt', 'R', ['RALT', 'RIGHT_ALT'])
 modKey('Cmd', 'L', ['LGUI', 'LCMD', 'LWIN', 'LEFT_GUI', 'LEFT_COMMAND', 'LEFT_WIN'])
 modKey('Cmd', 'R', ['RGUI', 'RCMD', 'RWIN', 'RIGHT_GUI', 'RIGHT_COMMAND', 'RIGHT_WIN'])
 
-const LAYER_VERB: Record<string, string> = { mo: 'MO', tog: 'TOG', to: 'TO', sl: 'SL' }
+const LAYER_VERB: Record<string, string> = {
+  mo: 'hold',
+  tog: 'toggle',
+  to: 'switch',
+  sl: 'once',
+}
 const HOLD_TAPS = new Set(['mt', 'lt', 'tpf', 'hm'])
 
 const BT_LABELS: Record<string, string> = {
@@ -221,8 +232,18 @@ export function describeKeycode(token: string): Legend {
 
 /** Resolves a layer reference (index or name) to a display name. */
 function layerName(token: string, ctx: DescribeContext): string {
-  if (/^\d+$/.test(token)) return ctx.layerNames?.[Number(token)] ?? `L${token}`
-  return token
+  const raw = /^\d+$/.test(token) ? (ctx.layerNames?.[Number(token)] ?? `L${token}`) : token
+  return prettyLayerName(raw)
+}
+
+/** Turns a devicetree layer node name such as `default_layer` into "Default". */
+function prettyLayerName(raw: string): string {
+  const words = raw
+    .replace(/_layer$/i, '')
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+  if (words.length === 0) return raw
+  return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
 }
 
 /** Returns the legend shown on a keycap for a keymap binding. */

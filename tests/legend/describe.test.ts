@@ -104,7 +104,7 @@ describe('describeBinding: layers', () => {
   it('uses the layer name for &mo when context provides names', () => {
     expect(describeBinding(bind('&mo', '1'), { layerNames: LAYERS })).toEqual({
       primary: 'Nav',
-      secondary: 'MO',
+      secondary: 'hold',
       kind: 'layer',
     })
   })
@@ -114,7 +114,7 @@ describe('describeBinding: layers', () => {
   })
 
   it('uses the verb as secondary for &tog and &to', () => {
-    expect(describeBinding(bind('&tog', '2'), { layerNames: LAYERS }).secondary).toBe('TOG')
+    expect(describeBinding(bind('&tog', '2'), { layerNames: LAYERS }).secondary).toBe('toggle')
     expect(describeBinding(bind('&to', '0'), { layerNames: LAYERS }).primary).toBe('Base')
   })
 })
@@ -201,5 +201,20 @@ describe('describeKeycode and fixture coverage', () => {
     )
     expect(legends.length).toBeGreaterThan(0)
     expect(legends.every((legend) => typeof legend.primary === 'string')).toBe(true)
+  })
+})
+
+describe('review fixes', () => {
+  it('labels K_MENU as Menu', () => {
+    expect(describeBinding(bind('&kp', 'K_MENU')).primary).toBe('Menu')
+  })
+
+  it('labels the Japanese kana key without truncation', () => {
+    expect(describeBinding(bind('&kp', 'INT_KATAKANAHIRAGANA')).primary).toBe('Kana')
+  })
+
+  it('shows layer node names in title case without the _layer suffix', () => {
+    const legend = describeBinding(bind('&mo', '0'), { layerNames: ['default_layer'] })
+    expect(legend).toMatchObject({ primary: 'Default', secondary: 'hold', kind: 'layer' })
   })
 })
