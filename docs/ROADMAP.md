@@ -38,6 +38,14 @@ in `docs/PRODUCT.md` → Decisions log.
 - **M1c Binding picker** (Haiku): searchable command-palette style picker component.
 - **M1d Issue-driven parser hardening** (Luna): fixtures and fixes from the upstream issues.
 
+### M1f — Multi-keyboard groundwork (after M1d lands; see `docs/research/multi-keyboard.md`)
+
+- `KeyboardProfile` type (repo, branch, keymap path, board/shield target, layout source, workflow,
+  artifact map); the Advantage360 is the first profile.
+- Remove fixed 76-key assumptions; validate against the selected profile's layout.
+- Layout-source interface (QMK info.json now; ZMK `zmk,physical-layout` DTS next).
+- Thread a profile id through load / edit / commit / build. Multi-user stays out of scope.
+
 ### M2 — Board editor
 
 - Board rendering from `info.json` + parser model, layer pills, key selection, picker integration,
