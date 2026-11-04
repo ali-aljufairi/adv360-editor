@@ -19,8 +19,8 @@ describe('key alias resolution', () => {
     expect(resolveKeyCode('BKSP')?.code).toBe('BACKSPACE')
   })
 
-  it('treats KANA and LANG1 as the same key', () => {
-    expect(resolveKeyCode('KANA')?.code).toBe('LANG1')
+  it('rejects KANA, which is not defined by this firmware', () => {
+    expect(resolveKeyCode('KANA')).toBeUndefined()
     expect(resolveKeyCode('LANG1')?.code).toBe('LANG1')
   })
 

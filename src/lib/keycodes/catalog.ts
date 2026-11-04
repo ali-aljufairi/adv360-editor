@@ -1,3 +1,5 @@
+import generated from './zmk-keys.generated.json'
+
 /** Picker section a catalog entry is listed under. */
 export type GroupId =
   | 'keys'
@@ -129,14 +131,14 @@ const FUNCTION_KEYS: KeyDef[] = Array.from({ length: 24 }, (_, index) => {
 })
 
 const SYMBOLS: KeyDef[] = [
-  key('MINUS', ['DASH'], '-', 'keys', ['hyphen', 'dash', 'minus']),
+  key('MINUS', [], '-', 'keys', ['hyphen', 'dash', 'minus']),
   key('EQUAL', ['EQL'], '=', 'keys', ['equals']),
   key('LBKT', ['LEFT_BRACKET', 'LBRC'], '[', 'keys', ['bracket', 'open bracket']),
   key('RBKT', ['RIGHT_BRACKET', 'RBRC'], ']', 'keys', ['bracket', 'close bracket']),
   key('BSLH', ['BACKSLASH'], '\\', 'keys', ['backslash']),
   key('SEMI', ['SEMICOLON'], ';', 'keys', ['semicolon']),
   key('SQT', ['SINGLE_QUOTE', 'APOS', 'APOSTROPHE'], "'", 'keys', ['quote', 'apostrophe']),
-  key('GRAVE', ['GRAVE_ACCENT'], '`', 'keys', ['backtick', 'tilde']),
+  key('GRAVE', [], '`', 'keys', ['backtick', 'tilde']),
   key('COMMA', [], ',', 'keys', ['comma']),
   key('DOT', ['PERIOD'], '.', 'keys', ['period', 'full stop']),
   key('SLASH', ['FSLH'], '/', 'keys', ['forward slash']),
@@ -145,11 +147,11 @@ const SYMBOLS: KeyDef[] = [
 ]
 
 const MODIFIER_KEYS: KeyDef[] = [
-  key('LCTRL', ['LCTL', 'LEFT_CONTROL', 'LEFT_CTRL'], 'Left Ctrl', 'modifiers', ['control'], GLYPH_CTRL),
+  key('LCTRL', ['LCTL', 'LEFT_CONTROL'], 'Left Ctrl', 'modifiers', ['control'], GLYPH_CTRL),
   key('LSHIFT', ['LSHFT', 'LEFT_SHIFT'], 'Left Shift', 'modifiers', ['shift'], GLYPH_SHIFT),
   key('LALT', ['LEFT_ALT'], 'Left Alt', 'modifiers', ['option', 'opt'], GLYPH_ALT),
   key('LGUI', ['LEFT_GUI', 'LCMD', 'LWIN'], 'Left Cmd', 'modifiers', ['command', 'super', 'win'], GLYPH_GUI),
-  key('RCTRL', ['RCTL', 'RIGHT_CONTROL', 'RIGHT_CTRL'], 'Right Ctrl', 'modifiers', ['control'], GLYPH_CTRL),
+  key('RCTRL', ['RCTL', 'RIGHT_CONTROL'], 'Right Ctrl', 'modifiers', ['control'], GLYPH_CTRL),
   key('RSHIFT', ['RSHFT', 'RIGHT_SHIFT'], 'Right Shift', 'modifiers', ['shift'], GLYPH_SHIFT),
   key('RALT', ['RIGHT_ALT'], 'Right Alt', 'modifiers', ['option', 'opt', 'altgr'], GLYPH_ALT),
   key('RGUI', ['RIGHT_GUI', 'RCMD', 'RWIN'], 'Right Cmd', 'modifiers', ['command', 'super', 'win'], GLYPH_GUI),
@@ -178,17 +180,17 @@ const EDITING_KEYS: KeyDef[] = [
   key('INSERT', ['INS'], 'Insert', 'editing', []),
   key('CAPSLOCK', ['CAPS'], 'Caps lock', 'editing', ['capital']),
   key('PRINTSCREEN', ['PSCRN'], 'Print screen', 'editing', ['screenshot', 'print']),
-  key('APPLICATION', ['K_APP'], 'Menu', 'editing', ['context menu', 'app']),
+  key('K_APPLICATION', ['K_APP'], 'Menu', 'editing', ['context menu', 'app']),
 ]
 
 const KEYPAD_KEYS: KeyDef[] = [
   key('KP_NUMLOCK', ['KP_NUM'], 'Num lock', 'keypad', ['keypad']),
   key('KP_SLASH', ['KP_DIVIDE'], 'Keypad /', 'keypad', ['divide'], '/'),
-  key('KP_ASTERISK', ['KP_MULTIPLY', 'KP_STAR'], 'Keypad *', 'keypad', ['multiply'], '*'),
+  key('KP_ASTERISK', ['KP_MULTIPLY'], 'Keypad *', 'keypad', ['multiply'], '*'),
   key('KP_MINUS', [], 'Keypad -', 'keypad', ['subtract'], '-'),
   key('KP_PLUS', [], 'Keypad +', 'keypad', ['add'], '+'),
   key('KP_ENTER', [], 'Keypad Enter', 'keypad', [], GLYPH_ENTER),
-  key('KP_DOT', ['KP_DECIMAL'], 'Keypad .', 'keypad', ['decimal'], '.'),
+  key('KP_DOT', [], 'Keypad .', 'keypad', ['decimal'], '.'),
   key('KP_EQUAL', [], 'Keypad =', 'keypad', [], '='),
   ...['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map((digit) =>
     key(`KP_N${digit}`, [], `Keypad ${digit}`, 'keypad', ['keypad number'], digit),
@@ -196,32 +198,32 @@ const KEYPAD_KEYS: KeyDef[] = [
 ]
 
 const MEDIA_KEYS: KeyDef[] = [
-  key('C_PLAY_PAUSE', ['C_PP', 'PLAY_PAUSE'], 'Play / pause', 'media', ['music', 'media'], '⏯'),
-  key('C_NEXT', ['C_NEXT_TRACK'], 'Next track', 'media', ['skip', 'forward'], '⏭'),
-  key('C_PREVIOUS', ['C_PREV', 'C_PREV_TRACK'], 'Previous track', 'media', ['back'], '⏮'),
+  key('C_PLAY_PAUSE', ['C_PP'], 'Play / pause', 'media', ['music', 'media'], '⏯'),
+  key('C_NEXT', [], 'Next track', 'media', ['skip', 'forward'], '⏭'),
+  key('C_PREVIOUS', ['C_PREV'], 'Previous track', 'media', ['back'], '⏮'),
   key('C_STOP', [], 'Stop', 'media', [], '⏹'),
   key('C_MUTE', [], 'Mute', 'media', ['sound', 'audio'], '\u{1F507}'),
   key('C_VOLUME_UP', ['C_VOL_UP'], 'Volume up', 'media', ['louder', 'sound'], '\u{1F50A}'),
-  key('C_VOLUME_DOWN', ['C_VOL_DN', 'C_VOL_DOWN'], 'Volume down', 'media', ['quieter', 'sound']),
+  key('C_VOLUME_DOWN', ['C_VOL_DN'], 'Volume down', 'media', ['quieter', 'sound']),
   key('C_BRIGHTNESS_INC', ['C_BRI_INC'], 'Brightness up', 'media', ['screen'], '☀'),
   key('C_BRIGHTNESS_DEC', ['C_BRI_DEC'], 'Brightness down', 'media', ['screen', 'dim']),
 ]
 
 const INTERNATIONAL_KEYS: KeyDef[] = [
-  key('INTL1', [], 'International 1 (ro)', 'international', ['jis', 'ro', 'backslash']),
-  key('INTL2', [], 'International 2 (kana/eisu)', 'international', ['jis', 'katakana']),
-  key('INTL3', [], 'International 3 (yen)', 'international', ['jis', 'yen']),
-  key('INTL4', [], 'International 4 (henkan)', 'international', ['jis', 'convert']),
-  key('INTL5', [], 'International 5 (muhenkan)', 'international', ['jis', 'non-convert']),
-  key('LANG1', ['HANGUL', 'KANA'], 'Kana (LANG1)', 'international', ['hangul', 'ime', 'japanese']),
-  key('LANG2', ['HANJA', 'EISU'], 'Eisu (LANG2)', 'international', ['hanja', 'ime', 'japanese']),
+  key('INT1', [], 'International 1 (ro)', 'international', ['jis', 'ro', 'backslash']),
+  key('INT2', [], 'International 2 (kana/eisu)', 'international', ['jis', 'katakana']),
+  key('INT3', [], 'International 3 (yen)', 'international', ['jis', 'yen']),
+  key('INT4', [], 'International 4 (henkan)', 'international', ['jis', 'convert']),
+  key('INT5', [], 'International 5 (muhenkan)', 'international', ['jis', 'non-convert']),
+  key('LANG1', [], 'Kana (LANG1)', 'international', ['hangul', 'ime', 'japanese']),
+  key('LANG2', [], 'Eisu (LANG2)', 'international', ['hanja', 'ime', 'japanese']),
   key('LANG3', [], 'Katakana (LANG3)', 'international', ['ime', 'japanese']),
   key('LANG4', [], 'Hiragana (LANG4)', 'international', ['ime', 'japanese']),
   key('LANG5', [], 'Zenkaku/Hankaku (LANG5)', 'international', ['ime', 'japanese', 'half width']),
 ]
 
 /** Every key code the editor knows how to write with `&kp`. */
-export const KEYS: readonly KeyDef[] = [
+export const KEY_OVERLAY: readonly KeyDef[] = [
   ...LETTERS,
   ...DIGITS,
   ...FUNCTION_KEYS,
@@ -233,6 +235,19 @@ export const KEYS: readonly KeyDef[] = [
   ...MEDIA_KEYS,
   ...INTERNATIONAL_KEYS,
 ]
+
+// Prefer the established picker spelling when defined; otherwise use the shortest header
+// spelling, retaining header order when lengths tie.
+// All labels and search terms are indexed by usage; generated names alone define validity.
+const values = generated.values as Record<string, number>
+const overlayByUsage = new Map(KEY_OVERLAY.map((item) => [values[item.code], item]))
+export const KEYS: readonly KeyDef[] = Object.entries(generated.groups).map(([usage, names]) => {
+  const overlay = overlayByUsage.get(Number(usage))
+  const code = overlay?.code ??
+    names.reduce((best, name) => name.length < best.length ? name : best)
+  return key(code, names.filter((name) => name !== code), overlay?.label ?? code,
+    overlay?.group ?? 'keys', overlay?.keywords ?? [], overlay?.glyph)
+})
 
 const BT_PROFILES: ActionDef[] = [0, 1, 2, 3, 4].map((slot) =>
   action(

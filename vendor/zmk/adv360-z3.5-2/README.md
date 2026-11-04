@@ -1,0 +1,1 @@
+These headers are vendored from https://github.com/ReFil/zmk/tree/adv360-z3.5-2/app/include/dt-bindings/zmk at revision `adv360-z3.5-2`. They are licensed under the MIT license; individual files retain their copyright and SPDX notices.

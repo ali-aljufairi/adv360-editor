@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "lint": "eslint .",
-    "themes:build": "node scripts/build-theme-presets.ts"
+    "themes:build": "node scripts/build-theme-presets.ts",
+    "keycodes:build": "node scripts/build-keycodes.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
