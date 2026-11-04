@@ -46,6 +46,27 @@ in `docs/PRODUCT.md` → Decisions log.
 - Layout-source interface (QMK info.json now; ZMK `zmk,physical-layout` DTS next).
 - Thread a profile id through load / edit / commit / build. Multi-user stays out of scope.
 
+### M1g — Key and behavior coverage (Luna, after M1f and picker polish)
+
+Every key and behavior ZMK supports must be pickable, displayable and round-trippable. Driven by
+upstream issues (see `docs/research/keymap-editor-issues.md`):
+
+- Mouse: `&mkp`, `&mmv`, `&msc` with the parameter syntax of the firmware revision in use
+  (#241, #283, #274, #228, #356).
+- International: accents, currency, grave/tilde, locale headers such as zmk-locale-generator and
+  `german_aliases.h`; names come from headers the config `#include`s (#230, #261, #263, #166,
+  #219, #282).
+- User-defined names from included `.h` files and any unlisted key code: accepted, shown as raw
+  with a warning, never rejected silently (#222, #296).
+- Missing keys/behaviors: Globe, media FF/rewind, all Delete variants, `&key_repeat`,
+  `&soft_off`, `&studio_unlock`, `&caps_word`, `&sk`, `&kt`, `&gresc`, `&out`, `&ext_power`,
+  `&bl`, `&rgb_ug`, `&sys_reset`, `&bootloader` (#143, #128, #217, #303, #209, #272).
+- Picker usability regressions to guard against: typing shifted characters must not toggle
+  modifiers, Enter confirms, focus stays in search, second-parameter slot gets focus
+  (#113, #111, #155, #226).
+- A coverage report test: every name in the vendored ZMK headers has a label or an explicit
+  raw fallback; every built-in behavior has a picker entry and a legend.
+
 ### M2 — Board editor
 
 - Board rendering from `info.json` + parser model, layer pills, key selection, picker integration,
