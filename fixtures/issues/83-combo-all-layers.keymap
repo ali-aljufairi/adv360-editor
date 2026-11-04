@@ -1,0 +1,9 @@
+/* Issue #83: omitted layers means all layers. */
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer { bindings = <&kp A>; };
+    };
+    combos { all_combo { bindings = <&kp ESC>; key-positions = <1 2>; }; };
+
+};

@@ -1,0 +1,12 @@
+/* Issue #198: quoted local includes are preserved; included files are intentionally absent. */
+#include "keymap_swiss_de.h"
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer { bindings = <&kp A>; };
+    };
+    behaviors {
+        #include "macros.dtsi"
+    };
+
+};
