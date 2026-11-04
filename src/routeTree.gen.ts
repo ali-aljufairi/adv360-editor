@@ -10,13 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DevBoardRouteImport } from './routes/dev.board'
 import { Route as DevKeycapsRouteImport } from './routes/dev.keycaps'
 import { Route as DevNavigationRouteImport } from './routes/dev.navigation'
+import { Route as DevPanelsRouteImport } from './routes/dev.panels'
 import { Route as DevPickerRouteImport } from './routes/dev.picker'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevBoardRoute = DevBoardRouteImport.update({
+  id: '/dev/board',
+  path: '/dev/board',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevKeycapsRoute = DevKeycapsRouteImport.update({
@@ -29,6 +36,11 @@ const DevNavigationRoute = DevNavigationRouteImport.update({
   path: '/dev/navigation',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevPanelsRoute = DevPanelsRouteImport.update({
+  id: '/dev/panels',
+  path: '/dev/panels',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DevPickerRoute = DevPickerRouteImport.update({
   id: '/dev/picker',
   path: '/dev/picker',
@@ -37,35 +49,62 @@ const DevPickerRoute = DevPickerRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dev/board': typeof DevBoardRoute
   '/dev/keycaps': typeof DevKeycapsRoute
   '/dev/navigation': typeof DevNavigationRoute
+  '/dev/panels': typeof DevPanelsRoute
   '/dev/picker': typeof DevPickerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dev/board': typeof DevBoardRoute
   '/dev/keycaps': typeof DevKeycapsRoute
   '/dev/navigation': typeof DevNavigationRoute
+  '/dev/panels': typeof DevPanelsRoute
   '/dev/picker': typeof DevPickerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dev/board': typeof DevBoardRoute
   '/dev/keycaps': typeof DevKeycapsRoute
   '/dev/navigation': typeof DevNavigationRoute
+  '/dev/panels': typeof DevPanelsRoute
   '/dev/picker': typeof DevPickerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dev/keycaps' | '/dev/navigation' | '/dev/picker'
+  fullPaths:
+    | '/'
+    | '/dev/board'
+    | '/dev/keycaps'
+    | '/dev/navigation'
+    | '/dev/panels'
+    | '/dev/picker'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dev/keycaps' | '/dev/navigation' | '/dev/picker'
-  id: '__root__' | '/' | '/dev/keycaps' | '/dev/navigation' | '/dev/picker'
+  to:
+    | '/'
+    | '/dev/board'
+    | '/dev/keycaps'
+    | '/dev/navigation'
+    | '/dev/panels'
+    | '/dev/picker'
+  id:
+    | '__root__'
+    | '/'
+    | '/dev/board'
+    | '/dev/keycaps'
+    | '/dev/navigation'
+    | '/dev/panels'
+    | '/dev/picker'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DevBoardRoute: typeof DevBoardRoute
   DevKeycapsRoute: typeof DevKeycapsRoute
   DevNavigationRoute: typeof DevNavigationRoute
+  DevPanelsRoute: typeof DevPanelsRoute
   DevPickerRoute: typeof DevPickerRoute
 }
 
@@ -76,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/board': {
+      id: '/dev/board'
+      path: '/dev/board'
+      fullPath: '/dev/board'
+      preLoaderRoute: typeof DevBoardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev/keycaps': {
@@ -92,6 +138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevNavigationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/panels': {
+      id: '/dev/panels'
+      path: '/dev/panels'
+      fullPath: '/dev/panels'
+      preLoaderRoute: typeof DevPanelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dev/picker': {
       id: '/dev/picker'
       path: '/dev/picker'
@@ -104,8 +157,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DevBoardRoute: DevBoardRoute,
   DevKeycapsRoute: DevKeycapsRoute,
   DevNavigationRoute: DevNavigationRoute,
+  DevPanelsRoute: DevPanelsRoute,
   DevPickerRoute: DevPickerRoute,
 }
 export const routeTree = rootRouteImport
