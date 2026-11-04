@@ -1,5 +1,14 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 import type { NavigationSettings, Settings } from './schema'
+import type { PlatformSetting } from '../keycodes/platform'
 import { cloneDefaults } from './schema'
 import { loadSettings, saveSettings } from './storage'
 
@@ -10,6 +19,8 @@ export interface SettingsContextValue {
   updateNavigation(patch: Partial<NavigationSettings>): void
   /** Restores the navigation section to its defaults. */
   resetNavigation(): void
+  /** Sets which platform's shortcuts are shown, and persists it. */
+  setPlatform(platform: PlatformSetting): void
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null)
@@ -42,9 +53,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setSettings((current) => ({ ...current, navigation: cloneDefaults().navigation }))
   }, [])
 
+  const setPlatform = useCallback((platform: PlatformSetting) => {
+    setSettings((current) => ({ ...current, platform }))
+  }, [])
+
   const value = useMemo(
-    () => ({ settings, updateNavigation, resetNavigation }),
-    [settings, updateNavigation, resetNavigation],
+    () => ({ settings, updateNavigation, resetNavigation, setPlatform }),
+    [settings, updateNavigation, resetNavigation, setPlatform],
   )
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
 }
