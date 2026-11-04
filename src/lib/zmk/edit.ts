@@ -4,6 +4,9 @@ import { formatBinding, formatNode } from './format'
 import type { BindingInput, ComboInput, MacroInput, HoldTapInput } from './format'
 import { createTwoFilesPatch } from 'diff'
 import type { FileMap, Model, Node, Property, Span } from './types'
+import type { KeyboardProfile } from '../profile/types'
+import type { PhysicalLayout } from '../layout/types'
+import { getLayoutSource } from '../layout'
 import { nodes, prop, resolve } from './model'
 /** A numeric layer reference changed by a layer operation. */
 export interface LayerRewrite extends Span {
@@ -54,8 +57,18 @@ export class ZmkEditor {
     padding: string
   }[] = []
   readonly entry: string
-  constructor(files: FileMap, entry: string) {
+  readonly profileId?: string
+  readonly profile?: KeyboardProfile
+  readonly layout?: PhysicalLayout
+  constructor(
+    files: FileMap,
+    entry: string,
+    context: { profile?: KeyboardProfile; layout?: PhysicalLayout } = {},
+  ) {
     this.entry = entry
+    this.profile = context.profile
+    this.profileId = context.profile?.id
+    this.layout = context.layout
     this.original = { ...files }
     this.current = { ...files }
     resolve(this.current, entry)
@@ -589,4 +602,30 @@ export class ZmkEditor {
 /** Create an editor for the supplied keymap files. */
 export function createEditor(files: FileMap, entry: string): ZmkEditor {
   return new ZmkEditor(files, entry)
+}
+
+function findProfileFile(files: FileMap, path: string, configRoot: string): [string, string] {
+  const candidates = [path, path.startsWith(`${configRoot}/`) ? path.slice(configRoot.length + 1) : path]
+  const found = candidates.find((candidate) => candidate in files)
+  if (!found) throw new Error(`Profile file not found: ${path}`)
+  return [found, files[found]]
+}
+
+/** Create an editor bound to a profile's explicit keymap and physical layout. */
+export function createEditorForProfile(profile: KeyboardProfile, files: FileMap): ZmkEditor {
+  const [entry] = findProfileFile(files, profile.keymap.path, profile.configRoot)
+  const [, layoutFile] = findProfileFile(files, profile.layout.path, profile.configRoot)
+  const source = getLayoutSource(profile.layout.source)
+  const layout = source.load(layoutFile, {
+    layoutName: profile.layout.layoutName,
+    nodeLabel: profile.layout.nodeLabel,
+  })
+  if (layout.keys.length !== profile.layout.keyCount)
+    throw new Error(
+      `Profile ${profile.id} expects ${profile.layout.keyCount} keys but ${layout.source} layout ${layout.name} has ${layout.keys.length}`,
+    )
+  return new ZmkEditor(files, entry, {
+    profile,
+    layout: { ...layout, verified: layout.verified && profile.layout.verified },
+  })
 }
