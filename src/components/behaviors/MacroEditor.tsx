@@ -89,7 +89,17 @@ function EditableMacro({ macro }: { macro: Behavior }) {
   }
   const edit = (id: number, text: string) =>
     setRows((current) =>
-      current.map((row) => (row.id === id ? { ...row, step: stepFrom(row.step.kind, text) } : row)),
+      current.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              step:
+                row.step.kind === 'behavior'
+                  ? { ...row.step, text }
+                  : stepFrom(row.step.kind, text),
+            }
+          : row,
+      ),
     )
   const remove = (id: number) => setRows((current) => current.filter((row) => row.id !== id))
   const add = () => {
@@ -206,7 +216,13 @@ function EditableMacro({ macro }: { macro: Behavior }) {
             <input
               aria-label="New step value"
               aria-invalid={Boolean(draftText && draftProblem) || undefined}
-              placeholder={kind === 'wait' ? '50' : kind === 'behavior' ? '&kp A' : 'A or LS(A)'}
+              placeholder={
+                kind === 'wait' || kind === 'tapTime'
+                  ? '50'
+                  : kind === 'behavior'
+                    ? '&kp A'
+                    : 'A or LS(A)'
+              }
               value={draftText}
               onChange={(event) => setDraftText(event.target.value)}
               onKeyDown={(event) => {

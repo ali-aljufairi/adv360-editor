@@ -26,22 +26,22 @@ export const FLAVORS: Flavor[] = [
   {
     value: 'balanced',
     label: 'Balanced',
-    help: 'Becomes a hold when another key is pressed and released while this one is held. Otherwise a tap.',
+    help: 'Becomes a hold when the tapping term expires, or another key is pressed and released while this one is held.',
   },
   {
     value: 'tap-preferred',
     label: 'Tap preferred',
-    help: 'Another key pressed while this one is held makes it a tap. Only a long hold on its own counts as a hold.',
+    help: 'Becomes a hold when the tapping term expires; other key presses do not affect the decision.',
   },
   {
     value: 'hold-preferred',
     label: 'Hold preferred',
-    help: 'Another key pressed while this one is held makes it a hold straight away.',
+    help: 'Becomes a hold when the tapping term expires or another key is pressed.',
   },
   {
     value: 'tap-unless-interrupted',
     label: 'Tap unless interrupted',
-    help: 'Taps unless another key is pressed while it is held, which makes it a hold at once.',
+    help: 'Becomes a hold only if another key is pressed before the tapping term expires; otherwise it taps.',
   },
 ]
 
@@ -98,11 +98,6 @@ export function toggleIndex(positions: readonly number[], index: number): number
 const isInteger = (value: number, min: number, max: number) =>
   Number.isInteger(value) && value >= min && value <= max
 
-/** A value the user cleared is not written back by the editor, so the form must reject it. */
-function clearedProblem(before: unknown, after: unknown): boolean {
-  return before !== undefined && after === undefined
-}
-
 /** Properties of a node by name, read from its children. */
 export function propertyValue(node: Node, name: string): string | undefined {
   const found = node.children.find(
@@ -133,6 +128,9 @@ export interface HoldTapForm {
   quickTapMs?: number
   requirePriorIdleMs?: number
   holdTriggerKeyPositions: number[]
+  holdTriggerOnRelease: boolean
+  retroTap: boolean
+  bindings: string[]
 }
 
 /** Read the form values from a resolved hold-tap behavior. */
@@ -144,12 +142,19 @@ export function holdTapFormOf(behavior: Behavior): HoldTapForm {
     quickTapMs: cellNumbers(props['quick-tap-ms'])[0],
     requirePriorIdleMs: cellNumbers(props['require-prior-idle-ms'])[0],
     holdTriggerKeyPositions: cellNumbers(props['hold-trigger-key-positions']),
+    holdTriggerOnRelease: props['hold-trigger-on-release'] !== undefined,
+    retroTap: props['retro-tap'] !== undefined,
+    bindings: behavior.bindings.map((binding) => binding.text),
   }
 }
 
 /** Only the hold-tap fields that changed, ready for `updateHoldTap`. */
 export function holdTapChanges(before: HoldTapForm, after: HoldTapForm): HoldTapInput {
-  return changedOnly<HoldTapInput>(holdTapInputOf(before), holdTapInputOf(after))
+  const changes = changedOnly<HoldTapInput>(holdTapInputOf(before), holdTapInputOf(after))
+  if (before.quickTapMs !== after.quickTapMs) changes.quickTapMs = after.quickTapMs ?? null
+  if (before.requirePriorIdleMs !== after.requirePriorIdleMs)
+    changes.requirePriorIdleMs = after.requirePriorIdleMs ?? null
+  return changes
 }
 
 /** The full `HoldTapInput` for a form. */
@@ -160,6 +165,9 @@ export function holdTapInputOf(form: HoldTapForm): HoldTapInput {
     quickTapMs: form.quickTapMs,
     requirePriorIdleMs: form.requirePriorIdleMs,
     holdTriggerKeyPositions: [...form.holdTriggerKeyPositions],
+    holdTriggerOnRelease: form.holdTriggerOnRelease,
+    retroTap: form.retroTap,
+    bindings: form.bindings,
   }
 }
 
@@ -167,8 +175,9 @@ export function holdTapInputOf(form: HoldTapForm): HoldTapInput {
 export function holdTapProblems(
   form: HoldTapForm,
   keyCount: number,
-  before?: HoldTapForm,
+  _before?: HoldTapForm,
 ): Problems {
+  void _before
   const problems: Problems = {}
   if (form.tappingTermMs === undefined || !isInteger(form.tappingTermMs, 1, 2000))
     problems.tappingTermMs = 'Enter a whole number of milliseconds from 1 to 2000.'
@@ -176,10 +185,8 @@ export function holdTapProblems(
     problems.quickTapMs = 'Enter a whole number from 0 to 1000.'
   if (form.requirePriorIdleMs !== undefined && !isInteger(form.requirePriorIdleMs, 0, 5000))
     problems.requirePriorIdleMs = 'Enter a whole number from 0 to 5000.'
-  if (clearedProblem(before?.quickTapMs, form.quickTapMs))
-    problems.quickTapMs = 'Clearing a value is not supported yet. Enter a number instead.'
-  if (clearedProblem(before?.requirePriorIdleMs, form.requirePriorIdleMs))
-    problems.requirePriorIdleMs = 'Clearing a value is not supported yet. Enter a number instead.'
+  if (form.bindings.length !== 2 || form.bindings.some((binding) => !isBindingText(binding)))
+    problems.bindings = 'Enter two behavior bindings starting with &.'
   if (form.holdTriggerKeyPositions.some((position) => !isInteger(position, 0, keyCount - 1)))
     problems.holdTriggerKeyPositions = `Key positions must be between 0 and ${keyCount - 1}.`
   return problems
@@ -217,18 +224,18 @@ export function wrappedBindings(behavior: Behavior): string[] {
 export type MacroStep =
   | { kind: 'tap' | 'press' | 'release'; key: string }
   | { kind: 'wait'; ms: number }
-  | { kind: 'behavior'; text: string }
+  | { kind: 'tapTime'; ms: number }
+  | { kind: 'behavior'; text: string; mode?: 'tap' | 'press' | 'release' }
 
-/** The step kinds offered when adding a step, in menu order. */
 export const STEP_KINDS: { kind: MacroStep['kind']; label: string }[] = [
   { kind: 'tap', label: 'Tap key' },
   { kind: 'press', label: 'Press (hold) key' },
   { kind: 'release', label: 'Release key' },
   { kind: 'wait', label: 'Wait (ms)' },
+  { kind: 'tapTime', label: 'Tap time (ms)' },
   { kind: 'behavior', label: 'Other behavior' },
 ]
 
-/** Why a macro cannot be edited safely, or undefined when it can. */
 export function macroOpaqueReason(macro: Behavior): string | undefined {
   const blocked = macro.bindings.find((binding) => !binding.editable)
   if (blocked) return blocked.reason ?? 'This binding is a preprocessor expression.'
@@ -237,63 +244,66 @@ export function macroOpaqueReason(macro: Behavior): string | undefined {
   return undefined
 }
 
-/** Turn resolved macro bindings into ordered steps. Unknown bindings are kept as behavior steps. */
 export function macroStepsOf(bindings: readonly Binding[]): MacroStep[] {
   const steps: MacroStep[] = []
-  for (let index = 0; index < bindings.length; index++) {
-    const binding = bindings[index]
+  let mode: 'tap' | 'press' | 'release' = 'tap'
+  for (const binding of bindings) {
     const name = binding.behavior.replace(/^&/, '')
-    const next = bindings[index + 1]
-    const nextKey = next?.behavior === 'kp' && next.params.length > 0 ? next.params : undefined
-    if (name === 'kp' && binding.params.length > 0) {
-      steps.push({ kind: 'tap', key: binding.params.join(' ') })
-    } else if (nextKey && ['macro_press', 'macro_release', 'macro_tap'].includes(name)) {
-      const kind = name === 'macro_press' ? 'press' : name === 'macro_release' ? 'release' : 'tap'
-      steps.push({ kind, key: nextKey.join(' ') })
-      index++
-    } else if (name === 'macro_wait_time' && /^\d+$/.test(binding.params[0] ?? '')) {
-      steps.push({ kind: 'wait', ms: Number(binding.params[0]) })
+    if (name === 'macro_tap' || name === 'macro_press' || name === 'macro_release') {
+      mode = name.slice(6) as typeof mode
+    } else if (
+      (name === 'macro_wait_time' || name === 'macro_tap_time') &&
+      /^\d+$/.test(binding.params[0] ?? '')
+    ) {
+      steps.push({
+        kind: name === 'macro_wait_time' ? 'wait' : 'tapTime',
+        ms: Number(binding.params[0]),
+      })
+    } else if (name === 'kp' && binding.params.length > 0) {
+      steps.push({ kind: mode, key: binding.params.join(' ') })
     } else {
-      steps.push({ kind: 'behavior', text: binding.text.trim() })
+      steps.push({ kind: 'behavior', text: binding.text.trim(), mode })
     }
   }
   return steps
 }
 
-/** Bindings for ordered steps, ready to be written as a macro's `bindings`. */
 export function macroBindingsOf(steps: readonly MacroStep[]): BindingInput[] {
+  let mode: 'tap' | 'press' | 'release' = 'tap'
   return steps.flatMap((step): BindingInput[] => {
-    switch (step.kind) {
-      case 'tap':
-        return [{ behavior: 'kp', params: [step.key] }]
-      case 'press':
-        return [{ behavior: 'macro_press' }, { behavior: 'kp', params: [step.key] }]
-      case 'release':
-        return [{ behavior: 'macro_release' }, { behavior: 'kp', params: [step.key] }]
-      case 'wait':
-        return [{ behavior: 'macro_wait_time', params: [step.ms] }]
-      case 'behavior':
-        return [step.text]
-    }
+    if (step.kind === 'wait' || step.kind === 'tapTime')
+      return [
+        {
+          behavior: step.kind === 'wait' ? 'macro_wait_time' : 'macro_tap_time',
+          params: [step.ms],
+        },
+      ]
+    const nextMode = step.kind === 'behavior' ? (step.mode ?? 'tap') : step.kind
+    const marker: BindingInput[] = nextMode === mode ? [] : [{ behavior: `macro_${nextMode}` }]
+    mode = nextMode
+    return [
+      ...marker,
+      step.kind === 'behavior' ? step.text : { behavior: 'kp', params: [step.key] },
+    ]
   })
 }
 
 /** Build a step from a kind and its text (a key, a number of milliseconds, or a binding). */
 export function stepFrom(kind: MacroStep['kind'], text: string): MacroStep {
-  if (kind === 'wait') return { kind, ms: Number(text) }
+  if (kind === 'wait' || kind === 'tapTime') return { kind, ms: Number(text) }
   if (kind === 'behavior') return { kind, text: text.trim() }
   return { kind, key: text.trim() }
 }
 
 /** The editable text of a step, the inverse of `stepFrom`. */
 export function stepText(step: MacroStep): string {
-  if (step.kind === 'wait') return String(step.ms)
+  if (step.kind === 'wait' || step.kind === 'tapTime') return String(step.ms)
   return step.kind === 'behavior' ? step.text : step.key
 }
 
 /** The message for one step, or undefined when it is valid. */
 export function stepProblem(step: MacroStep): string | undefined {
-  if (step.kind === 'wait')
+  if (step.kind === 'wait' || step.kind === 'tapTime')
     return isInteger(step.ms, 0, 10000)
       ? undefined
       : 'Wait must be a whole number from 0 to 10000 ms.'
@@ -315,6 +325,8 @@ export function macroPreview(steps: readonly MacroStep[], timing: MacroTiming = 
         return `release ${step.key}`
       case 'wait':
         return `wait ${step.ms} ms`
+      case 'tapTime':
+        return `tap time ${step.ms} ms`
       case 'behavior':
         return step.text
     }
@@ -347,22 +359,19 @@ export function macroChanges(before: MacroForm, after: MacroForm): Partial<Macro
   const changes: Partial<MacroInput> = {}
   if (JSON.stringify(before.steps) !== JSON.stringify(after.steps))
     changes.bindings = macroBindingsOf(after.steps)
-  if (before.tapMs !== after.tapMs) changes.tapMs = after.tapMs
-  if (before.waitMs !== after.waitMs) changes.waitMs = after.waitMs
+  if (before.tapMs !== after.tapMs) changes.tapMs = after.tapMs ?? null
+  if (before.waitMs !== after.waitMs) changes.waitMs = after.waitMs ?? null
   return changes
 }
 
 /** Validate timing fields and every step. */
-export function macroProblems(form: MacroForm, before?: MacroForm): Problems {
+export function macroProblems(form: MacroForm, _before?: MacroForm): Problems {
+  void _before
   const problems: Problems = {}
   if (form.tapMs !== undefined && !isInteger(form.tapMs, 0, 10000))
     problems.tapMs = 'Enter a whole number from 0 to 10000 ms.'
   if (form.waitMs !== undefined && !isInteger(form.waitMs, 0, 10000))
     problems.waitMs = 'Enter a whole number from 0 to 10000 ms.'
-  if (clearedProblem(before?.tapMs, form.tapMs))
-    problems.tapMs = 'Clearing a value is not supported yet. Enter a number instead.'
-  if (clearedProblem(before?.waitMs, form.waitMs))
-    problems.waitMs = 'Clearing a value is not supported yet. Enter a number instead.'
   form.steps.forEach((step, index) => {
     const message = stepProblem(step)
     if (message) problems[`step${index}`] = message
@@ -427,15 +436,20 @@ export function comboInputOf(form: ComboForm): ComboInput {
 
 /** Only the combo fields that changed, ready for `updateCombo`. */
 export function comboChanges(before: ComboForm, after: ComboForm): Partial<ComboInput> {
-  return changedOnly<ComboInput>(comboInputOf(before), comboInputOf(after))
+  const changes = changedOnly<ComboInput>(comboInputOf(before), comboInputOf(after))
+  if (before.timeoutMs !== after.timeoutMs) changes.timeoutMs = after.timeoutMs ?? null
+  if (before.requirePriorIdleMs !== after.requirePriorIdleMs)
+    changes.requirePriorIdleMs = after.requirePriorIdleMs ?? null
+  return changes
 }
 
 /** Validate a combo form. `otherNames` are the names of the other combos in the keymap. */
 export function comboProblems(
   form: ComboForm,
   context: { keyCount: number; layerCount: number; otherNames: readonly string[] },
-  before?: ComboForm,
+  _before?: ComboForm,
 ): Problems {
+  void _before
   const problems: Problems = {}
   if (!/^[A-Za-z_]\w*$/.test(form.name))
     problems.name = 'Use letters, digits and underscores, starting with a letter or underscore.'
@@ -451,10 +465,6 @@ export function comboProblems(
     problems.timeoutMs = 'Enter a whole number from 0 to 5000 ms.'
   if (form.requirePriorIdleMs !== undefined && !isInteger(form.requirePriorIdleMs, 0, 5000))
     problems.requirePriorIdleMs = 'Enter a whole number from 0 to 5000 ms.'
-  if (clearedProblem(before?.timeoutMs, form.timeoutMs))
-    problems.timeoutMs = 'Clearing a value is not supported yet. Enter a number instead.'
-  if (clearedProblem(before?.requirePriorIdleMs, form.requirePriorIdleMs))
-    problems.requirePriorIdleMs = 'Clearing a value is not supported yet. Enter a number instead.'
   if (!form.allLayers && form.layers.length === 0)
     problems.layers = 'Pick at least one layer, or choose All layers.'
   if (form.layers.some((layer) => !isInteger(layer, 0, context.layerCount - 1)))

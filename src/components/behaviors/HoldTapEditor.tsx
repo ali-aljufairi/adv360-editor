@@ -8,7 +8,6 @@ import {
   holdTapProblems,
   keysUsing,
   toggleIndex,
-  wrappedBindings,
   type HoldTapForm,
 } from './forms'
 import { ApplyBar, Field, KeyBoard, NumberField, messageOf } from './parts'
@@ -21,7 +20,7 @@ export interface HoldTapEditorProps {
 }
 
 /**
- * Edit a hold-tap's timing, flavor and hold-trigger keys. Bindings are shown read-only.
+ * Edit a hold-tap's timing, flavor and hold-trigger keys. Bindings can be edited.
  * @param props - The hold-tap, the resolved model and the board's keys.
  * @returns The editor.
  */
@@ -37,7 +36,6 @@ export function HoldTapEditor({ behavior, model, keys }: HoldTapEditorProps) {
   const uses = keysUsing(model, names)
   const update = (changes: Partial<HoldTapForm>) =>
     setForm((previous) => ({ ...previous, ...changes }))
-  const onRelease = behavior.properties['hold-trigger-on-release'] !== undefined
 
   const setPositions = (next: number[]) => {
     update({ holdTriggerKeyPositions: next })
@@ -115,7 +113,7 @@ export function HoldTapEditor({ behavior, model, keys }: HoldTapEditorProps) {
           max={5000}
           value={form.requirePriorIdleMs}
           problem={problems.requirePriorIdleMs}
-          help="Only start this hold-tap if no other key was pressed within this many ms."
+          help="Resolve as a tap if a non-modifier key was pressed within this many ms."
           onChange={(value) => update({ requirePriorIdleMs: value })}
         />
       </section>
@@ -153,18 +151,47 @@ export function HoldTapEditor({ behavior, model, keys }: HoldTapEditorProps) {
             className="rounded-md border border-subtle bg-canvas px-2 py-1 font-mono text-sm"
           />
         </Field>
-        <p className="text-xs text-secondary">
-          Hold-trigger on release is {onRelease ? 'on' : 'off'}. Changing it here is not supported
-          yet.
-        </p>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={form.holdTriggerOnRelease}
+            onChange={(event) => update({ holdTriggerOnRelease: event.target.checked })}
+          />
+          Hold-trigger on release
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={form.retroTap}
+            onChange={(event) => update({ retroTap: event.target.checked })}
+          />
+          Retro tap
+        </label>
       </section>
 
       <section className="flex flex-col gap-2">
         <h3 className="text-sm font-semibold">Wrapped bindings</h3>
-        <p className="font-mono text-sm text-secondary">{wrappedBindings(behavior).join(', ')}</p>
-        <p className="text-xs text-muted">
-          Shown read-only. Editing them needs the writer to emit separate binding groups.
-        </p>
+        {form.bindings.map((binding, index) => (
+          <Field
+            key={index}
+            id={`ht-binding-${index}`}
+            label={index === 0 ? 'Hold binding' : 'Tap binding'}
+            problem={problems.bindings}
+          >
+            <input
+              id={`ht-binding-${index}`}
+              value={binding}
+              onChange={(event) =>
+                update({
+                  bindings: form.bindings.map((item, i) =>
+                    i === index ? event.target.value : item,
+                  ),
+                })
+              }
+              className="rounded border border-subtle bg-canvas px-2 py-1 font-mono text-sm"
+            />
+          </Field>
+        ))}
       </section>
 
       <section aria-labelledby="ht-uses" className="flex flex-col gap-2">

@@ -82,3 +82,5 @@ consistent binding count. With an info.json layout it emits an informational
 `info-label-mismatch` when a simple layer-0 keycode disagrees with the corresponding label. The
 Adv360 metadata contains a known stale label at index 35 (`LCtrl` while layer 0 binds `LEFT_ALT`);
 this is a note, not a validation error.
+
+Macro activation modes carry over to subsequent bindings, starting in tap mode; timing controls do not reset the mode. The editor inserts mode controls when needed. See the [ZMK macro documentation](https://zmk.dev/docs/keymaps/behaviors/macros#binding-activation-mode) and the mode controls catalogued for ReFil/zmk `adv360-z3.5-2` in `vendor/zmk/adv360-z3.5-2/behavior-bindings.json`. Hold-tap flavor descriptions follow the [ZMK hold-tap documentation](https://zmk.dev/docs/keymaps/behaviors/hold-tap#interrupt-flavors).

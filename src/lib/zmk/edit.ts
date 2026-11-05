@@ -101,7 +101,9 @@ export class ZmkEditor {
     const currentBinding = this.model.layers[layerIndex]?.bindings[keyIndex]
     if (!currentBinding) throw new RangeError('Binding not found')
     if (!currentBinding.editable)
-      throw new Error(currentBinding.reason ?? 'This binding is opaque and cannot be edited structurally')
+      throw new Error(
+        currentBinding.reason ?? 'This binding is opaque and cannot be edited structurally',
+      )
     if (!/^&[^\s<>;,{}]+(?:\s+[^<>;,{}]+)*$/.test(binding.trim()) || /[\r\n]/.test(binding))
       throw new Error('Expected a single binding')
     const nextSource = this.current[currentBinding.file]
@@ -163,11 +165,12 @@ export class ZmkEditor {
       const siblingIndent =
         sibling && source.slice(source.lastIndexOf('\n', sibling.start - 1) + 1, sibling.start)
       const multilineClosingIndent = /^[ \t]*$/.test(closingIndent)
-      const indent = siblingIndent && /^[ \t]*$/.test(siblingIndent)
-        ? siblingIndent
-        : multilineClosingIndent
-          ? `${closingIndent}    `
-          : ' '
+      const indent =
+        siblingIndent && /^[ \t]*$/.test(siblingIndent)
+          ? siblingIndent
+          : multilineClosingIndent
+            ? `${closingIndent}    `
+            : ' '
       const eol = source.includes('\r\n') ? '\r\n' : '\n'
       const at = multilineClosingIndent ? lineStart : node.bodyEnd
       this.patch(
@@ -209,7 +212,37 @@ export class ZmkEditor {
   updateMacro(name: string, changes: Partial<MacroInput>) {
     const macro = this.model.macros.find((item) => item.label === name || item.name === name)
     if (!macro) throw new Error(`Macro ${name} not found`)
-    this.updateFields(macro.node, changes, { waitMs: 'wait-ms', tapMs: 'tap-ms' })
+    const { bindings, ...other } = changes
+    if (bindings) {
+      const old = macro.bindings
+      const next = bindings.map(formatBinding)
+      const modes = (texts: string[]) => {
+        let mode = 'tap'
+        return texts.flatMap((text, index) => {
+          const marker = text.trim().match(/^&macro_(tap|press|release)$/)
+          if (marker) {
+            mode = marker[1]
+            return []
+          }
+          return [{ index, mode, text: text.trim() }]
+        })
+      }
+      const oldSteps = modes(old.map((binding) => binding.text))
+      const nextSteps = modes(next)
+      // Keep the original controls and formatting if effective modes are unchanged.
+      if (
+        oldSteps.length === nextSteps.length &&
+        oldSteps.every((step, i) => step.mode === nextSteps[i].mode)
+      ) {
+        for (let i = oldSteps.length - 1; i >= 0; i--) {
+          if (oldSteps[i].text !== nextSteps[i].text)
+            this.patch(old[oldSteps[i].index], nextSteps[i].text)
+        }
+      } else {
+        this.updateFields(macro.node, { bindings }, {})
+      }
+    }
+    this.updateFields(macro.node, other, { waitMs: 'wait-ms', tapMs: 'tap-ms' })
   }
   updateCombo(name: string, changes: Partial<ComboInput>) {
     const combo = this.model.combos.find((item) => item.name === name)
@@ -241,6 +274,8 @@ export class ZmkEditor {
       quickTapMs: 'quick-tap-ms',
       requirePriorIdleMs: 'require-prior-idle-ms',
       holdTriggerKeyPositions: 'hold-trigger-key-positions',
+      holdTriggerOnRelease: 'hold-trigger-on-release',
+      retroTap: 'retro-tap',
     })
   }
   private updateFields(node: Node, changes: object, names: Record<string, string>) {
@@ -269,15 +304,22 @@ export class ZmkEditor {
         continue
       }
       if (value === undefined) continue
+      if (value === null) {
+        const existing = prop(current, property)
+        if (existing) this.patch(this.removalSpan(existing), '')
+        continue
+      }
       if (typeof value === 'boolean') {
         const existing = prop(current, property)
-        if (!value && existing) this.patch(existing, '')
+        if (!value && existing) this.patch(this.removalSpan(existing), '')
         else if (value && !existing) this.updateProperty(current, property, '')
         continue
       }
       const text =
         key === 'bindings'
-          ? `<${(value as BindingInput[]).map(formatBinding).join(' ')}>`
+          ? prop(current, property)?.value.match(/>\s*,\s*</)
+            ? (value as BindingInput[]).map((binding) => `<${formatBinding(binding)}>`).join(', ')
+            : `<${(value as BindingInput[]).map(formatBinding).join(' ')}>`
           : Array.isArray(value)
             ? `<${value.join(' ')}>`
             : typeof value === 'number'
@@ -605,7 +647,10 @@ export function createEditor(files: FileMap, entry: string): ZmkEditor {
 }
 
 function findProfileFile(files: FileMap, path: string, configRoot: string): [string, string] {
-  const candidates = [path, path.startsWith(`${configRoot}/`) ? path.slice(configRoot.length + 1) : path]
+  const candidates = [
+    path,
+    path.startsWith(`${configRoot}/`) ? path.slice(configRoot.length + 1) : path,
+  ]
   const found = candidates.find((candidate) => candidate in files)
   if (!found) throw new Error(`Profile file not found: ${path}`)
   return [found, files[found]]

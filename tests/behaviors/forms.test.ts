@@ -87,7 +87,7 @@ describe('hold-taps', () => {
     for (const flavor of FLAVORS) expect(flavor.help.length).toBeGreaterThan(20)
   })
 
-  it('flags out-of-range values, bad positions and cleared optional values', () => {
+  it('flags out-of-range values and permits clearing optional values', () => {
     const before = holdTapFormOf(named(fixture, 'tpf'))
     expect(holdTapProblems({ ...before, tappingTermMs: 0 }, 62)).toHaveProperty('tappingTermMs')
     expect(holdTapProblems({ ...before, holdTriggerKeyPositions: [62] }, 62)).toHaveProperty(
@@ -95,9 +95,8 @@ describe('hold-taps', () => {
     )
     expect(holdTapProblems(before, 62)).toEqual({})
     const withQuick = { ...before, quickTapMs: 150 }
-    expect(holdTapProblems({ ...before, quickTapMs: undefined }, 62, withQuick)).toHaveProperty(
-      'quickTapMs',
-    )
+    expect(holdTapProblems({ ...before, quickTapMs: undefined }, 62, withQuick)).toEqual({})
+    expect(holdTapChanges(withQuick, before).quickTapMs).toBeNull()
   })
 
   it('finds every key that uses the hold-tap', () => {
@@ -115,16 +114,17 @@ describe('macros', () => {
       { kind: 'tap', key: 'A' },
       { kind: 'release', key: 'LSHIFT' },
       { kind: 'wait', ms: 40 },
-      { kind: 'tap', key: 'B' },
+      { kind: 'release', key: 'B' },
     ])
   })
 
-  it('writes steps back to the same bindings, with macro_tap written as a plain key', () => {
+  it('writes steps back to the same bindings, with explicit mode changes', () => {
     const macro = named(shoutModel, 'shout')
     const written = macroBindingsOf(macroStepsOf(macro.bindings)).map(formatBinding)
     expect(written).toEqual([
       '&macro_press',
       '&kp LSHIFT',
+      '&macro_tap',
       '&kp A',
       '&macro_release',
       '&kp LSHIFT',
@@ -135,10 +135,30 @@ describe('macros', () => {
 
   it('keeps unknown bindings as behavior steps, so nothing is lost on write', () => {
     const steps = macroStepsOf(named(fixture, 'mail').bindings)
-    expect(steps[0]).toEqual({ kind: 'behavior', text: '&none' })
+    expect(steps[0]).toEqual({ kind: 'behavior', text: '&none', mode: 'tap' })
     expect(steps[1]).toEqual({ kind: 'tap', key: 'M' })
     const written = macroBindingsOf(steps).map(formatBinding)
     expect(written).toEqual(named(fixture, 'mail').bindings.map((binding) => binding.text))
+  })
+
+  it('emits mode changes after reordering and carries mode across timing controls', () => {
+    const steps = macroStepsOf(named(shoutModel, 'shout').bindings)
+    const reordered = moveItem(steps, 1, 0)
+    expect(macroBindingsOf(reordered).map(formatBinding)).toEqual([
+      '&kp A',
+      '&macro_press',
+      '&kp LSHIFT',
+      '&macro_release',
+      '&kp LSHIFT',
+      '&macro_wait_time 40',
+      '&kp B',
+    ])
+    expect(
+      macroChanges(macroFormOf(named(shoutModel, 'shout')), {
+        ...macroFormOf(named(shoutModel, 'shout')),
+        tapMs: undefined,
+      }).tapMs,
+    ).toBeNull()
   })
 
   it('marks macros with placeholders as read-only and says why', () => {
@@ -164,7 +184,7 @@ describe('macros', () => {
   it('describes what it types in one line', () => {
     const steps = macroStepsOf(named(shoutModel, 'shout').bindings)
     expect(macroPreview(steps, { tapMs: 12, waitMs: 30 })).toBe(
-      'hold LSHIFT → A → release LSHIFT → wait 40 ms → B (tap 12 ms, wait 30 ms between)',
+      'hold LSHIFT → A → release LSHIFT → wait 40 ms → release B (tap 12 ms, wait 30 ms between)',
     )
     expect(macroPreview([])).toBe('No steps yet.')
   })
