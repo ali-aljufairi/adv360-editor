@@ -7,6 +7,7 @@ import { ChangesSheet } from '../panels/ChangesSheet'
 import { ProblemsPanel } from '../panels/ProblemsPanel'
 import { BindingPicker } from '../picker/BindingPicker'
 import { ThemePicker } from '../theme-picker/ThemePicker'
+import { BehaviorsDrawer } from '../behaviors/BehaviorsDrawer'
 import { useTheme } from '../../lib/theme/ThemeProvider'
 import { useEditor } from '../../lib/editor-state'
 import { useSettings } from '../../lib/settings/context'
@@ -81,11 +82,13 @@ export function EditorPage() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [behaviorsOpen, setBehaviorsOpen] = useState(false)
   const [combosOn, setCombosOn] = useState(true)
   const [notice, setNotice] = useState<string | null>(null)
 
   const layerCount = model.layers.length
-  const modalOpen = picker !== null || themeOpen || sheetOpen || settingsOpen || helpOpen
+  const modalOpen =
+    picker !== null || themeOpen || sheetOpen || settingsOpen || helpOpen || behaviorsOpen
 
   // Read the stored preference after mount so server and first client render agree.
   useEffect(() => setCombosOn(readCombosPreference()), [])
@@ -238,6 +241,13 @@ export function EditorPage() {
           </button>
           <button
             type="button"
+            onClick={() => setBehaviorsOpen(true)}
+            className="rounded-md border border-subtle px-2.5 py-1 text-sm hover:bg-hover"
+          >
+            Behaviors
+          </button>
+          <button
+            type="button"
             aria-pressed={combosOn}
             onClick={toggleCombos}
             className={`rounded-md border border-subtle px-2.5 py-1 text-sm hover:bg-hover ${combosOn ? 'bg-hover' : ''}`}
@@ -347,6 +357,8 @@ export function EditorPage() {
       ) : null}
 
       <ThemePicker open={themeOpen} onClose={() => setThemeOpen(false)} />
+
+      <BehaviorsDrawer open={behaviorsOpen} onClose={() => setBehaviorsOpen(false)} />
 
       {helpOpen ? (
         <CheatSheet
