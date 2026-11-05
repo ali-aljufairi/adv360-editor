@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DevBehaviorsRouteImport } from './routes/dev.behaviors'
 import { Route as DevBoardRouteImport } from './routes/dev.board'
 import { Route as DevKeycapsRouteImport } from './routes/dev.keycaps'
 import { Route as DevNavigationRouteImport } from './routes/dev.navigation'
@@ -19,6 +20,11 @@ import { Route as DevPickerRouteImport } from './routes/dev.picker'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevBehaviorsRoute = DevBehaviorsRouteImport.update({
+  id: '/dev/behaviors',
+  path: '/dev/behaviors',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevBoardRoute = DevBoardRouteImport.update({
@@ -49,6 +55,7 @@ const DevPickerRoute = DevPickerRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dev/behaviors': typeof DevBehaviorsRoute
   '/dev/board': typeof DevBoardRoute
   '/dev/keycaps': typeof DevKeycapsRoute
   '/dev/navigation': typeof DevNavigationRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dev/behaviors': typeof DevBehaviorsRoute
   '/dev/board': typeof DevBoardRoute
   '/dev/keycaps': typeof DevKeycapsRoute
   '/dev/navigation': typeof DevNavigationRoute
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dev/behaviors': typeof DevBehaviorsRoute
   '/dev/board': typeof DevBoardRoute
   '/dev/keycaps': typeof DevKeycapsRoute
   '/dev/navigation': typeof DevNavigationRoute
@@ -76,6 +85,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/dev/behaviors'
     | '/dev/board'
     | '/dev/keycaps'
     | '/dev/navigation'
@@ -84,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/dev/behaviors'
     | '/dev/board'
     | '/dev/keycaps'
     | '/dev/navigation'
@@ -92,6 +103,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/dev/behaviors'
     | '/dev/board'
     | '/dev/keycaps'
     | '/dev/navigation'
@@ -101,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DevBehaviorsRoute: typeof DevBehaviorsRoute
   DevBoardRoute: typeof DevBoardRoute
   DevKeycapsRoute: typeof DevKeycapsRoute
   DevNavigationRoute: typeof DevNavigationRoute
@@ -115,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/behaviors': {
+      id: '/dev/behaviors'
+      path: '/dev/behaviors'
+      fullPath: '/dev/behaviors'
+      preLoaderRoute: typeof DevBehaviorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev/board': {
@@ -157,6 +177,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DevBehaviorsRoute: DevBehaviorsRoute,
   DevBoardRoute: DevBoardRoute,
   DevKeycapsRoute: DevKeycapsRoute,
   DevNavigationRoute: DevNavigationRoute,
