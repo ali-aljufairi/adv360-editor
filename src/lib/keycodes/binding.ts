@@ -40,6 +40,26 @@ export interface BindingValue {
   params: string[]
 }
 
+/** Parameter order of a hold-tap: `hold-tap` is `&mt HOLD TAP`, `tap-hold` is `&x TAP HOLD`. */
+export type HoldTapOrder = 'hold-tap' | 'tap-hold'
+
+/** What a hold-tap's hold parameter takes: a key (or modifier) or a layer. */
+export type HoldKind = 'key' | 'layer'
+
+/** A hold-tap behavior the picker can write. `behavior` includes the `&`. */
+export interface HoldTapSpec {
+  behavior: string
+  order: HoldTapOrder
+  holdKind: HoldKind
+}
+
+/** A hold-tap as described by the caller. Missing fields take the hold-tap / key defaults. */
+export interface HoldTapEntry {
+  label: string
+  order?: HoldTapOrder
+  holdKind?: HoldKind
+}
+
 /** The state of the picker while the user is still choosing. */
 export type Draft =
   | { mode: 'single'; choice: Choice | null; mods: readonly ModId[] }
@@ -49,7 +69,130 @@ export type Draft =
       tap: Choice | null
       hold: Choice | null
       mods: readonly ModId[]
+      /** Set only for `tap-hold` order; absent means `hold-tap`. */
+      order?: HoldTapOrder
     }
+
+/** The picker's behavior tabs, in display order. */
+export type BehaviorTab =
+  'key' | 'taphold' | 'layer' | 'macro' | 'bluetooth' | 'mouse' | 'system' | 'empty'
+
+/** Labels for the behavior tabs, in display order. */
+export const BEHAVIOR_TABS: readonly { id: BehaviorTab; label: string }[] = [
+  { id: 'key', label: 'Key' },
+  { id: 'taphold', label: 'Tap/Hold' },
+  { id: 'layer', label: 'Layer' },
+  { id: 'macro', label: 'Macro' },
+  { id: 'bluetooth', label: 'Bluetooth' },
+  { id: 'mouse', label: 'Mouse' },
+  { id: 'system', label: 'System' },
+  { id: 'empty', label: 'Empty' },
+]
+
+/** A layer behavior the Layer tab can write, with the mode's button label. */
+export type LayerMode = 'mo' | 'tog' | 'to' | 'sl'
+
+/** Layer modes in display order. Each maps to one ZMK layer behavior. */
+export const LAYER_MODES: readonly {
+  id: LayerMode
+  label: string
+  behavior: string
+  hint: string
+}[] = [
+  { id: 'mo', label: 'Hold', behavior: '&mo', hint: 'Active while the key is held' },
+  { id: 'tog', label: 'Toggle', behavior: '&tog', hint: 'Press once on, again off' },
+  { id: 'to', label: 'Switch', behavior: '&to', hint: 'Go to this layer and stay there' },
+  { id: 'sl', label: 'Once', behavior: '&sl', hint: 'Active for the next key press only' },
+]
+
+/** The hold-tap behaviors every keymap can use; the picker always offers them. */
+export const DEFAULT_HOLD_TAPS: readonly HoldTapSpec[] = [
+  { behavior: '&mt', order: 'hold-tap', holdKind: 'key' },
+  { behavior: '&lt', order: 'hold-tap', holdKind: 'layer' },
+]
+
+/**
+ * Builds the hold-tap specs the picker uses: the built-in `&mt` and `&lt`, then the keymap's
+ * hold-taps. A later entry with the same behavior replaces an earlier one.
+ * @param entries - Hold-taps from the model, by label without `&`.
+ * @returns Specs in order: built-ins first, then custom behaviors.
+ */
+export function holdTapSpecs(entries: readonly HoldTapEntry[] = []): HoldTapSpec[] {
+  const specs = new Map(DEFAULT_HOLD_TAPS.map((spec) => [spec.behavior, spec]))
+  for (const entry of entries) {
+    const behavior = `&${entry.label}`
+    specs.set(behavior, {
+      behavior,
+      order: entry.order ?? 'hold-tap',
+      holdKind: entry.holdKind ?? 'key',
+    })
+  }
+  return [...specs.values()]
+}
+
+/** What `kindOfBinding` needs to know beyond the binding itself. */
+export interface PickerContext {
+  holdTaps?: readonly HoldTapSpec[]
+  /** Macro behaviors, with their `&`, e.g. `&hello_world`. */
+  macros?: readonly string[]
+}
+
+const KEY_BEHAVIORS = new Set(['&kp', '&sk', '&kt', '&caps_word', '&gresc', '&key_repeat'])
+const BLUETOOTH_BEHAVIORS = new Set(['&bt', '&out'])
+const MOUSE_BEHAVIORS = new Set(['&mkp', '&mmv', '&msc'])
+const EMPTY_BEHAVIORS = new Set(['&trans', '&none'])
+
+/**
+ * Picks the behavior tab a binding belongs to, so the picker can open on it.
+ * Anything without a dedicated tab (bootloader, lighting, power, ...) is System.
+ * @param value - The binding.
+ * @param context - Custom hold-taps and macros in the keymap.
+ * @returns The tab that shows this binding.
+ */
+export function kindOfBinding(value: BindingValue, context: PickerContext = {}): BehaviorTab {
+  const { behavior, params } = value
+  const holdTaps = [...DEFAULT_HOLD_TAPS, ...(context.holdTaps ?? [])]
+  if (params.length === 2 && holdTaps.some((spec) => spec.behavior === behavior)) return 'taphold'
+  if (LAYER_BEHAVIORS.has(behavior)) return 'layer'
+  if (behavior.startsWith('&macro_') || (context.macros ?? []).includes(behavior)) return 'macro'
+  if (KEY_BEHAVIORS.has(behavior)) return 'key'
+  if (BLUETOOTH_BEHAVIORS.has(behavior)) return 'bluetooth'
+  if (MOUSE_BEHAVIORS.has(behavior)) return 'mouse'
+  if (EMPTY_BEHAVIORS.has(behavior)) return 'empty'
+  return 'system'
+}
+
+/**
+ * Builds a layer binding for one of the four layer behaviors.
+ * @param mode - Hold, Toggle, Switch or Once.
+ * @param layer - Layer index.
+ * @returns The binding, e.g. `&tog 2`.
+ */
+export function layerBinding(mode: LayerMode, layer: number): BindingValue {
+  const entry = LAYER_MODES.find((candidate) => candidate.id === mode)
+  return { behavior: entry?.behavior ?? '&mo', params: [String(layer)] }
+}
+
+/**
+ * Reads the layer mode and index from a layer binding.
+ * @param value - The binding.
+ * @returns The mode and layer, or null when the binding is not a layer behavior.
+ */
+export function layerModeOf(value: BindingValue): { mode: LayerMode; layer: number } | null {
+  const entry = LAYER_MODES.find((candidate) => candidate.behavior === value.behavior)
+  if (!entry || value.params.length !== 1 || !NUMBER_PATTERN.test(value.params[0])) return null
+  return { mode: entry.id, layer: Number(value.params[0]) }
+}
+
+/**
+ * Looks up what a hold-tap behavior holds: a key or a layer.
+ * @param behavior - Behavior with its `&`.
+ * @param specs - Known hold-tap specs.
+ * @returns The hold kind, defaulting to a key for unknown behaviors.
+ */
+export function holdKindOf(behavior: string, specs: readonly HoldTapSpec[]): HoldKind {
+  return specs.find((spec) => spec.behavior === behavior)?.holdKind ?? 'key'
+}
 
 const MOD_PATTERN = /^(LC|LS|LA|LG|RC|RS|RA|RG)\((.*)\)$/i
 const BEHAVIOR_PATTERN = /^&[A-Za-z_][A-Za-z0-9_]*$/
@@ -133,9 +276,10 @@ export function buildBinding(draft: Draft, names: PreferredNames = {}): BindingV
   if (draft.tap.kind !== 'key') return null
   const holdParam = holdParamOf(draft.hold, names)
   if (holdParam === null) return null
+  const tapParam = wrapMods(spellKey(draft.tap.code, names), draft.mods)
   return {
     behavior: draft.behavior,
-    params: [holdParam, wrapMods(spellKey(draft.tap.code, names), draft.mods)],
+    params: draft.order === 'tap-hold' ? [tapParam, holdParam] : [holdParam, tapParam],
   }
 }
 
@@ -197,9 +341,13 @@ export function formatBinding(value: BindingValue): string {
 /**
  * Reads an existing binding back into a draft so the picker can show it.
  * @param value - The binding being edited.
+ * @param specs - Hold-taps in the keymap; `&mt` and `&lt` are always known.
  * @returns A draft that reproduces the binding.
  */
-export function draftFromBinding(value: BindingValue): Draft {
+export function draftFromBinding(
+  value: BindingValue,
+  specs: readonly HoldTapSpec[] = DEFAULT_HOLD_TAPS,
+): Draft {
   if (value.behavior === '&kp' && value.params.length === 1) {
     const unwrapped = unwrapMods(value.params[0])
     return {
@@ -208,12 +356,13 @@ export function draftFromBinding(value: BindingValue): Draft {
       mods: unwrapped.mods,
     }
   }
-  const isHold = value.behavior === '&mt' || value.behavior === '&lt'
-  if (isHold && value.params.length === 2) {
-    const tap = unwrapMods(value.params[1])
-    const holdParam = value.params[0]
+  const spec = [...DEFAULT_HOLD_TAPS, ...specs].find((entry) => entry.behavior === value.behavior)
+  if (spec && value.params.length === 2) {
+    const tapIndex = spec.order === 'tap-hold' ? 0 : 1
+    const tap = unwrapMods(value.params[tapIndex])
+    const holdParam = value.params[1 - tapIndex]
     const hold: Choice =
-      value.behavior === '&lt'
+      spec.holdKind === 'layer'
         ? { kind: 'layer', layer: Number(holdParam) }
         : { kind: 'key', code: holdParam }
     return {
@@ -222,6 +371,7 @@ export function draftFromBinding(value: BindingValue): Draft {
       tap: { kind: 'key', code: tap.code },
       hold,
       mods: tap.mods,
+      ...(spec.order === 'tap-hold' ? { order: 'tap-hold' as const } : {}),
     }
   }
   return {

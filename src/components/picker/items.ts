@@ -8,10 +8,14 @@ import {
 } from '../../lib/keycodes/catalog'
 import {
   formatBinding,
+  holdKindOf,
+  kindOfBinding,
   MOD_CHIPS,
   unwrapMods,
+  type BehaviorTab,
   type BindingValue,
   type Choice,
+  type HoldTapSpec,
   type ModChip,
   type ModId,
 } from '../../lib/keycodes/binding'
@@ -51,6 +55,8 @@ export interface PickerItem extends SearchFields {
   choice?: Choice
   /** Starts a two-slot (tap + hold) binding; the hold slot takes a key or a layer. */
   dual?: { behavior: string; hold: 'key' | 'layer' }
+  /** The behavior tab this row is listed under. */
+  tab: BehaviorTab
 }
 
 /** Keys shown first when the query is empty, in display order. Layer keys follow them. */
@@ -101,6 +107,9 @@ export function shortcutText(key: string, shift: boolean, platform: ResolvedPlat
  * @param macros - Macros defined by the model.
  * @param holdTaps - Hold-tap behaviors defined by the model.
  * @param platform - Platform whose command modifier shortcuts use.
+ * @param userKeycodes - Key names read from user-included headers.
+ * @param macroPreview - First steps per macro name (without `&`), shown as each macro's note.
+ * @param holdSpecs - Hold-tap specs; a hold-tap's hold kind decides what its hold slot takes.
  * @returns Items in catalog order, with layers, macros and hold-taps after the static rows.
  */
 export function buildItems(
@@ -109,6 +118,8 @@ export function buildItems(
   holdTaps: readonly PickerHoldTap[],
   platform: ResolvedPlatform,
   userKeycodes: readonly UserKeycode[] = [],
+  macroPreview: Readonly<Record<string, string>> = {},
+  holdSpecs: readonly HoldTapSpec[] = [],
 ): PickerItem[] {
   const items: PickerItem[] = []
   for (const entry of KEYS) {
@@ -123,6 +134,7 @@ export function buildItems(
       weight: entry.searchWeight,
       note: entry.note,
       choice: { kind: 'key', code: entry.code },
+      tab: 'key',
     })
   }
   const knownNames = new Set(
@@ -140,6 +152,7 @@ export function buildItems(
       keywords: ['user header', 'custom keycode', 'raw', entry.source],
       note: `Defined in ${entry.source}; value: ${entry.value}`,
       choice: { kind: 'key', code: entry.name },
+      tab: 'key',
     })
   }
   for (const entry of ACTIONS) {
@@ -155,6 +168,7 @@ export function buildItems(
         aliases: [],
         keywords: entry.keywords,
         choice: { kind: 'shortcut', code: key, mods },
+        tab: 'key',
       })
       continue
     }
@@ -171,6 +185,9 @@ export function buildItems(
         ? undefined
         : { kind: 'action', behavior: entry.behavior, params: entry.params },
       dual: entry.hold ? { behavior: entry.behavior, hold: entry.hold } : undefined,
+      tab: entry.hold
+        ? 'taphold'
+        : kindOfBinding({ behavior: entry.behavior, params: [...entry.params] }),
     })
   }
   for (const layer of layers) {
@@ -187,6 +204,7 @@ export function buildItems(
           behavior: action.behavior,
           params: [String(layer.index)],
         },
+        tab: 'layer',
       })
     }
   }
@@ -198,7 +216,9 @@ export function buildItems(
       code: `&${macro.name}`,
       aliases: [],
       keywords: ['macro'],
+      note: macroPreview[macro.name],
       choice: { kind: 'action', behavior: `&${macro.name}`, params: [] },
+      tab: 'macro',
     })
   }
   for (const holdTap of holdTaps) {
@@ -209,7 +229,8 @@ export function buildItems(
       code: `&${holdTap.label}`,
       aliases: [],
       keywords: ['hold-tap', 'tap hold', 'dual role'],
-      dual: { behavior: `&${holdTap.label}`, hold: 'key' },
+      dual: { behavior: `&${holdTap.label}`, hold: holdKindOf(`&${holdTap.label}`, holdSpecs) },
+      tab: 'taphold',
     })
   }
   return items
@@ -229,6 +250,7 @@ export function buildHoldLayerItems(layers: readonly PickerLayer[]): PickerItem[
     aliases: [],
     keywords: ['layer'],
     choice: { kind: 'layer', layer: layer.index },
+    tab: 'layer',
   }))
 }
 
