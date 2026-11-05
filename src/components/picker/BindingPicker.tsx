@@ -594,7 +594,13 @@ export function BindingPicker(props: BindingPickerProps) {
   }
 
   const preview = keycapParts(value, userKeycodes)
-  const legend = describeBinding(value, platform, userKeycodes)
+  // Hold-taps (including custom ones such as `&tpf`) read better as "Tap 2 · Hold F2".
+  const valueDraft = draftFromBinding(value, holdSpecs)
+  const legend =
+    valueDraft.mode === 'single'
+      ? describeBinding(value, platform, userKeycodes)
+      : `Tap ${modGlyphs(valueDraft.mods)}${choiceLabel(valueDraft.tap, layers)} · ` +
+        `Hold ${choiceLabel(valueDraft.hold, layers)}`
   const rawCode =
     value.behavior === '&kp' && value.params.length === 1 ? value.params[0] : formatBinding(value)
   const previewBinding = buildBinding(holdView, preferredNames)

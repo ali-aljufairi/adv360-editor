@@ -211,10 +211,23 @@ export function EditorPage() {
   }
 
   const pickerBinding = picker ? model.layers[picker.layer]?.bindings[picker.key] : undefined
+  // The parser stores behaviors without `&` (e.g. `tpf`); the picker works with `&tpf`.
+  const rawBehavior = pickerBinding?.behavior ?? 'none'
   const pickerValue: BindingValue = {
-    behavior: pickerBinding?.behavior ?? '&none',
+    behavior: rawBehavior.startsWith('&') ? rawBehavior : `&${rawBehavior}`,
     params: [...(pickerBinding?.params ?? [])],
   }
+  // ZMK hold-taps always take `HOLD TAP` params; the hold is a layer when the first wrapped
+  // behavior is a layer behavior such as `&mo`.
+  const holdTapInfo = model.behaviors
+    .filter((behavior) => behavior.compatible === 'zmk,behavior-hold-tap')
+    .map((behavior) => ({
+      label: behavior.label ?? behavior.name,
+      order: 'hold-tap' as const,
+      holdKind: /^&?(mo|to|tog|sl)$/.test(behavior.bindings[0]?.text ?? '')
+        ? ('layer' as const)
+        : ('key' as const),
+    }))
   const changeCount = summary.length
 
   return (
@@ -347,6 +360,7 @@ export function EditorPage() {
             layers={pickerInputs.layers}
             macros={pickerInputs.macros}
             holdTaps={pickerInputs.holdTaps}
+            holdTapInfo={holdTapInfo}
             userKeycodes={model.userKeycodes}
             preferredNames={preferredNames}
             platform={settings.platform}
