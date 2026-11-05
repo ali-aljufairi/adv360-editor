@@ -15,4 +15,15 @@
   --color-accent-layer-2: var(--layer-2);
   --color-accent-layer-3: var(--layer-3);
   --color-accent-layer-4: var(--layer-4);
+  --color-accent-primary: var(--accent-primary);
+  --color-focus-ring: var(--focus-ring);
+}
+
+:root {
+  /* Floating surfaces (popovers, drawers) reuse the theme's dialog shadow. */
+  --shadow-float: var(
+    --shadow-dialog,
+    0 24px 60px -16px rgb(0 0 0 / 0.45),
+    0 2px 8px rgb(0 0 0 / 0.2)
+  );
 }
