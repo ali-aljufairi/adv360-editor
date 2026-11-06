@@ -1,0 +1,8 @@
+/* Synthesized from issue #147: the issue describes alternative branches with duplicate layer identifiers but gives no excerpt. */
+/ {
+    #ifdef CONFIG_LAYOUT_A
+    keymap { compatible = "zmk,keymap"; default_layer { bindings = <&kp A>; }; keymap_alt { bindings = <&kp B>; }; };
+    #else
+    keymap { compatible = "zmk,keymap"; default_layer { bindings = <&kp C>; }; keymap_alt { bindings = <&kp D>; }; };
+    #endif
+};

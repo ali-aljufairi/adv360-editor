@@ -1,0 +1,113 @@
+{
+  "source": "https://github.com/ReFil/zmk/tree/adv360-z3.5-2/app/dts/behaviors.dtsi",
+  "revision": "adv360-z3.5-2",
+  "behaviors": [
+    { "name": "&kp", "bindingCells": 1, "label": "Key press", "example": "&kp A" },
+    { "name": "&mo", "bindingCells": 1, "label": "Momentary layer", "example": "&mo 1" },
+    { "name": "&tog", "bindingCells": 1, "label": "Toggle layer", "example": "&tog 1" },
+    { "name": "&to", "bindingCells": 1, "label": "To layer", "example": "&to 1" },
+    { "name": "&lt", "bindingCells": 2, "label": "Layer-tap", "example": "&lt 1 ESC" },
+    { "name": "&mt", "bindingCells": 2, "label": "Mod-tap", "example": "&mt LSHIFT A" },
+    { "name": "&sl", "bindingCells": 1, "label": "Sticky layer", "example": "&sl 1" },
+    { "name": "&sk", "bindingCells": 1, "label": "Sticky key", "example": "&sk LSHIFT" },
+    { "name": "&trans", "bindingCells": 0, "label": "Transparent", "example": "&trans" },
+    { "name": "&none", "bindingCells": 0, "label": "None", "example": "&none" },
+    { "name": "&bt", "bindingCells": 2, "label": "Bluetooth", "example": "&bt BT_SEL 0" },
+    { "name": "&out", "bindingCells": 1, "label": "Output selection", "example": "&out OUT_USB" },
+    {
+      "name": "&ext_power",
+      "bindingCells": 1,
+      "label": "External power",
+      "example": "&ext_power EP_TOG"
+    },
+    { "name": "&bl", "bindingCells": 2, "label": "Backlight", "example": "&bl BL_TOG" },
+    { "name": "&rgb_ug", "bindingCells": 2, "label": "Underglow", "example": "&rgb_ug RGB_TOG" },
+    { "name": "&sys_reset", "bindingCells": 0, "label": "Reset", "example": "&sys_reset" },
+    { "name": "&bootloader", "bindingCells": 0, "label": "Bootloader", "example": "&bootloader" },
+    {
+      "name": "&key_repeat",
+      "bindingCells": 0,
+      "label": "Repeat last key",
+      "example": "&key_repeat"
+    },
+    { "name": "&soft_off", "bindingCells": 0, "label": "Soft off", "example": "&soft_off" },
+    {
+      "name": "&studio_unlock",
+      "bindingCells": 0,
+      "label": "Unlock ZMK Studio",
+      "example": "&studio_unlock"
+    },
+    { "name": "&caps_word", "bindingCells": 0, "label": "Caps Word", "example": "&caps_word" },
+    { "name": "&kt", "bindingCells": 1, "label": "Key toggle", "example": "&kt A" },
+    { "name": "&gresc", "bindingCells": 0, "label": "Grave / Escape", "example": "&gresc" },
+    { "name": "&mkp", "bindingCells": 1, "label": "Mouse key press", "example": "&mkp LCLK" },
+    { "name": "&mmv", "bindingCells": 1, "label": "Mouse move", "example": "&mmv MOVE_UP" },
+    { "name": "&msc", "bindingCells": 1, "label": "Mouse scroll", "example": "&msc SCRL_UP" },
+    {
+      "name": "&stp",
+      "bindingCells": 1,
+      "label": "Battery level indicator",
+      "example": "&stp STP_BAT"
+    },
+    { "name": "&macro_tap", "bindingCells": 0, "label": "Macro tap mode", "example": "&macro_tap" },
+    {
+      "name": "&macro_press",
+      "bindingCells": 0,
+      "label": "Macro press mode",
+      "example": "&macro_press"
+    },
+    {
+      "name": "&macro_release",
+      "bindingCells": 0,
+      "label": "Macro release mode",
+      "example": "&macro_release"
+    },
+    {
+      "name": "&macro_pause_for_release",
+      "bindingCells": 0,
+      "label": "Pause macro until release",
+      "example": "&macro_pause_for_release"
+    },
+    {
+      "name": "&macro_tap_time",
+      "bindingCells": 1,
+      "label": "Set macro tap time",
+      "example": "&macro_tap_time 200"
+    },
+    {
+      "name": "&macro_wait_time",
+      "bindingCells": 1,
+      "label": "Set macro wait time",
+      "example": "&macro_wait_time 10"
+    },
+    {
+      "name": "&macro_param_1to1",
+      "bindingCells": 0,
+      "label": "Macro parameter 1 to 1",
+      "example": "&macro_param_1to1"
+    },
+    {
+      "name": "&macro_param_1to2",
+      "bindingCells": 0,
+      "label": "Macro parameter 1 to 2",
+      "example": "&macro_param_1to2"
+    },
+    {
+      "name": "&macro_param_2to1",
+      "bindingCells": 0,
+      "label": "Macro parameters 2 to 1",
+      "example": "&macro_param_2to1"
+    },
+    {
+      "name": "&macro_param_2to2",
+      "bindingCells": 0,
+      "label": "Macro parameters 2 to 2",
+      "example": "&macro_param_2to2"
+    }
+  ],
+  "mouseParameters": {
+    "&mkp": ["MB1", "MB2", "MB3", "MB4", "MB5", "LCLK", "MCLK", "RCLK"],
+    "&mmv": ["MOVE_UP", "MOVE_DOWN", "MOVE_LEFT", "MOVE_RIGHT", "MOVE(hor, vert)"],
+    "&msc": ["SCRL_UP", "SCRL_DOWN", "SCRL_LEFT", "SCRL_RIGHT"]
+  }
+}

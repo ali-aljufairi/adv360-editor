@@ -1,18 +1,24 @@
 import { createFileRoute } from '@tanstack/react-router'
-import keymap from '../../fixtures/adv360/adv360.keymap?raw'
-import macros from '../../fixtures/adv360/macros.dtsi?raw'
-import { resolve } from '../lib/zmk'
+import { EditorPage } from '../components/editor/EditorPage'
+import { EditorProvider, loadFixtureFiles } from '../lib/editor-state'
+import { SettingsProvider } from '../lib/settings/context'
+import { ADV360_PROFILE } from '../lib/profile/registry'
 
 export const Route = createFileRoute('/')({ component: Home })
-const layers = resolve({ 'adv360.keymap': keymap, 'macros.dtsi': macros }, 'adv360.keymap').layers
+
+/** Bundled Adv360 configuration; GitHub loading arrives in M4. */
+const FIXTURE_FILES = loadFixtureFiles()
+
+/**
+ * The editor at `/`: settings and the editor store wrap the board-first page.
+ * @returns The editor route.
+ */
 function Home() {
   return (
-    <main>
-      <h1>Adv360 editor</h1>
-      <h2>Layers</h2>
-      <ul>
-        {layers.map((layer) => <li key={layer.name}>{layer.displayName ?? layer.name}</li>)}
-      </ul>
-    </main>
+    <SettingsProvider>
+      <EditorProvider initialFiles={FIXTURE_FILES} profile={ADV360_PROFILE}>
+        <EditorPage />
+      </EditorProvider>
+    </SettingsProvider>
   )
 }

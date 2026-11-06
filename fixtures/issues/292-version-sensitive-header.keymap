@@ -1,0 +1,9 @@
+/* Synthesized from issue #292: preserve include ordering and avoid duplicate version-sensitive headers. */
+#include <dt-bindings/zmk/pointing.h>
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer { bindings = <&kp A>; };
+    };
+
+};

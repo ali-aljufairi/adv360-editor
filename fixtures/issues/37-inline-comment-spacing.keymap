@@ -1,0 +1,9 @@
+/** Exact issue #37 regression snippet: the gap before this inline comment is significant. */
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer { bindings = <&kp A &kp B>; };
+    };
+    foo;         // bar
+
+};

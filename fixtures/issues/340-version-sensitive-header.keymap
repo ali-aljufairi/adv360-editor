@@ -1,0 +1,9 @@
+/* Synthesized from issue #340: older ZMK versions may not define pointing behaviors; keep the author's include set. */
+#include <dt-bindings/zmk/pointing.h>
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer { bindings = <&kp A>; };
+    };
+
+};

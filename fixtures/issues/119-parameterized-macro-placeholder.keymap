@@ -1,0 +1,11 @@
+/* Synthesized from issue #119: the reproducer was supplied as a video, not text. */
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer { bindings = <&kp A>; };
+    };
+    macros {
+        sample: sample { compatible = "zmk,behavior-macro-one-param"; #binding-cells = <1>; bindings = <&macro_param_1to1 &kp MACRO_PLACEHOLDER>; };
+    };
+
+};

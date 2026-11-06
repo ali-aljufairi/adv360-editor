@@ -1,0 +1,17 @@
+/* Issue #77: arbitrary keycodes are accepted by mod-tap/hold-tap usage. */
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer { bindings = <&mt PSCRN P &kp A>; };
+    };
+    behaviors {
+        hp: hold_preferred {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "hold-preferred";
+            tapping-term-ms = <0>;
+            bindings = <&kp>, <&kp>;
+        };
+    };
+
+};

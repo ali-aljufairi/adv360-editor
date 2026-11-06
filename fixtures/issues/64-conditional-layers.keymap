@@ -1,0 +1,13 @@
+/* Synthesized from research: gh issue view #64 no longer resolves; the research describes conditional-layer references. */
+/ {
+    keymap { compatible = "zmk,keymap"; default_layer { bindings = <&kp A>; }; layer_one { bindings = <&kp B>; }; layer_two { bindings = <&kp C>; }; layer_three { bindings = <&kp D>; }; };
+    conditional_layers {
+        compatible = "zmk,conditional-layers";
+        tri_layer { if-layers = <1 2>; then-layer = <3>; };
+    };
+    keymap {
+        layer_one { bindings = <&kp A>; };
+        layer_two { bindings = <&kp B>; };
+        layer_three { bindings = <&kp C>; };
+    };
+};

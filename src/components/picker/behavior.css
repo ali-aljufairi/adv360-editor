@@ -1,0 +1,105 @@
+/* Behavior row, Tap/Hold and Layer controls. Colours come from the theme tokens in docs/theme.md. */
+
+.bp-tabs,
+.bp-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 0 10px;
+}
+
+.bp-tab,
+.bp-mode {
+  border: 1px solid var(--border-base);
+  background: transparent;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.bp-tab[aria-checked='true'],
+.bp-mode[aria-pressed='true'] {
+  background: var(--text-primary);
+  color: var(--surface-panel);
+  border-color: var(--text-primary);
+}
+
+.bp-tab:focus-visible,
+.bp-mode:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.bp-mode-hint {
+  width: 100%;
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.bp-taphold {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 10px;
+}
+
+.bp-taphold .bp-slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.bp-behavior-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.bp-behavior {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bp-behavior select {
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-base);
+  border-radius: 8px;
+  padding: 3px 6px;
+}
+
+.bp-preview-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.bp-preview-code,
+.bp-raw-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.bp-raw-code {
+  margin-left: 8px;
+}
+
+.bp-scope {
+  padding: 0 4px 4px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}

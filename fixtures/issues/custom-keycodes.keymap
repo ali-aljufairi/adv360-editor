@@ -1,0 +1,9 @@
+#include "custom-keycodes.h"
+
+/ {
+    keymap {
+        default_layer {
+            bindings = <&kp DE_AE &kp DE_SS &kp DE_CURRENCY &kp Z>;
+        };
+    };
+};

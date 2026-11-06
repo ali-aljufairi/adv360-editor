@@ -7,9 +7,9 @@ export interface ComboInput {
   name: string
   bindings: BindingInput[]
   keyPositions: number[]
-  timeoutMs?: number
+  timeoutMs?: number | null
   layers?: number[]
-  requirePriorIdleMs?: number
+  requirePriorIdleMs?: number | null
   slowRelease?: boolean
 }
 /** Editable fields of a macro. */
@@ -17,17 +17,19 @@ export interface MacroInput {
   label: string
   name: string
   bindings: BindingInput[]
-  waitMs?: number
-  tapMs?: number
+  waitMs?: number | null
+  tapMs?: number | null
 }
 /** Editable hold-tap properties. */
 export interface HoldTapInput {
   flavor?: string
-  tappingTermMs?: number
-  quickTapMs?: number
-  requirePriorIdleMs?: number
+  tappingTermMs?: number | null
+  quickTapMs?: number | null
+  requirePriorIdleMs?: number | null
   holdTriggerKeyPositions?: number[]
   bindings?: BindingInput[]
+  holdTriggerOnRelease?: boolean
+  retroTap?: boolean
 }
 /** Render a binding in DTS notation. */
 export function formatBinding(binding: BindingInput): string {
@@ -60,14 +62,15 @@ export function formatNode(
   fields.push(`bindings = <${input.bindings.map(formatBinding).join(' ')}>;`)
   if ('keyPositions' in input) {
     fields.push(`key-positions = <${input.keyPositions.join(' ')}>;`)
-    if (input.timeoutMs !== undefined) fields.push(`timeout-ms = <${input.timeoutMs}>;`)
-    if (input.layers !== undefined) fields.push(`layers = <${input.layers.join(' ')}>;`)
-    if (input.requirePriorIdleMs !== undefined)
+    if (input.timeoutMs != null) fields.push(`timeout-ms = <${input.timeoutMs}>;`)
+    if (input.layers?.length && !input.layers.includes(-1))
+      fields.push(`layers = <${input.layers.join(' ')}>;`)
+    if (input.requirePriorIdleMs != null)
       fields.push(`require-prior-idle-ms = <${input.requirePriorIdleMs}>;`)
     if (input.slowRelease) fields.push('slow-release;')
   } else {
-    if (input.waitMs !== undefined) fields.push(`wait-ms = <${input.waitMs}>;`)
-    if (input.tapMs !== undefined) fields.push(`tap-ms = <${input.tapMs}>;`)
+    if (input.waitMs != null) fields.push(`wait-ms = <${input.waitMs}>;`)
+    if (input.tapMs != null) fields.push(`tap-ms = <${input.tapMs}>;`)
   }
   const label = 'label' in input ? `${input.label}: ` : ''
   return `${node}${label}${input.name} {\n${fields.map((field) => `${node}${unit}${field}`).join('\n')}\n${node}};`

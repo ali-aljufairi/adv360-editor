@@ -1,0 +1,11 @@
+/* UTF-8 regression: café, 日本語, and 🐈 stay byte-identical. */
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer { bindings = <&kp A>; };
+    };
+    behaviors {
+        greeting: greeting { compatible = "zmk,behavior-macro"; label = "挨拶 ✨"; bindings = <&kp K_HEART>; };
+    };
+
+};

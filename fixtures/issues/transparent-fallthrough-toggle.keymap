@@ -1,0 +1,66 @@
+/* Prototype regression: transparent Windows positions expose the Macro toggle at 16 and
+ * the base-layer momentary Macro access at 75. */
+/ {
+    keymap {
+        base { bindings = <
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &mo 3
+        >; };
+        keypad { bindings = <
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none
+        >; };
+        mod { bindings = <
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none
+        >; };
+        macro { bindings = <
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &tog 4 &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none
+        >; };
+        windows { bindings = <
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &trans &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &none &none &none &none &none
+            &none &none &none &trans
+        >; };
+    };
+};

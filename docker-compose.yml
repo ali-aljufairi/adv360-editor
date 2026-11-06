@@ -1,0 +1,10 @@
+services:
+  valkey:
+    image: valkey/valkey:9.1.2
+    command: ["valkey-server", "--requirepass", "local-development-only"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - valkey-data:/data
+volumes:
+  valkey-data:

@@ -1,0 +1,47 @@
+# Theme notices
+
+Terminal palettes originate from Ghostty / iTerm2-Color-Schemes. Copyright and author lines available from upstream are reproduced below; consult each linked project for its full license.
+
+- **Catppuccin Mocha** — MIT; Copyright (c) 2021 Catppuccin; source: https://github.com/catppuccin/palette.
+- **Catppuccin Latte** — MIT; Copyright (c) 2021 Catppuccin; source: https://github.com/catppuccin/palette.
+- **Catppuccin Frappe** — MIT; Copyright (c) 2021 Catppuccin; source: https://github.com/catppuccin/palette.
+- **Catppuccin Macchiato** — MIT; Copyright (c) 2021 Catppuccin; source: https://github.com/catppuccin/palette.
+- **TokyoNight** — Apache-2.0; Author: Folke Lemaitre; source: https://github.com/folke/tokyonight.nvim.
+- **TokyoNight Day** — Apache-2.0; Author: Folke Lemaitre; source: https://github.com/folke/tokyonight.nvim.
+- **TokyoNight Moon** — Apache-2.0; Author: Folke Lemaitre; source: https://github.com/folke/tokyonight.nvim.
+- **TokyoNight Storm** — Apache-2.0; Author: Folke Lemaitre; source: https://github.com/folke/tokyonight.nvim.
+- **Nord** — MIT; Copyright © 2016 Arctic Ice Studio; source: https://github.com/nordtheme/iterm2.
+- **Nord Light** — MIT; Copyright © 2016 Arctic Ice Studio; source: https://github.com/nordtheme/iterm2.
+- **Gruvbox Dark** — MIT; Author: Pavel Pertsev &lt;morhetz@gmail.com&gt;; source: https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6.
+- **Gruvbox Dark Hard** — MIT; Author: Pavel Pertsev &lt;morhetz@gmail.com&gt;; source: https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6.
+- **Gruvbox Light** — MIT; Author: Pavel Pertsev &lt;morhetz@gmail.com&gt;; source: https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6.
+- **Gruvbox Light Hard** — MIT; Author: Pavel Pertsev &lt;morhetz@gmail.com&gt;; source: https://github.com/morhetz/gruvbox/blob/697c00291db857ca0af00ec154e5bd514a79191f/package.json#L6.
+- **Rose Pine** — MIT; Copyright (c) mvllow; source: https://github.com/rose-pine/build.
+- **Rose Pine Dawn** — MIT; Copyright (c) mvllow; source: https://github.com/rose-pine/build.
+- **Rose Pine Moon** — MIT; Copyright (c) mvllow; source: https://github.com/rose-pine/build.
+- **Kanagawa Wave** — MIT; Copyright (c) 2021 Tommaso Laurenzi; source: https://github.com/rebelot/kanagawa.nvim.
+- **Kanagawa Dragon** — MIT; Copyright (c) 2021 Tommaso Laurenzi; source: https://github.com/rebelot/kanagawa.nvim.
+- **Everforest Dark Hard** — MIT; Copyright (c) 2021 Nikolai Osaulenko; source: https://github.com/icewind/everforest.iterm2.
+- **Everforest Light Med** — MIT; Copyright (c) 2021 Nikolai Osaulenko; source: https://github.com/icewind/everforest.iterm2.
+- **Atom One Dark** — MIT; Copyright (c) 2011-2022 GitHub Inc.; source: https://github.com/atom/atom/tree/master/packages/one-dark-ui.
+- **Atom One Light** — MIT; Copyright (c) 2011-2022 GitHub Inc.; source: https://github.com/atom/atom/tree/master/packages/one-light-ui.
+- **GitHub Dark** — MIT; Copyright (c) 2020 Primer; source: https://github.com/primer/github-vscode-theme.
+- **GitHub Light Default** — MIT; Copyright (c) 2020 Primer; source: https://github.com/primer/github-vscode-theme.
+- **GitHub Dark Dimmed** — MIT; Copyright (c) 2020 Primer; source: https://github.com/primer/github-vscode-theme.
+- **GitHub Dark High Contrast** — MIT; Copyright (c) 2020 Primer; source: https://github.com/primer/github-vscode-theme.
+- **Andromeda** — MIT; source: https://github.com/mbadolato/iTerm2-Color-Schemes.
+- **Cobalt Next** — MIT; Copyright (c) 2017 David Leininger; source: https://github.com/davidleininger/cobaltnext-vscode.
+- **Ayu Mirage** — MIT; Copyright (c) 2016 Ike Kurghinyan; source: https://github.com/ayu-theme/vscode-ayu.
+- **Night Owlish Light** — MIT; source: https://github.com/praveenpuglia/night-owlish-theme.
+- **Flexoki Dark** — MIT; Copyright (c) 2023 Steph Ango; source: https://github.com/kepano/flexoki.
+- **Flexoki Light** — MIT; Copyright (c) 2023 Steph Ango; source: https://github.com/kepano/flexoki.
+- **Dawnfox** — MIT; Copyright (c) 2021 James Simpson; source: https://github.com/EdenEast/nightfox.nvim/tree/main/extra.
+- **Dayfox** — MIT; Copyright (c) 2021 James Simpson; source: https://github.com/edeneast/nightfox.nvim.
+- **Everblush** — MIT; Copyright (c) 2022 Everblush; source: https://github.com/Everblush/everblush.
+- **Horizon** — MIT; Copyright (c) 2018 Jonathan Olaleye; source: https://github.com/jolaleye/horizon-theme-vscode.
+- **Snazzy** — MIT; Copyright (c) Sindre Sorhus &lt;sindresorhus@gmail.com&gt; (https://sindresorhus.com); source: https://github.com/sindresorhus/iterm2-snazzy.
+- **Carbonfox** — MIT; Copyright (c) 2021 James Simpson; source: https://github.com/EdenEast/nightfox.nvim/tree/main/extra.
+- **Material Ocean** — MIT; Copyright (c) 2017 Kai Cataldo; source: https://github.com/kaicataldo/material.vim.
+- **Harbor Signal** — original prototype, project authors; source: design/approved/board-first-themes.html.
+- **Signal Amber** — original prototype, project authors; source: design/approved/board-first-themes.html.
+- **Studio Slate** — original prototype, project authors; source: design/approved/board-first-themes.html.

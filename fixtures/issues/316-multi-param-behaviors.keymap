@@ -1,0 +1,11 @@
+/* Synthesized from issue #316: multi-parameter Bluetooth actions and macro parameter flow. */
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer { bindings = <&bt BT_SEL 0 &kp A>; };
+    };
+    macros {
+        select_slot: select_slot { compatible = "zmk,behavior-macro-one-param"; #binding-cells = <1>; bindings = <&macro_param_1to1 &bt BT_SEL MACRO_PLACEHOLDER>; };
+    };
+
+};

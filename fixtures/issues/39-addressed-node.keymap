@@ -1,0 +1,9 @@
+/* Issue #39 syntax: addressed node names must retain the @ unit address. */
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer { bindings = <&kp A>; };
+    };
+    foo@123 { bar; };
+
+};

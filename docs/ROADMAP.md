@@ -38,6 +38,35 @@ in `docs/PRODUCT.md` → Decisions log.
 - **M1c Binding picker** (Haiku): searchable command-palette style picker component.
 - **M1d Issue-driven parser hardening** (Luna): fixtures and fixes from the upstream issues.
 
+### M1f — Multi-keyboard groundwork (after M1d lands; see `docs/research/multi-keyboard.md`)
+
+- `KeyboardProfile` type (repo, branch, keymap path, board/shield target, layout source, workflow,
+  artifact map); the Advantage360 is the first profile.
+- Remove fixed 76-key assumptions; validate against the selected profile's layout.
+- Layout-source interface (QMK info.json now; ZMK `zmk,physical-layout` DTS next).
+- Thread a profile id through load / edit / commit / build. Multi-user stays out of scope.
+
+### M1g — Key and behavior coverage (Luna, after M1f and picker polish)
+
+Every key and behavior ZMK supports must be pickable, displayable and round-trippable. Driven by
+upstream issues (see `docs/research/keymap-editor-issues.md`):
+
+- Mouse: `&mkp`, `&mmv`, `&msc` with the parameter syntax of the firmware revision in use
+  (#241, #283, #274, #228, #356).
+- International: accents, currency, grave/tilde, locale headers such as zmk-locale-generator and
+  `german_aliases.h`; names come from headers the config `#include`s (#230, #261, #263, #166,
+  #219, #282).
+- User-defined names from included `.h` files and any unlisted key code: accepted, shown as raw
+  with a warning, never rejected silently (#222, #296).
+- Missing keys/behaviors: Globe, media FF/rewind, all Delete variants, `&key_repeat`,
+  `&soft_off`, `&studio_unlock`, `&caps_word`, `&sk`, `&kt`, `&gresc`, `&out`, `&ext_power`,
+  `&bl`, `&rgb_ug`, `&sys_reset`, `&bootloader` (#143, #128, #217, #303, #209, #272).
+- Picker usability regressions to guard against: typing shifted characters must not toggle
+  modifiers, Enter confirms, focus stays in search, second-parameter slot gets focus
+  (#113, #111, #155, #226).
+- A coverage report test: every name in the vendored ZMK headers has a label or an explicit
+  raw fallback; every built-in behavior has a picker entry and a legend.
+
 ### M2 — Board editor
 
 - Board rendering from `info.json` + parser model, layer pills, key selection, picker integration,
@@ -46,6 +75,17 @@ in `docs/PRODUCT.md` → Decisions log.
 ### M3 — Behaviors
 
 - Macro editor, hold-tap editor, combo editor (arcs on the board).
+
+### M3b — OS layers and profile-linked layers (recommended; owner may veto)
+
+- One keyboard is used on both macOS and Windows; firmware cannot detect the host OS.
+- Base layer + thin "Windows" overlay layer holding only differing keys (Cmd↔Ctrl, shortcuts).
+- Picker: assigning a shortcut such as Copy writes ⌘C on the Mac side and Ctrl+C on the Windows
+  overlay in one step; the board preview switches OS view.
+- A Mac/Windows toggle key or combo; optional macros that select a Bluetooth profile and the
+  matching OS layer together (`&bt BT_SEL n` + `&to <layer>`). A firmware module that follows the
+  active profile automatically is a later, separate decision.
+- Prerequisite: give the unreachable Mod/Bluetooth layer (layer 2) an access key.
 
 ### M4 — GitHub
 

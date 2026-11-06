@@ -173,3 +173,43 @@ it.each(['macro', 'combo'] as const)('removes the full line for a standalone %s'
       .join('\n'),
   )
 })
+
+it('preserves macro text around an edited step and supports no-op writes', () => {
+  const source = `/ { macros { m: m { compatible = "zmk,behavior-macro";
+    bindings = <&macro_press &macro_press &kp LSHFT>, /* keep */ <&macro_tap &kp A>, <&macro_release &kp LSHFT>;
+  }; }; };`
+  const editor = createEditor({ x: source }, 'x')
+  const bindings = [
+    '&macro_press',
+    '&kp LSHFT',
+    '&macro_tap',
+    '&kp A',
+    '&macro_release',
+    '&kp LSHFT',
+  ]
+  editor.updateMacro('m', { bindings })
+  expect(editor.serialize().x).toBe(source)
+  bindings[3] = '&kp B'
+  editor.updateMacro('m', { bindings })
+  expect(editor.serialize().x).toBe(source.replace('&kp A', '&kp B'))
+})
+
+it('preserves hold-tap binding style and adds and removes bare and optional properties', () => {
+  const source = `/ { behaviors { ht: ht { compatible = "zmk,behavior-hold-tap";
+    bindings = <&kp>, <&kp>;
+    quick-tap-ms = <150>;
+    retro-tap;
+  }; }; combos { c { bindings = <&kp A>; key-positions = <1 2>; timeout-ms = <30>; slow-release; }; }; };`
+  const editor = createEditor({ x: source }, 'x')
+  editor.updateHoldTap('ht', {
+    bindings: ['&mo', '&kp'],
+    quickTapMs: null,
+    holdTriggerOnRelease: true,
+    retroTap: false,
+  })
+  editor.updateCombo('c', { timeoutMs: null, slowRelease: false })
+  const result = editor.serialize().x
+  expect(result).toContain('bindings = <&mo>, <&kp>;')
+  expect(result).toContain('hold-trigger-on-release;')
+  expect(result).not.toMatch(/quick-tap-ms|retro-tap|timeout-ms|slow-release/)
+})

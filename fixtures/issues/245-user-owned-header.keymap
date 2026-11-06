@@ -1,0 +1,9 @@
+/* Synthesized from issue #245 discussion: preserve a user-owned ext_power include. */
+#include <dt-bindings/zmk/ext_power.h>
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer { bindings = <&kp A>; };
+    };
+
+};

@@ -45,6 +45,16 @@ Ideas may be borrowed from <https://github.com/nickcoutsos/keymap-editor> (MIT) 
 - 2026-11-05 — **Team:** Haiku builds UI components in small tasks; Terra builds logic; Luna (max)
   implements issue-research items. See `docs/ROADMAP.md`.
 
+- 2026-11-05 — **Multi-keyboard (own keyboards) planned, multi-user deferred.** Estimated M for
+  several of the owner's keyboards, L for a multi-user service. Groundwork in roadmap M1f.
+- 2026-11-05 — **Keyboard navigation:** vim / emacs / arrows schemes, configurable in settings,
+  spatial movement on the physical layout.
+
+- 2026-11-05 — **Valkey cache layer** (fail-open; memory adapter in dev): conditional GitHub
+  requests with ETags, a content-addressed firmware build cache (any byte change in a build input
+  = new build), and rate-limit helpers for possible future multi-user use. Firmware builds stay on
+  GitHub-hosted runners (no self-hosted runners on a public repo).
+
 ## The config (see `fixtures/adv360/`)
 
 - `adv360.keymap` — shared keymap: 4 layers × 76 keys (`default_layer`, `keypad`, `mod`, `macro`),
