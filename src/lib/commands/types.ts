@@ -11,6 +11,7 @@ export const COMMAND_GROUPS = [
   'Theme',
   'Help',
 ] as const
+/** A palette section name. */
 export type CommandGroup = (typeof COMMAND_GROUPS)[number]
 
 /** One entry in the ⌘K command palette. */
