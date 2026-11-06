@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Layers · B map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Concept B: MAP. A horizontal graph of layers above the board. Edges are the answer to
+   "how do I get there": hold / toggle arrows drawn from the layer that owns the key. */
+:root{
+  --surface-canvas:#1e1e2e; --surface-panel:#181825; --surface-raised:#313244; --surface-dot:#262737;
+  --surface-glow:rgba(137,180,250,.07);
+  --border-base:#45475a; --border-subtle:#313244;
+  --text-primary:#cdd6f4; --text-secondary:#a6adc8; --text-muted:#7f849c;
+  --accent-primary:#89b4fa; --on-accent:#11111b;
+  --status-warning:#fab387; --on-warning:#11111b; --status-success:#a6e3a1;
+  --layer-1:#89b4fa; --layer-2:#a6e3a1; --layer-3:#f9e2af; --layer-4:#f5c2e7; --layer-5:#94e2d5;
+  --keycap-top:#45475a; --keycap-face:#313244; --keycap-side:#11111b; --keycap-legend:#cdd6f4;
+  --keycap-highlight:rgba(255,255,255,.07); --keycap-shadow:rgba(0,0,0,.55);
+  --shadow-float:0 14px 34px -14px rgba(0,0,0,.7);
+  --sans:"Instrument Sans","Helvetica Neue",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font:14px/1.45 var(--sans);-webkit-font-smoothing:antialiased;min-width:1200px}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+kbd{font:500 11px/1 var(--mono);background:var(--surface-raised);border:1px solid var(--border-base);border-bottom-width:2px;border-radius:5px;padding:2px 5px}
+.eyebrow{font:500 10.5px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted)}
+.fine{font-size:12px;color:var(--text-muted);margin:0}
+
+.top{height:52px;display:flex;align-items:center;gap:14px;padding:0 18px;border-bottom:1px solid var(--border-subtle);background:var(--surface-panel)}
+.top b{font-weight:700}
+.top .dev{font:500 12px var(--mono);color:var(--text-muted)}
+.top .sp{flex:1}
+.ghost{background:transparent;border:1px solid var(--border-base);border-radius:7px;padding:5px 10px;font-size:12.5px;color:var(--text-secondary)}
+
+.wrap{padding:18px 28px 28px;display:flex;flex-direction:column;gap:16px;min-height:calc(100vh - 53px);
+  background:radial-gradient(var(--surface-dot) 1px,transparent 1.3px) 0 0/22px 22px,var(--surface-canvas)}
+.bar{display:flex;align-items:center;gap:18px}
+.bar h2{margin:0;font-size:15px;font-weight:600}
+.legend{margin-left:auto;display:flex;gap:16px;font:500 11.5px var(--mono);color:var(--text-muted);align-items:center}
+.legend svg{vertical-align:middle;margin-right:6px}
+
+/* the map */
+.map{position:relative;height:262px;width:1140px;margin:0 auto;border:1px solid var(--border-subtle);border-radius:18px;background:
+  color-mix(in srgb,var(--surface-panel) 70%,transparent)}
+.map svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.edge{fill:none;stroke-width:1.75}
+.edge.hold{stroke:var(--c);stroke-linecap:round}
+.edge.tog{stroke:var(--c);stroke-dasharray:6 5}
+.edge-tag{position:absolute;transform:translate(-50%,-50%);font:600 11px/1 var(--mono);padding:5px 8px;border-radius:999px;background:var(--surface-canvas);border:1px solid color-mix(in srgb,var(--c) 55%,transparent);color:var(--text-primary);white-space:nowrap}
+.edge-tag b{color:var(--c);font-weight:600}
+
+.node{position:absolute;width:214px;height:96px;border-radius:14px;background:var(--surface-panel);border:1px solid var(--border-base);
+  box-shadow:var(--shadow-float),inset 0 1px 0 rgba(255,255,255,.03);padding:11px 12px 10px 14px;cursor:pointer;--c:var(--layer-1);
+  display:grid;grid-template-columns:1fr 92px;grid-template-rows:auto 1fr;gap:4px 10px;transition:border-color .15s,transform .15s}
+.node::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0;background:var(--c)}
+.node:hover{transform:translateY(-2px)}
+.node.on{border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 18%,transparent),var(--shadow-float)}
+.node .hd{display:flex;align-items:center;gap:7px;min-width:0}
+.node .n{font:600 11px/1 var(--mono);color:var(--c)}
+.node .nm{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.node .why{grid-column:1;font:500 11.5px/1.35 var(--mono);color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.node .why b{color:var(--text-secondary);font-weight:500}
+.node .mini{grid-column:2;grid-row:1 / span 2;display:grid;grid-template-columns:repeat(12,1fr);grid-auto-rows:6px;gap:3px;align-self:center}
+.node .mini i{height:6px;border-radius:2px;background:var(--border-subtle)}
+.node .mini i.on{background:var(--c);opacity:.9}
+.node.base{background:color-mix(in srgb,var(--c) 6%,var(--surface-panel))}
+.node.orphan{border:1.5px dashed var(--status-warning);background:color-mix(in srgb,var(--status-warning) 7%,var(--surface-panel))}
+.node.orphan::before{background:var(--status-warning)}
+.node.orphan .n,.node.orphan .why{color:var(--status-warning)}
+.warn-pill{position:absolute;right:10px;top:-9px;font:600 10px/1 var(--sans);background:var(--status-warning);color:var(--on-warning);padding:4px 7px;border-radius:999px}
+
+.plus{position:absolute;left:1010px;top:83px;width:96px;height:96px;border:1px dashed var(--border-base);border-radius:14px;background:transparent;color:var(--text-muted);font:500 12px var(--mono);display:grid;place-items:center}
+.plus:hover{color:var(--text-primary);border-color:var(--text-muted)}
+.pop{position:absolute;left:872px;top:186px;width:260px;background:var(--surface-raised);border:1px solid var(--border-base);border-radius:14px;padding:14px;box-shadow:var(--shadow-float);z-index:5;display:none;flex-direction:column;gap:10px}
+.pop.open{display:flex}
+.pop::before{content:"";position:absolute;right:40px;top:-6px;width:10px;height:10px;background:var(--surface-raised);border-left:1px solid var(--border-base);border-top:1px solid var(--border-base);transform:rotate(45deg)}
+.pop input{background:var(--surface-canvas);border:1px solid var(--border-base);border-radius:8px;padding:7px 9px;font-weight:600;outline:none}
+.pop input:focus{border-color:var(--accent-primary)}
+.opt{display:flex;gap:6px;font-size:12.5px;color:var(--text-secondary)}
+.opt label{display:flex;gap:6px;align-items:center;border:1px solid var(--border-base);border-radius:7px;padding:5px 8px;cursor:pointer}
+.opt input{accent-color:var(--accent-primary)}
+.pop .row{display:flex;justify-content:space-between;align-items:center}
+.btn{border:0;border-radius:8px;padding:7px 12px;font-weight:600;font-size:12.5px;background:var(--surface-canvas);color:var(--text-primary)}
+.btn.primary{background:var(--accent-primary);color:var(--on-accent)}
+.btn.danger{background:var(--status-warning);color:var(--on-warning)}
+
+/* selected-node tools: sit under the map, not in a modal */
+.tools{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-muted)}
+.tools button{background:transparent;border:1px solid var(--border-base);border-radius:7px;padding:5px 10px;color:var(--text-secondary)}
+.tools button:hover{color:var(--text-primary);border-color:var(--text-muted)}
+.tools .danger-t:hover{color:var(--status-warning);border-color:var(--status-warning)}
+.tools .sp{flex:1}
+.impact{border:1px solid color-mix(in srgb,var(--status-warning) 45%,var(--border-subtle));background:color-mix(in srgb,var(--status-warning) 6%,var(--surface-panel));border-radius:14px;padding:12px 14px;display:flex;gap:18px;align-items:center}
+.impact[hidden]{display:none}
+.impact ul{margin:0;padding:0;list-style:none;display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--text-secondary)}
+.impact li b{color:var(--text-primary)}
+.impact .act{margin-left:auto;display:flex;gap:6px}
+
+/* board */
+.board{display:flex;justify-content:center;gap:56px;padding:10px 0 0}
+.side{display:flex;flex-direction:column;gap:8px}
+.grid{display:grid;grid-template-columns:repeat(6,52px);grid-auto-rows:52px;gap:6px}
+.thumbs{display:flex;gap:6px}
+.side:first-child .thumbs{justify-content:flex-end}
+.side:last-child .thumbs{justify-content:flex-start}
+.k{position:relative;border:0;padding:0;width:52px;height:52px;border-radius:11px;background:linear-gradient(180deg,var(--keycap-top),var(--keycap-face));
+  box-shadow:inset 0 2px 0 var(--keycap-highlight),0 4px 0 var(--keycap-side),0 10px 18px -8px var(--keycap-shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:opacity .2s}
+.thumbs .k{width:52px;height:52px}
+.k .md{font:600 8px/1 var(--mono);text-transform:uppercase;color:var(--c)}
+.k .lg{font:600 12px/1 var(--sans);color:var(--keycap-legend);white-space:nowrap;max-width:44px;overflow:hidden;text-overflow:ellipsis}
+.k.nav{box-shadow:inset 0 2px 0 var(--keycap-highlight),0 4px 0 var(--keycap-side),0 0 0 1.5px var(--c),0 0 18px -4px var(--c)}
+.k.nav .lg{color:var(--c)}
+.board:not([data-layer="1"]) .k:not(.lit){opacity:.4}
+.board .k:not(.lit):not(.nav) .lg{color:var(--text-muted)}
+.board .k:not(.lit) .lg{opacity:.5}
+</style>
+</head>
+<body>
+<header class="top">
+  <b>adv360</b><span class="dev">Kinesis Advantage360 Pro</span>
+  <span class="sp" style="flex:1"></span>
+  <button class="ghost">Catppuccin Mocha</button>
+  <button class="ghost">Settings</button>
+</header>
+
+<main class="wrap">
+  <div class="bar">
+    <h2>Layers <span class="muted" style="color:var(--text-muted);font-weight:500">· 5 · how each is reached</span></h2>
+    <div class="legend">
+      <span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" stroke="#a6adc8" stroke-width="1.75" stroke-linecap="round"/></svg>hold</span>
+      <span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" stroke="#a6adc8" stroke-width="1.75" stroke-dasharray="6 5"/></svg>toggle</span>
+      <span><svg width="14" height="14"><rect x="1" y="1" width="12" height="12" rx="3" fill="none" stroke="#fab387" stroke-width="1.5" stroke-dasharray="3 2"/></svg>nothing reaches it</span>
+    </div>
+  </div>
+
+  <div class="map" id="map">
+    <svg id="edges" aria-hidden="true"></svg>
+    <!-- nodes are placed in JS from NODES -->
+    <button class="plus" id="plus" aria-expanded="false">+ add</button>
+    <div class="pop" id="pop" role="dialog" aria-label="Add layer">
+      <input id="popName" placeholder="Layer name" aria-label="Layer name">
+      <div class="opt" role="radiogroup">
+        <label><input type="radio" name="from" checked> Empty</label>
+        <label><input type="radio" name="from"> Copy of Default</label>
+      </div>
+      <p class="fine">Lands at the end of the map. Reach it with a key that selects it.</p>
+      <div class="row"><button class="btn" id="popCancel">Cancel</button><button class="btn primary">Add layer</button></div>
+    </div>
+  </div>
+
+  <div class="tools" id="tools">
+    <span id="toolsName">Selected: Default</span>
+    <span class="sp"></span>
+    <button id="mvL">◂ Move left</button>
+    <button id="mvR">Move right ▸</button>
+    <button>Rename</button>
+    <button class="danger-t" id="delBtn">Delete…</button>
+  </div>
+
+  <div class="impact" id="impact" hidden>
+    <div><div class="eyebrow" style="color:var(--status-warning)">Delete Macro?</div>
+      <p class="fine" style="margin-top:4px">Removes 3 keys on this layer.</p></div>
+    <ul>
+      <li><b>Default</b> · the <kbd>hold Macro</kbd> key stops doing anything</li>
+      <li><b>Windows</b> · only reached through Macro, becomes unreachable</li>
+    </ul>
+    <div class="act"><button class="btn" id="keep">Keep</button><button class="btn danger">Delete layer</button></div>
+  </div>
+
+  <section class="board" id="board" data-layer="1"></section>
+</main>
+
+<script>
+// Positions are in map px (map is 1140 x 262). `to` marks a switching key.
+const LAYERS = [
+  {id:1,name:'Default',base:true,x:36,y:83,keys:{60:{t:'Keypad',mode:'hold',to:2},61:{t:'Macro',mode:'hold',to:4}}},
+  {id:2,name:'Keypad',x:336,y:14,keys:{36:{t:'7'},37:{t:'8'},38:{t:'9'},42:{t:'4'},43:{t:'5'},44:{t:'6'},48:{t:'1'},49:{t:'2'},50:{t:'3'},55:{t:'0'}}},
+  {id:3,name:'Mod',x:636,y:14,keys:{0:{t:'BT 0'},1:{t:'BT 1'},2:{t:'BT 2'},3:{t:'BT clr'},4:{t:'BOOT'}}},
+  {id:4,name:'Macro',x:336,y:152,keys:{8:{t:'W',mode:'toggle',to:5},9:{t:'⌘⇧S'},14:{t:'⌘Spc'}}},
+  {id:5,name:'Windows',x:636,y:152,keys:{2:{t:'Ctrl+S'},3:{t:'Alt+Tab'},8:{t:'Win'}}}
+];
+const byId = id => LAYERS.find(l => l.id === id);
+let active = 1;
+const reachers = id => {
+  const out = [];
+  LAYERS.forEach(l => Object.entries(l.keys).forEach(([i,k]) => { if (k.to === id) out.push({from:l.id, key:k}); }));
+  return out;
+};
+
+// Edges: from a layer's right edge to the target's left edge
+function drawEdges(){
+  const svg = document.getElementById('edges');
+  let s = '', tags = '';
+  LAYERS.forEach(l => {
+    Object.values(l.keys).forEach(k => {
+      if (!k.to) return;
+      const t = byId(k.to);
+      const x1 = l.x + 214, y1 = l.y + 48, x2 = t.x, y2 = t.y + 48;
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      const cls = k.mode === 'hold' ? 'hold' : 'tog';
+      s += `<path class="edge ${cls}" style="--c:var(--layer-${t.id})" d="M${x1} ${y1} C${mx} ${y1},${mx} ${y2},${x2} ${y2}"/>`;
+      tags += `<span class="edge-tag" style="left:${mx}px;top:${my}px;--c:var(--layer-${t.id})"><b>${k.mode}</b> "${k.t}"</span>`;
+    });
+  });
+  svg.innerHTML = s;
+  document.getElementById('map').querySelectorAll('.edge-tag').forEach(n => n.remove());
+  document.getElementById('map').insertAdjacentHTML('beforeend', tags);
+}
+
+// Nodes
+function nodeEl(l){
+  const r = reachers(l.id);
+  const el = document.createElement('div');
+  el.className = 'node' + (l.base ? ' base' : '') + (!l.base && !r.length ? ' orphan' : '') + (l.id === active ? ' on' : '');
+  el.style.left = l.x + 'px'; el.style.top = l.y + 'px';
+  el.style.setProperty('--c', 'var(--layer-' + l.id + ')');
+  el.dataset.id = l.id;
+  let why;
+  if (l.base) why = '<b>base</b> · always on underneath';
+  else if (!r.length) why = '<b>no key reaches this</b>';
+  else why = `${r[0].key.mode} <b>"${r[0].key.t}"</b> on ${byId(r[0].from).name}`;
+  // mini: 60 cells in a 12 x 5 grid, lit where the layer sets a key
+  const cells = Array.from({length:60}, (_, i) => `<i class="${l.keys[i] ? 'on' : ''}"></i>`).join('');
+  el.innerHTML = `<div class="hd"><span class="n">${l.id}</span><span class="nm">${l.name}</span></div>
+    <div class="why">${why}</div><div class="mini">${cells}</div>`;
+  if (!l.base && !r.length) { const w = document.createElement('span'); w.className = 'warn-pill'; w.textContent = 'unreachable'; el.appendChild(w); }
+  el.addEventListener('click', () => setActive(l.id));
+  return el;
+}
+function drawNodes(){
+  const map = document.getElementById('map');
+  map.querySelectorAll('.node').forEach(n => n.remove());
+  LAYERS.forEach(l => map.insertBefore(nodeEl(l), document.getElementById('plus')));
+}
+
+// Board placeholder
+const board = document.getElementById('board');
+function mkRange(a, n, cls){
+  const el = document.createElement('div'); el.className = cls;
+  for (let i = a; i < a + n; i++){
+    const b = document.createElement('button'); b.className = 'k'; b.dataset.i = i;
+    b.innerHTML = '<span class="md"></span><span class="lg"></span>';
+    el.appendChild(b);
+  }
+  return el;
+}
+(function build(){
+  const L = document.createElement('div'); L.className = 'side';
+  L.append(mkRange(0,30,'grid'), mkRange(60,3,'thumbs'));
+  const R = document.createElement('div'); R.className = 'side';
+  R.append(mkRange(30,30,'grid'), mkRange(63,3,'thumbs'));
+  board.append(L, R);
+})();
+function renderBoard(){
+  const layer = byId(active);
+  board.dataset.layer = active;
+  board.querySelectorAll('.k').forEach(b => {
+    const i = +b.dataset.i, k = layer.keys[i];
+    b.className = 'k' + (k ? ' lit' : '') + (k && k.to ? ' nav' : '');
+    b.style.setProperty('--c', k && k.to ? 'var(--layer-' + k.to + ')' : 'var(--layer-' + active + ')');
+    b.querySelector('.md').textContent = k && k.to ? k.mode : '';
+    b.querySelector('.lg').textContent = k ? k.t : '';
+    b.onclick = () => k && k.to && setActive(k.to);
+  });
+}
+
+// Selection and tools
+function setActive(id){
+  active = id;
+  drawNodes(); renderBoard();
+  const l = byId(id);
+  document.getElementById('toolsName').textContent = 'Selected: ' + l.name + (l.base ? ' (base)' : '');
+  document.getElementById('mvL').disabled = l.base;
+  document.getElementById('impact').hidden = true;
+}
+
+// Add popover, anchored to the + node
+const plus = document.getElementById('plus'), pop = document.getElementById('pop');
+plus.onclick = () => {
+  const open = !pop.classList.contains('open');
+  pop.classList.toggle('open', open);
+  plus.setAttribute('aria-expanded', open);
+  if (open) document.getElementById('popName').focus();
+};
+document.getElementById('popCancel').onclick = () => pop.classList.remove('open');
+
+// Delete impact strip, shown inline under the map
+document.getElementById('delBtn').onclick = () => { document.getElementById('impact').hidden = false; };
+document.getElementById('keep').onclick = () => { document.getElementById('impact').hidden = true; };
+
+setActive(1);
+drawEdges();
+</script>
+</body>
+</html>

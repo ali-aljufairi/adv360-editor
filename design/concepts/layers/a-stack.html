@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Layers · A stack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Concept A: STACK. Layers as a vertical stack; base at the bottom, overlays rise above it,
+   and nested elbows show which layer reaches which. Catppuccin Mocha tokens on :root. */
+:root{
+  --surface-canvas:#1e1e2e; --surface-panel:#181825; --surface-raised:#313244; --surface-dot:#262737;
+  --surface-glow:rgba(137,180,250,.07);
+  --border-base:#45475a; --border-subtle:#313244;
+  --text-primary:#cdd6f4; --text-secondary:#a6adc8; --text-muted:#7f849c;
+  --accent-primary:#89b4fa; --on-accent:#11111b;
+  --status-warning:#fab387; --on-warning:#11111b; --status-success:#a6e3a1;
+  --layer-1:#89b4fa; --layer-2:#a6e3a1; --layer-3:#f9e2af; --layer-4:#f5c2e7; --layer-5:#94e2d5;
+  --keycap-top:#45475a; --keycap-face:#313244; --keycap-side:#11111b; --keycap-legend:#cdd6f4;
+  --keycap-highlight:rgba(255,255,255,.07); --keycap-shadow:rgba(0,0,0,.55);
+  --shadow-float:0 14px 34px -14px rgba(0,0,0,.7);
+  --sans:"Instrument Sans","Helvetica Neue",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font:14px/1.45 var(--sans);-webkit-font-smoothing:antialiased;min-width:1100px}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+kbd{font:500 11px/1 var(--mono);background:var(--surface-raised);border:1px solid var(--border-base);border-bottom-width:2px;border-radius:5px;padding:2px 5px;color:var(--text-primary)}
+.eyebrow{font:500 10.5px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted)}
+.muted{color:var(--text-muted)}
+.fine{font-size:12px;color:var(--text-muted);margin:0}
+
+/* app frame */
+.top{height:52px;display:flex;align-items:center;gap:14px;padding:0 18px;border-bottom:1px solid var(--border-subtle);background:var(--surface-panel)}
+.top b{font-weight:700;letter-spacing:-.01em}
+.top .dev{font:500 12px var(--mono);color:var(--text-muted)}
+.top .sp{flex:1}
+.ghost{background:transparent;border:1px solid var(--border-base);border-radius:7px;padding:5px 10px;font-size:12.5px;color:var(--text-secondary)}
+.main{display:grid;grid-template-columns:360px 1fr;min-height:calc(100vh - 53px)}
+
+/* stack column */
+.stack{background:var(--surface-panel);border-right:1px solid var(--border-subtle);padding:18px 16px 22px;display:flex;flex-direction:column;gap:14px}
+.stack-head{display:flex;align-items:center;justify-content:space-between}
+.stack-head button{background:var(--surface-raised);border:0;border-radius:7px;padding:6px 10px;font-size:12.5px;font-weight:600}
+.rail{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;position:relative}
+.lr{position:relative;display:grid;grid-template-columns:10px 26px 1fr auto;align-items:center;gap:8px;padding:9px 10px 9px 8px;border-radius:9px;border:1px solid transparent;cursor:pointer;--c:var(--layer-1);transition:background .15s}
+.lr:hover{background:color-mix(in srgb,var(--surface-raised) 60%,transparent)}
+.lr.on{background:var(--surface-raised);border-color:color-mix(in srgb,var(--c) 45%,transparent);box-shadow:inset 3px 0 0 var(--c)}
+.lr .grip{width:6px;height:14px;background:radial-gradient(circle,var(--border-base) 1.2px,transparent 1.6px) 0 0/6px 5px;opacity:0;transition:opacity .15s;cursor:grab}
+.lr:hover .grip{opacity:1}
+.lr .num{font:600 12px/1 var(--mono);color:var(--c);width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 14%,transparent)}
+.lr .txt{min-width:0}
+.lr .nm{font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px}
+.lr .why{font:500 11.5px/1.3 var(--mono);color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lr .why b{color:var(--text-secondary);font-weight:500}
+.lr .acts{display:flex;gap:2px;opacity:0;transition:opacity .15s}
+.lr:hover .acts{opacity:1}
+.lr .acts button{background:none;border:0;color:var(--text-muted);font-size:12px;padding:4px 6px;border-radius:5px}
+.lr .acts button:hover{background:var(--surface-canvas);color:var(--text-primary)}
+.lr .acts button.del:hover{color:var(--status-warning)}
+/* elbows: an overlay hangs off the layer that reaches it */
+.lr.d1{margin-left:22px}
+.lr.d2{margin-left:44px}
+.lr.d1::before,.lr.d2::before{content:"";position:absolute;left:-12px;top:-7px;height:calc(50% + 7px);width:10px;border-left:1.5px solid var(--c);border-bottom:1.5px solid var(--c);border-bottom-left-radius:6px;opacity:.75}
+.lr.base{margin-top:6px;border-top:1px dashed var(--border-base);border-radius:0 0 9px 9px;padding-top:12px}
+.lr.base .num{background:var(--c);color:var(--on-accent)}
+.tag{font:600 9.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:3px 5px;border-radius:4px;background:var(--surface-canvas);color:var(--text-muted)}
+.tag.base{color:var(--c)}
+/* orphan: nothing reaches it */
+.lr.orphan{border:1px dashed color-mix(in srgb,var(--status-warning) 60%,transparent);background:color-mix(in srgb,var(--status-warning) 6%,transparent)}
+.lr.orphan .num{color:var(--status-warning);background:color-mix(in srgb,var(--status-warning) 16%,transparent)}
+.lr.orphan .why{color:var(--status-warning)}
+.lr.orphan .fix{font:600 11px var(--sans);color:var(--status-warning);background:none;border:1px solid color-mix(in srgb,var(--status-warning) 50%,transparent);border-radius:999px;padding:3px 9px}
+
+/* inline add (expands in place, not a modal) */
+.addf{display:none;flex-direction:column;gap:10px;padding:12px;border:1px solid var(--border-base);border-radius:12px;background:var(--surface-canvas)}
+.addf.open{display:flex}
+.addf input{background:transparent;border:0;border-bottom:1px solid var(--accent-primary);padding:4px 0 6px;font-size:15px;font-weight:600;outline:none}
+.seg{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.seg button{background:transparent;border:1px solid var(--border-base);border-radius:7px;padding:5px 9px;font-size:12.5px;color:var(--text-secondary)}
+.seg button[aria-pressed="true"]{border-color:var(--accent-primary);color:var(--text-primary);background:color-mix(in srgb,var(--accent-primary) 14%,transparent)}
+.seg select{background:var(--surface-raised);border:0;border-radius:6px;padding:4px 6px;font-size:12.5px}
+.addf .row{display:flex;justify-content:flex-end;gap:6px}
+.btn{border:0;border-radius:7px;padding:6px 12px;font-weight:600;font-size:12.5px;background:var(--surface-raised);color:var(--text-primary)}
+.btn.primary{background:var(--accent-primary);color:var(--on-accent)}
+.btn.danger{background:var(--status-warning);color:var(--on-warning)}
+
+/* stage */
+.stage{padding:20px 28px 26px;display:flex;flex-direction:column;gap:18px;background:
+  radial-gradient(var(--surface-dot) 1px,transparent 1.3px) 0 0/22px 22px,var(--surface-canvas)}
+.focus{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:end}
+.focus h1{margin:4px 0 6px;font-size:30px;letter-spacing:-.02em;font-weight:700;display:flex;align-items:baseline;gap:12px}
+.focus h1 span{font:600 15px var(--mono);color:var(--c)}
+.chain{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font:500 12px var(--mono);color:var(--text-muted)}
+.chain button{background:var(--surface-raised);border:1px solid var(--border-base);border-radius:7px;color:var(--text-primary);padding:5px 9px;font:600 12px var(--sans)}
+.chain button i{font-style:normal;color:var(--c-to,var(--text-muted))}
+.chain .edge{color:var(--text-muted)}
+.stats{display:flex;gap:18px;font:500 12px var(--mono);color:var(--text-muted)}
+.stats b{display:block;font:700 22px/1 var(--sans);color:var(--text-primary);margin-top:4px}
+
+/* board */
+.board{display:flex;justify-content:center;gap:56px;padding:30px 0 10px}
+.side{display:flex;flex-direction:column;gap:8px}
+.grid{display:grid;grid-template-columns:repeat(6,56px);grid-auto-rows:56px;gap:6px}
+.thumbs{display:flex;gap:6px}
+.side:first-child .thumbs{justify-content:flex-end;padding-right:6px}
+.side:last-child .thumbs{justify-content:flex-start;padding-left:6px}
+.k{position:relative;border:0;padding:0;border-radius:11px;background:linear-gradient(180deg,var(--keycap-top),var(--keycap-face));
+  box-shadow:inset 0 2px 0 var(--keycap-highlight),0 4px 0 var(--keycap-side),0 10px 18px -8px var(--keycap-shadow);width:56px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:transform .12s,opacity .2s}
+.thumbs .k{width:56px;height:56px}
+.k:hover{transform:translateY(-2px)}
+.k .md{font:600 8.5px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--c)}
+.k .lg{font:600 12.5px/1 var(--sans);color:var(--keycap-legend);white-space:nowrap;max-width:50px;overflow:hidden;text-overflow:ellipsis}
+.k.nav{box-shadow:inset 0 2px 0 var(--keycap-highlight),0 4px 0 var(--keycap-side),0 0 0 1.5px var(--c),0 0 18px -4px var(--c)}
+.k.nav .lg{color:var(--c)}
+.k.lit:not(.nav) .lg{color:var(--text-primary)}
+.board:not([data-layer="1"]) .k:not(.lit){opacity:.42}
+.board[data-layer="1"] .k:not(.lit){opacity:.9}
+.board .k:not(.lit):not(.nav) .lg{color:var(--text-muted)}
+
+/* flow states */
+.states{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.state{background:var(--surface-panel);border:1px solid var(--border-subtle);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.state h3{margin:0;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.state h3 span{font:500 10.5px var(--mono);color:var(--text-muted)}
+.state ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--text-secondary)}
+.state li{display:flex;gap:8px;align-items:baseline}
+.state li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--status-warning);flex:none;transform:translateY(-1px)}
+.state.danger{border-color:color-mix(in srgb,var(--status-warning) 40%,var(--border-subtle))}
+.state .row{display:flex;gap:6px;justify-content:flex-end}
+.state .inp{background:var(--surface-canvas);border-bottom:1px solid var(--accent-primary);padding:4px 0;font-weight:600}
+</style>
+</head>
+<body>
+<header class="top">
+  <b>adv360</b><span class="dev">Kinesis Advantage360 Pro</span>
+  <span class="sp"></span>
+  <button class="ghost">Catppuccin Mocha</button>
+  <button class="ghost">Settings</button>
+</header>
+
+<div class="main">
+  <aside class="stack" aria-label="Layers">
+    <div class="stack-head">
+      <span class="eyebrow">Layers · 5</span>
+      <button id="addBtn" aria-expanded="false">+ Add layer</button>
+    </div>
+
+    <form class="addf" id="addf" onsubmit="return false">
+      <input placeholder="Layer name" aria-label="Layer name" value="">
+      <div class="seg" role="group" aria-label="Start from">
+        <button type="button" aria-pressed="true">Empty</button>
+        <button type="button" aria-pressed="false">Copy of
+          <select aria-label="Copy from"><option>Default</option><option>Keypad</option><option>Macro</option></select></button>
+      </div>
+      <p class="fine">Added on top of the stack. It stays unreachable until a key points at it.</p>
+      <div class="row"><button type="button" class="btn" id="addCancel">Cancel</button><button type="button" class="btn primary">Add layer</button></div>
+    </form>
+
+    <ol class="rail" id="rail"></ol>
+
+    <p class="fine">Overlays hang off the layer that reaches them. Drag <span class="muted">⋮</span> to reorder. Double-click a name to rename.</p>
+  </aside>
+
+  <section class="stage" aria-live="polite">
+    <div class="focus">
+      <div>
+        <div class="eyebrow" id="kicker">Active layer</div>
+        <h1 id="title">Default <span id="lnum">1</span></h1>
+        <div class="chain" id="chain"></div>
+      </div>
+      <div class="stats">
+        <div>Keys set<b id="sKeys">0</b></div>
+        <div>Reached by<b id="sReach">0</b></div>
+      </div>
+    </div>
+
+    <div class="board" id="board" data-layer="1"></div>
+
+    <div class="states">
+      <div class="state">
+        <h3>Add · inline <span>empty or copy</span></h3>
+        <div class="inp">Mouse</div>
+        <p class="fine" style="margin:0">Start from: <b style="color:var(--text-primary)">Copy of Keypad</b></p>
+        <p class="fine" style="margin:0">Adds as layer 6 at the top. Reach it with a key on Default or Macro.</p>
+        <div class="row"><button class="btn">Cancel</button><button class="btn primary">Add layer</button></div>
+      </div>
+      <div class="state danger">
+        <h3>Delete · Macro <span>impact list</span></h3>
+        <ul>
+          <li><b>Default</b> · <kbd>hold Macro</kbd> key would do nothing</li>
+          <li><b>Windows</b> · only reached through Macro, becomes unreachable</li>
+        </ul>
+        <p class="fine" style="margin:0">Keys on Macro are removed with it. Nothing else changes.</p>
+        <div class="row"><button class="btn">Keep</button><button class="btn danger">Delete layer</button></div>
+      </div>
+      <div class="state danger">
+        <h3>Mod · unreachable <span>warning</span></h3>
+        <ul><li><b>Mod</b> holds Bluetooth and bootloader keys, but no key reaches it</li></ul>
+        <p class="fine" style="margin:0">Fix by placing a key that selects Mod on Default, or leave it as a parked layer.</p>
+        <div class="row"><button class="btn">Dismiss</button><button class="btn primary">Pick a key on Default</button></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+// Layer data. `to` marks a key that switches layers; `mode` is hold or toggle.
+const LAYERS = [
+  {id:1,name:'Default',base:true,keys:{60:{t:'Keypad',mode:'hold',to:2},61:{t:'Macro',mode:'hold',to:4}}},
+  {id:2,name:'Keypad',keys:{36:{t:'7'},37:{t:'8'},38:{t:'9'},42:{t:'4'},43:{t:'5'},44:{t:'6'},48:{t:'1'},49:{t:'2'},50:{t:'3'},55:{t:'0'}}},
+  {id:3,name:'Mod',keys:{0:{t:'BT 0'},1:{t:'BT 1'},2:{t:'BT 2'},3:{t:'BT clr'},4:{t:'BOOT'}}},
+  {id:4,name:'Macro',keys:{8:{t:'W',mode:'toggle',to:5},9:{t:'⌘⇧S'},14:{t:'⌘Spc'}}},
+  {id:5,name:'Windows',keys:{2:{t:'Ctrl+S'},3:{t:'Alt+Tab'},8:{t:'Win'}}}
+];
+const byId = id => LAYERS.find(l => l.id === id);
+let active = 1;
+
+// Who reaches whom
+function reachers(id){
+  const out = [];
+  LAYERS.forEach(l => Object.entries(l.keys).forEach(([i,k]) => { if (k.to === id) out.push({from:l.id, key:k}); }));
+  return out;
+}
+function depth(id){
+  const r = reachers(id);
+  return r.length ? 1 + Math.min(...r.map(x => depth(x.from))) : 0;
+}
+
+// Stack rail
+const rail = document.getElementById('rail');
+function renderRail(){
+  rail.innerHTML = '';
+  [...LAYERS].sort((a,b) => b.id - a.id).forEach(l => {
+    const r = reachers(l.id);
+    const d = depth(l.id);
+    const li = document.createElement('li');
+    li.className = 'lr' + (l.id === active ? ' on' : '') + (d ? ' d' + Math.min(d,2) : '') +
+      (l.base ? ' base' : '') + (!l.base && !r.length ? ' orphan' : '');
+    li.style.setProperty('--c', 'var(--layer-' + l.id + ')');
+    li.dataset.id = l.id;
+    let why;
+    if (l.base) why = '<b>base</b> · always on underneath';
+    else if (!r.length) why = '<b>no key reaches this</b>';
+    else { const k = r[0].key; const from = byId(r[0].from).name;
+      why = `${k.mode} <b>"${k.t}"</b> on ${from}`; }
+    li.innerHTML = `<span class="grip"></span><span class="num">${l.id}</span>
+      <span class="txt"><span class="nm">${l.name}${l.base ? ' <span class="tag base">base</span>' : ''}</span><span class="why">${why}</span></span>
+      <span class="acts"><button title="Rename">Rename</button><button class="del" title="Delete">Delete</button></span>`;
+    if (!r.length && !l.base) li.querySelector('.acts').innerHTML = '<button class="fix">Pick a key</button>';
+    li.addEventListener('click', () => setActive(l.id));
+    rail.appendChild(li);
+  });
+}
+
+// Board placeholder: 30 + 3 keys per half, indexes 0-29 / 30-59 / 60-62 / 63-65
+const board = document.getElementById('board');
+function mkRange(a, n, cls){
+  const el = document.createElement('div'); el.className = cls;
+  for (let i = a; i < a + n; i++){
+    const b = document.createElement('button'); b.className = 'k'; b.dataset.i = i;
+    b.innerHTML = '<span class="md"></span><span class="lg"></span>';
+    el.appendChild(b);
+  }
+  return el;
+}
+function buildBoard(){
+  const L = document.createElement('div'); L.className = 'side';
+  L.append(mkRange(0,30,'grid'), mkRange(60,3,'thumbs'));
+  const R = document.createElement('div'); R.className = 'side';
+  R.append(mkRange(30,30,'grid'), mkRange(63,3,'thumbs'));
+  board.append(L, R);
+}
+
+function renderBoard(){
+  const layer = byId(active);
+  board.dataset.layer = active;
+  board.querySelectorAll('.k').forEach(b => {
+    const i = +b.dataset.i, k = layer.keys[i];
+    b.className = 'k' + (k ? ' lit' : '') + (k && k.to ? ' nav' : '');
+    b.style.setProperty('--c', k && k.to ? 'var(--layer-' + k.to + ')' : 'var(--layer-' + active + ')');
+    b.querySelector('.md').textContent = k && k.to ? k.mode : '';
+    b.querySelector('.lg').textContent = k ? k.t : '';
+    b.title = k ? k.t + (k.to ? ' → ' + byId(k.to).name : '') : '';
+    b.onclick = () => k && k.to && setActive(k.to);
+  });
+}
+
+// Header, chain, stats
+function renderHead(){
+  const l = byId(active);
+  document.getElementById('title').firstChild.textContent = l.name + ' ';
+  document.getElementById('lnum').textContent = l.id;
+  document.querySelector('.stage').style.setProperty('--c', 'var(--layer-' + l.id + ')');
+  document.getElementById('kicker').textContent = l.base ? 'Active layer · base' : 'Active layer';
+  // chain: walk up through reachers to base
+  const parts = []; let cur = l.id, guard = 0;
+  while (cur !== 1 && guard++ < 6){
+    const r = reachers(cur)[0];
+    if (!r) { parts.unshift({orphan:true, id:cur}); break; }
+    parts.unshift({key:r.key, from:r.from, id:cur});
+    cur = r.from;
+  }
+  let html = `<button data-go="1">Default</button>`;
+  parts.forEach(p => {
+    if (p.orphan){ html += `<span class="edge">· · ·</span><span style="color:var(--status-warning)">nothing reaches ${byId(p.id).name}</span>`; return; }
+    html += `<span class="edge">${p.key.mode} "${p.key.t}" →</span><button data-go="${p.id}" style="--c-to:var(--layer-${p.id})"><i>●</i> ${byId(p.id).name}</button>`;
+  });
+  document.getElementById('chain').innerHTML = html;
+  document.querySelectorAll('#chain button').forEach(b => b.onclick = () => setActive(+b.dataset.go));
+  document.getElementById('sKeys').textContent = Object.keys(l.keys).length;
+  document.getElementById('sReach').textContent = reachers(l.id).length;
+}
+
+function setActive(id){ active = id; renderRail(); renderBoard(); renderHead(); }
+
+// Inline add row
+const addf = document.getElementById('addf');
+document.getElementById('addBtn').onclick = () => {
+  const open = !addf.classList.contains('open');
+  addf.classList.toggle('open', open);
+  document.getElementById('addBtn').setAttribute('aria-expanded', open);
+  if (open) addf.querySelector('input').focus();
+};
+document.getElementById('addCancel').onclick = () => { addf.classList.remove('open'); };
+addf.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
+  addf.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b));
+});
+
+buildBoard();
+setActive(1);
+</script>
+</body>
+</html>
