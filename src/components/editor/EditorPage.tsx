@@ -384,7 +384,7 @@ export function EditorPage() {
         </div>
       </header>
 
-      <div className="shell-layer relative flex min-h-0">
+      <div className="shell-layer relative flex min-h-0 max-md:[&:has([data-problems-collapsed])_main]:pt-12">
         <ProblemsPanel issues={issues} onJump={jump} />
         <div className="shell-layer relative min-w-0 flex-1">
           <div className="absolute inset-0 overflow-auto">

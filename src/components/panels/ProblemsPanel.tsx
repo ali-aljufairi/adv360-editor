@@ -28,7 +28,7 @@ const WIDE_QUERY = '(min-width: 1024px)'
 
 /**
  * Reads the remembered collapsed state, falling back to a width default: expanded from 1024px.
- * @returns True when the sidebar starts collapsed to its rail.
+ * @returns True when the sidebar starts collapsed to its floating button.
  */
 function readCollapsed(): boolean {
   try {
@@ -68,8 +68,8 @@ function worstSeverity(counts: Record<Severity, number>): Severity | null {
 
 /**
  * A docked left sidebar listing keymap problems grouped by severity. It can be filtered by
- * severity and collapses to a narrow rail that shows the count. Each row can jump to the place in
- * the keymap it describes. The sidebar is not modal: the board keeps its keyboard handling.
+ * severity and collapses to a floating button that shows the count. Each row can jump to the place
+ * in the keymap it describes. The sidebar is not modal: the board keeps its keyboard handling.
  * On phones an expanded sidebar overlays the board under the header, with no scrim.
  * @param props The issues to show and the jump handler.
  * @returns The problems sidebar.
@@ -88,25 +88,40 @@ export function ProblemsPanel({ issues, onJump }: ProblemsPanelProps) {
 
   if (collapsed) {
     const worst = worstSeverity(counts)
+    const tone = worst ? countClass[worst] : 'text-muted'
     return (
-      <aside
-        aria-label="Problems"
-        className="flex w-10 shrink-0 flex-col border-r border-subtle bg-raised text-primary"
+      <button
+        type="button"
+        onClick={toggleCollapsed}
+        aria-label={`Show problems (${total})`}
+        title="Show problems"
+        data-problems-collapsed=""
+        className="absolute left-3 top-3 z-20 flex h-7 items-center gap-1.5 rounded-[2px] border border-subtle bg-raised px-2 text-xs text-primary hover:bg-hover"
       >
-        <button
-          type="button"
-          onClick={toggleCollapsed}
-          aria-label={`Show problems (${total})`}
-          title="Show problems"
-          className="flex w-full flex-col items-center gap-2 py-3 text-xs hover:bg-hover"
+        <svg
+          aria-hidden="true"
+          width="12"
+          height="12"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={tone}
         >
-          <span
-            aria-hidden="true"
-            className={`size-2 rounded-full ${worst ? dotClass[worst] : 'bg-muted'}`}
-          />
-          <span className="tabular-nums">{total}</span>
-        </button>
-      </aside>
+          {total === 0 ? (
+            <path d="M3 8.5l3 3 7-7" />
+          ) : (
+            <>
+              <path d="M8 2.5l6 10.5H2z" />
+              <path d="M8 6.5v3" />
+              <path d="M8 11.5v.01" />
+            </>
+          )}
+        </svg>
+        <span className={`tabular-nums ${tone}`}>{total}</span>
+      </button>
     )
   }
 
