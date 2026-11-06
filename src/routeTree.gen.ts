@@ -17,6 +17,7 @@ import { Route as DevLayersRouteImport } from './routes/dev.layers'
 import { Route as DevNavigationRouteImport } from './routes/dev.navigation'
 import { Route as DevPanelsRouteImport } from './routes/dev.panels'
 import { Route as DevPickerRouteImport } from './routes/dev.picker'
+import { Route as DevSyncRouteImport } from './routes/dev.sync'
 import { Route as ApiArtifactsIdRouteImport } from './routes/api/artifacts/$id'
 import { Route as ApiAuthCallbackRouteImport } from './routes/api/auth/callback'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
@@ -62,6 +63,11 @@ const DevPickerRoute = DevPickerRouteImport.update({
   path: '/dev/picker',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevSyncRoute = DevSyncRouteImport.update({
+  id: '/dev/sync',
+  path: '/dev/sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiArtifactsIdRoute = ApiArtifactsIdRouteImport.update({
   id: '/api/artifacts/$id',
   path: '/api/artifacts/$id',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/dev/navigation': typeof DevNavigationRoute
   '/dev/panels': typeof DevPanelsRoute
   '/dev/picker': typeof DevPickerRoute
+  '/dev/sync': typeof DevSyncRoute
   '/api/artifacts/$id': typeof ApiArtifactsIdRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/dev/navigation': typeof DevNavigationRoute
   '/dev/panels': typeof DevPanelsRoute
   '/dev/picker': typeof DevPickerRoute
+  '/dev/sync': typeof DevSyncRoute
   '/api/artifacts/$id': typeof ApiArtifactsIdRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/dev/navigation': typeof DevNavigationRoute
   '/dev/panels': typeof DevPanelsRoute
   '/dev/picker': typeof DevPickerRoute
+  '/dev/sync': typeof DevSyncRoute
   '/api/artifacts/$id': typeof ApiArtifactsIdRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/dev/navigation'
     | '/dev/panels'
     | '/dev/picker'
+    | '/dev/sync'
     | '/api/artifacts/$id'
     | '/api/auth/callback'
     | '/api/auth/login'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/dev/navigation'
     | '/dev/panels'
     | '/dev/picker'
+    | '/dev/sync'
     | '/api/artifacts/$id'
     | '/api/auth/callback'
     | '/api/auth/login'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/dev/navigation'
     | '/dev/panels'
     | '/dev/picker'
+    | '/dev/sync'
     | '/api/artifacts/$id'
     | '/api/auth/callback'
     | '/api/auth/login'
@@ -180,6 +192,7 @@ export interface RootRouteChildren {
   DevNavigationRoute: typeof DevNavigationRoute
   DevPanelsRoute: typeof DevPanelsRoute
   DevPickerRoute: typeof DevPickerRoute
+  DevSyncRoute: typeof DevSyncRoute
   ApiArtifactsIdRoute: typeof ApiArtifactsIdRoute
   ApiAuthCallbackRoute: typeof ApiAuthCallbackRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
@@ -244,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevPickerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/sync': {
+      id: '/dev/sync'
+      path: '/dev/sync'
+      fullPath: '/dev/sync'
+      preLoaderRoute: typeof DevSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/artifacts/$id': {
       id: '/api/artifacts/$id'
       path: '/api/artifacts/$id'
@@ -284,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevNavigationRoute: DevNavigationRoute,
   DevPanelsRoute: DevPanelsRoute,
   DevPickerRoute: DevPickerRoute,
+  DevSyncRoute: DevSyncRoute,
   ApiArtifactsIdRoute: ApiArtifactsIdRoute,
   ApiAuthCallbackRoute: ApiAuthCallbackRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,

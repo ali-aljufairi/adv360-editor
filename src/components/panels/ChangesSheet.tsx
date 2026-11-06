@@ -2,12 +2,16 @@ import { useId, useRef, useState } from 'react'
 import { countChanges, parseUnifiedDiff } from './diff'
 import type { DiffRow } from './diff'
 import { useFocusTrap } from './useFocusTrap'
+import { CommitForm } from '../github/CommitForm'
+import type { CommitFormProps } from '../github/CommitForm'
 
 export interface ChangesSheetProps {
   diff: Record<string, string>
   summary: string[] // human-readable lines, e.g. "Base · key 12: Caps → Esc"
   onClose(): void
   onDiscard(): void
+  /** Commit form props; omitted where committing is not offered. */
+  commit?: CommitFormProps
 }
 
 type Tab = 'summary' | 'diff'
@@ -30,11 +34,11 @@ const markerOf: Record<DiffRow['kind'], string> = {
 
 /**
  * A review sheet for unsaved keymap changes. It has a plain-language summary and a per-file
- * unified diff, with discard and (for now disabled) commit and build actions.
- * @param props The diff per file, summary lines and close and discard handlers.
+ * unified diff, with discard and, when signed in, commit actions.
+ * @param props The diff per file, summary lines, close and discard handlers and commit props.
  * @returns The sheet.
  */
-export function ChangesSheet({ diff, summary, onClose, onDiscard }: ChangesSheetProps) {
+export function ChangesSheet({ diff, summary, onClose, onDiscard, commit }: ChangesSheetProps) {
   const [tab, setTab] = useState<Tab>('summary')
   const [confirming, setConfirming] = useState(false)
   const sheetRef = useRef<HTMLDivElement>(null)
@@ -60,7 +64,7 @@ export function ChangesSheet({ diff, summary, onClose, onDiscard }: ChangesSheet
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative flex max-h-[85vh] w-full max-w-3xl flex-col rounded-t-2xl border border-subtle bg-canvas text-primary shadow-[var(--shadow-dialog)] sm:rounded-2xl"
+        className="relative flex max-h-[85vh] w-full max-w-3xl flex-col rounded-none border border-subtle bg-canvas text-primary shadow-[var(--shadow-dialog)]"
       >
         <header className="flex items-start justify-between gap-4 border-b border-subtle px-5 py-4">
           <div>
@@ -73,7 +77,7 @@ export function ChangesSheet({ diff, summary, onClose, onDiscard }: ChangesSheet
             type="button"
             onClick={onClose}
             aria-label="Close review"
-            className="rounded-lg px-2 py-1 text-muted hover:bg-hover hover:text-primary"
+            className="rounded-none px-2 py-1 text-muted hover:bg-hover hover:text-primary"
           >
             ×
           </button>
@@ -87,8 +91,10 @@ export function ChangesSheet({ diff, summary, onClose, onDiscard }: ChangesSheet
               role="tab"
               aria-selected={tab === id}
               onClick={() => setTab(id)}
-              className={`rounded-lg px-3 py-1.5 text-sm ${
-                tab === id ? 'bg-raised font-medium text-primary' : 'text-muted hover:text-primary'
+              className={`border-b-2 px-1 py-1.5 text-sm ${
+                tab === id
+                  ? 'border-accent-primary text-primary'
+                  : 'border-transparent text-muted hover:text-primary'
               }`}
             >
               {label}
@@ -103,7 +109,7 @@ export function ChangesSheet({ diff, summary, onClose, onDiscard }: ChangesSheet
             ) : (
               <ul className="flex flex-col gap-2 text-sm">
                 {summary.map((line, index) => (
-                  <li key={`${index}:${line}`} className="rounded-lg bg-surface px-3 py-2">
+                  <li key={`${index}:${line}`} className="rounded-none bg-surface px-3 py-2">
                     {line}
                   </li>
                 ))}
@@ -121,11 +127,11 @@ export function ChangesSheet({ diff, summary, onClose, onDiscard }: ChangesSheet
         </div>
 
         <div className="border-t border-subtle px-5 py-4">
-          <p className="mb-3 rounded-lg bg-surface px-3 py-2 text-sm text-secondary">
-            <strong className="text-primary">Building never flashes your keyboard.</strong> Building
-            only produces a firmware file. Your keyboard keeps its current layout until you flash it
-            yourself.
-          </p>
+          {commit && count > 0 ? (
+            <div className="mb-4">
+              <CommitForm {...commit} />
+            </div>
+          ) : null}
           <div className="flex flex-wrap items-center justify-between gap-3">
             {confirming ? (
               <div className="flex items-center gap-2 text-sm">
@@ -135,14 +141,14 @@ export function ChangesSheet({ diff, summary, onClose, onDiscard }: ChangesSheet
                 <button
                   type="button"
                   onClick={onDiscard}
-                  className="rounded-lg bg-[var(--status-error)] px-3 py-1.5 font-medium text-[var(--on-accent)]"
+                  className="rounded-none bg-[var(--status-error)] px-3 py-1.5 font-medium text-[var(--on-accent)]"
                 >
                   Discard all
                 </button>
                 <button
                   type="button"
                   onClick={() => setConfirming(false)}
-                  className="rounded-lg border border-subtle px-3 py-1.5 text-secondary hover:text-primary"
+                  className="rounded-none border border-subtle px-3 py-1.5 text-secondary hover:text-primary"
                 >
                   Keep editing
                 </button>
@@ -152,29 +158,11 @@ export function ChangesSheet({ diff, summary, onClose, onDiscard }: ChangesSheet
                 type="button"
                 onClick={() => setConfirming(true)}
                 disabled={count === 0}
-                className="rounded-lg px-3 py-1.5 text-sm text-[var(--status-error)] hover:bg-hover disabled:opacity-40"
+                className="rounded-none px-3 py-1.5 text-sm text-[var(--status-error)] hover:bg-hover disabled:opacity-40"
               >
                 Discard all
               </button>
             )}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled
-                title="Coming in M4"
-                className="rounded-lg border border-subtle px-3 py-1.5 text-sm text-muted disabled:cursor-not-allowed"
-              >
-                Commit…
-              </button>
-              <button
-                type="button"
-                disabled
-                title="Coming in M4"
-                className="rounded-lg bg-accent-layer-1 px-3 py-1.5 text-sm font-medium text-[var(--on-layer-1)] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Build
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -186,7 +174,7 @@ function DiffFile({ name, text }: { name: string; text: string }) {
   const rows = parseUnifiedDiff(text)
   const { added, removed } = countChanges(text)
   return (
-    <section aria-label={name} className="overflow-hidden rounded-xl border border-subtle">
+    <section aria-label={name} className="overflow-hidden rounded-none border border-subtle">
       <header className="flex items-center justify-between gap-3 bg-surface px-3 py-2 font-mono text-xs">
         <span className="truncate text-primary">{name}</span>
         <span className="shrink-0 tabular-nums">
