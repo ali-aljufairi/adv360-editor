@@ -625,6 +625,76 @@ export class ZmkEditor {
     if (!/^[A-Za-z_][\w,.-]*$/.test(name)) throw new Error('Invalid node name')
     this.patch(layer.node.nameSpan, name)
   }
+  /**
+   * Set a layer's `display-name` (the name ZMK Studio shows), editing an existing `display-name`
+   * or legacy `label` in place, or inserting `display-name` as the node's first property.
+   */
+  setLayerLabel(index: number, label: string) {
+    const layer = this.model.layers[index]
+    if (!layer) throw new RangeError('Layer not found')
+    const clean = label.trim()
+    if (!clean) throw new Error('Layer name is empty')
+    const quoted = dtsString(clean)
+    const properties = layer.node.children.filter(
+      (child): child is Property => child.kind === 'property',
+    )
+    const existing =
+      properties.find((property) => property.name === 'display-name') ??
+      properties.find((property) => property.name === 'label')
+    if (existing?.valueSpan) {
+      this.patch(existing.valueSpan, quoted)
+      return
+    }
+    const source = this.current[layer.file]
+    const first = layer.node.children[0]
+    const eol = source.includes('\r\n') ? '\r\n' : '\n'
+    const indent = first
+      ? leadingIndent(source, first.start)
+      : `${leadingIndent(source, layer.node.start)}    `
+    const at = first ? source.lastIndexOf('\n', first.start - 1) + 1 : layer.node.bodyStart
+    const text = `${first ? '' : eol}${indent}display-name = ${quoted};${eol}`
+    this.patch({ file: layer.file, start: at, end: at }, text)
+  }
+  /**
+   * Append a layer after the last one. The bindings keep the row layout of the template layer:
+   * a copy of `copyFrom`, or every key `&trans` (shaped like the default layer) when omitted.
+   */
+  appendLayer(input: { name: string; label: string; copyFrom?: number }) {
+    const layers = this.model.layers
+    const template = layers[input.copyFrom ?? 0]
+    const last = layers[layers.length - 1]
+    if (!template || !last) throw new RangeError('Layer not found')
+    if (!/^[A-Za-z_][\w,.-]*$/.test(input.name)) throw new Error('Invalid node name')
+    const property = template.node.children.find(
+      (child): child is Property => child.kind === 'property' && child.name === 'bindings',
+    )
+    if (!property?.valueSpan) throw new Error('Template layer has no bindings')
+    const templateSource = this.current[template.file]
+    const span = property.valueSpan
+    let value = templateSource.slice(span.start, span.end)
+    if (input.copyFrom === undefined) {
+      const ordered = template.bindings
+        .filter((binding) => binding.file === template.file)
+        .sort((left, right) => right.start - left.start)
+      for (const binding of ordered) {
+        const offset = binding.start - span.start
+        const width = binding.end - binding.start
+        value = value.slice(0, offset) + '&trans'.padEnd(width) + value.slice(offset + width)
+      }
+      value = value.replace(/[ \t]+(\r?\n)/g, '$1')
+    }
+    const lastSource = this.current[last.file]
+    const eol = lastSource.includes('\r\n') ? '\r\n' : '\n'
+    const indent = leadingIndent(lastSource, last.node.start)
+    const childIndent = leadingIndent(templateSource, property.start) || `${indent}    `
+    const raw = [
+      `${indent}${input.name} {`,
+      `${childIndent}display-name = ${dtsString(input.label.trim())};`,
+      `${childIndent}bindings = ${value};`,
+      `${indent}};`,
+    ].join(eol)
+    this.insert(this.findContainer('keymap'), raw)
+  }
   serialize(): FileMap {
     return { ...this.current }
   }
@@ -673,4 +743,16 @@ export function createEditorForProfile(profile: KeyboardProfile, files: FileMap)
     profile,
     layout: { ...layout, verified: layout.verified && profile.layout.verified },
   })
+}
+
+/** Quote text as a devicetree string literal. */
+function dtsString(text: string): string {
+  return `"${text.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
+}
+
+/** The whitespace between the start of the line holding `offset` and `offset` ('' if not blank). */
+function leadingIndent(source: string, offset: number): string {
+  const lineStart = source.lastIndexOf('\n', offset - 1) + 1
+  const prefix = source.slice(lineStart, offset)
+  return /^[ \t]*$/.test(prefix) ? prefix : ''
 }

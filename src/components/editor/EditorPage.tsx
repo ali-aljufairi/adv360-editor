@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Board } from '../board/Board'
 import { LayerTabs } from '../board/LayerTabs'
+import { AddLayerDialog, DeleteLayerDialog, RenameLayerDialog } from '../layers/LayerDialogs'
+import type { LayerReference } from '../layers/LayerDialogs'
 import { layerAccentOf } from '../board/bindings'
 import { ChangesPill } from '../panels/ChangesPill'
 import { ChangesSheet } from '../panels/ChangesSheet'
 import { ProblemsPanel } from '../panels/ProblemsPanel'
 import { BindingPicker } from '../picker/BindingPicker'
 import { ThemePicker } from '../theme-picker/ThemePicker'
+import { CommandPalette } from '../command-palette/CommandPalette'
+import { buildCommands } from '../../lib/commands'
+import { resolvePlatform } from '../../lib/keycodes/platform'
 import { BehaviorsDrawer } from '../behaviors/BehaviorsDrawer'
 import { useTheme } from '../../lib/theme/ThemeProvider'
 import { useEditor } from '../../lib/editor-state'
@@ -21,6 +26,7 @@ import {
 } from '../../lib/keycodes/binding'
 import type { Issue } from '../../lib/zmk/types'
 import { CheatSheet, SettingsDialog } from './Dialog'
+import { focusStaysInside } from './SidePanel'
 import { PickerPopover } from './PickerPopover'
 import { layerOfIssue, layerTabsOf, legendContextOf, pickerInputsOf } from './editorModel'
 
@@ -28,6 +34,12 @@ import { layerOfIssue, layerTabsOf, legendContextOf, pickerInputsOf } from './ed
 const COMBOS_KEY = 'adv360.editor.showCombos'
 /** Viewports narrower than this use the bottom sheet for the binding picker. */
 const NARROW_QUERY = '(max-width: 639px)'
+
+/** Which layer dialog is open. */
+type LayerDialogState =
+  | { kind: 'add' }
+  | { kind: 'rename'; index: number }
+  | { kind: 'delete'; index: number; references: LayerReference[] }
 
 /** The binding picker's target: which layer and key it edits, and where to draw it. */
 interface PickerTarget {
@@ -37,6 +49,22 @@ interface PickerTarget {
 }
 
 /** Reads a boolean preference, falling back when storage is unavailable. */
+/** Panels that can be docked beside the board. */
+type PanelName = 'behaviors' | 'settings'
+
+/**
+ * Class for a top-bar toggle: text with an underline when active, never a fill.
+ * @param active - Whether the panel or option is showing.
+ * @returns The Tailwind class string.
+ */
+function navButton(active: boolean): string {
+  return `border-b-2 px-1 py-1 text-sm ${
+    active
+      ? 'border-accent-primary text-primary'
+      : 'border-transparent text-secondary hover:text-primary'
+  }`
+}
+
 function readCombosPreference(): boolean {
   try {
     return window.localStorage.getItem(COMBOS_KEY) !== 'false'
@@ -71,24 +99,50 @@ function messageOf(error: unknown): string {
  */
 export function EditorPage() {
   const editor = useEditor()
-  const { settings, setPlatform } = useSettings()
+  const { settings, setPlatform, updateNavigation } = useSettings()
   const theme = useTheme()
   const narrow = useNarrow()
   const { model, layout, issues, activeLayer, selectedKey, profile, files } = editor
-  const { scheme, arrowsAlwaysOn, custom } = settings.navigation
+  const { scheme, arrowsAlwaysOn, wrap, custom } = settings.navigation
 
   const [picker, setPicker] = useState<PickerTarget | null>(null)
+  const [paletteOpen, setPaletteOpen] = useState(false)
   const [themeOpen, setThemeOpen] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  /** The one docked side panel, if any. */
+  const [panel, setPanel] = useState<PanelName | null>(null)
+  /** True while keyboard focus is inside the docked panel; board keys then pause. */
+  const [dockFocused, setDockFocused] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
-  const [behaviorsOpen, setBehaviorsOpen] = useState(false)
   const [combosOn, setCombosOn] = useState(true)
   const [notice, setNotice] = useState<string | null>(null)
+  const [layerDialog, setLayerDialog] = useState<LayerDialogState | null>(null)
+  /** Run a layer edit; on failure (e.g. a layer number written as an expression) show why. */
+  const runLayerAction = (action: () => void, close = true) => {
+    try {
+      action()
+      if (close) setLayerDialog(null)
+      setNotice(null)
+    } catch (error) {
+      setLayerDialog(null)
+      setNotice(error instanceof Error ? error.message : 'That layer change is not possible here.')
+    }
+  }
 
   const layerCount = model.layers.length
   const modalOpen =
-    picker !== null || themeOpen || sheetOpen || settingsOpen || helpOpen || behaviorsOpen
+    picker !== null || paletteOpen || themeOpen || sheetOpen || helpOpen || layerDialog !== null
+  const boardKeysOff = modalOpen || dockFocused
+
+  /** Opens a panel, or closes the dock when that panel is already showing. */
+  const togglePanel = (name: PanelName) => {
+    setDockFocused(false)
+    setPanel((current) => (current === name ? null : name))
+  }
+  const closePanel = () => {
+    setDockFocused(false)
+    setPanel(null)
+  }
 
   // Read the stored preference after mount so server and first client render agree.
   useEffect(() => setCombosOn(readCombosPreference()), [])
@@ -145,7 +199,7 @@ export function EditorPage() {
   useBoardNavigation({
     keys: layout.keys,
     selected: selectedPosition,
-    enabled: !modalOpen,
+    enabled: !boardKeysOff,
     onSelect: (position) => {
       const key = layout.keys[position]
       if (key) editor.selectKey(key.index)
@@ -169,17 +223,17 @@ export function EditorPage() {
     },
   })
 
-  // ⌘K / Ctrl-K opens the theme picker from anywhere.
-  // Digits 1–4 pick a layer in the arrows and emacs schemes, but only when not typing.
+  // ⌘K / Ctrl-K opens the command palette from anywhere.
+  // Digits 1–9 pick a layer in the arrows and emacs schemes, but only when not typing.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
-        setThemeOpen(true)
+        setPaletteOpen(true)
         return
       }
       if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return
-      if (!/^[1-4]$/.test(event.key) || modalOpen) return
+      if (!/^[1-9]$/.test(event.key) || boardKeysOff) return
       if (scheme !== 'arrows' && scheme !== 'emacs') return
       if (!shouldHandleKeydown(event)) return
       const index = Number(event.key) - 1
@@ -189,7 +243,7 @@ export function EditorPage() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [editor, layerCount, modalOpen, scheme])
+  }, [editor, layerCount, boardKeysOff, scheme])
 
   const toggleCombos = () => {
     const next = !combosOn
@@ -230,8 +284,52 @@ export function EditorPage() {
     }))
   const changeCount = summary.length
 
+  const displayPlatform = resolvePlatform(settings.platform)
+  const commands = buildCommands({
+    layers: tabs.map(({ index, name }) => ({ index, name })),
+    activeLayer,
+    setActiveLayer: editor.setActiveLayer,
+    addLayer: () => setLayerDialog({ kind: 'add' }),
+    renameLayer: (index) => setLayerDialog({ kind: 'rename', index }),
+    moveLayer: (index, to) => runLayerAction(() => editor.moveLayer(index, to)),
+    deleteLayer: (index) =>
+      runLayerAction(
+        () =>
+          setLayerDialog({
+            kind: 'delete',
+            index,
+            references: editor.layerReferences(index),
+          }),
+        false,
+      ),
+    canUndo: editor.canUndo,
+    canRedo: editor.canRedo,
+    undo: editor.undo,
+    redo: editor.redo,
+    dirty: editor.dirty,
+    reviewChanges: () => setSheetOpen(true),
+    discardChanges: () => editor.reset(),
+    combosShown: combosOn,
+    toggleCombos,
+    openBehaviors: () => setPanel('behaviors'),
+    openThemePicker: () => setThemeOpen(true),
+    themeMode: theme.preference.mode,
+    setThemeMode: (mode) => theme.setPreference({ ...theme.preference, mode }),
+    openSettings: () => setPanel('settings'),
+    openHelp: () => setHelpOpen(true),
+    scheme,
+    setScheme: (next) => updateNavigation({ scheme: next }),
+    arrowsAlwaysOn,
+    setArrowsAlwaysOn: (on) => updateNavigation({ arrowsAlwaysOn: on }),
+    wrap,
+    setWrap: (on) => updateNavigation({ wrap: on }),
+    platform: settings.platform,
+    setPlatform,
+    displayPlatform,
+  })
+
   return (
-    <div className="min-h-dvh bg-canvas text-primary">
+    <div className="grid h-dvh grid-rows-[auto_1fr] overflow-hidden bg-canvas text-primary">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-subtle px-4 py-3 sm:px-6">
         <div className="flex items-baseline gap-2">
           <span className="text-base font-semibold">adv360</span>
@@ -246,16 +344,24 @@ export function EditorPage() {
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <button
             type="button"
+            aria-label="Open command palette"
+            onClick={() => setPaletteOpen(true)}
+            className="rounded-none border border-subtle px-2 py-1 font-mono text-xs text-muted hover:bg-hover"
+          >
+            {displayPlatform === 'mac' ? '⌘K' : 'Ctrl K'}
+          </button>
+          <button
+            type="button"
             onClick={() => setThemeOpen(true)}
             className="inline-flex items-center gap-2 rounded-md border border-subtle px-2.5 py-1 text-sm hover:bg-hover"
           >
             {theme.active.name}
-            <kbd className="rounded border border-subtle px-1 text-xs text-muted">⌘K</kbd>
           </button>
           <button
             type="button"
-            onClick={() => setBehaviorsOpen(true)}
-            className="rounded-md border border-subtle px-2.5 py-1 text-sm hover:bg-hover"
+            aria-pressed={panel === 'behaviors'}
+            onClick={() => togglePanel('behaviors')}
+            className={navButton(panel === 'behaviors')}
           >
             Behaviors
           </button>
@@ -263,133 +369,189 @@ export function EditorPage() {
             type="button"
             aria-pressed={combosOn}
             onClick={toggleCombos}
-            className={`rounded-md border border-subtle px-2.5 py-1 text-sm hover:bg-hover ${combosOn ? 'bg-hover' : ''}`}
+            className={`px-1 py-1 text-sm hover:text-primary ${combosOn ? 'text-primary' : 'text-muted'}`}
           >
             Combos
           </button>
           <button
             type="button"
-            onClick={() => setSettingsOpen(true)}
-            className="rounded-md border border-subtle px-2.5 py-1 text-sm hover:bg-hover"
+            aria-pressed={panel === 'settings'}
+            onClick={() => togglePanel('settings')}
+            className={navButton(panel === 'settings')}
           >
             Settings
           </button>
         </div>
       </header>
 
-      <main className="mx-auto flex max-w-6xl flex-col gap-5 px-4 pt-5 pb-28 sm:px-6">
-        {editor.staleDraft ? (
-          <div
-            role="alert"
-            className="flex flex-wrap items-center gap-3 rounded-lg border border-subtle bg-raised p-3 text-sm"
-          >
-            <p className="mr-auto text-secondary">
-              A saved draft from an earlier version of this keymap was found.
-            </p>
-            <button
-              type="button"
-              onClick={() => runDraftAction(editor.restoreDraft)}
-              className="rounded-md border border-subtle px-2.5 py-1 hover:bg-hover"
-            >
-              Restore
-            </button>
-            <button
-              type="button"
-              onClick={() => runDraftAction(editor.discardDraft)}
-              className="rounded-md px-2.5 py-1 text-secondary hover:bg-hover"
-            >
-              Discard
-            </button>
+      <div className="shell-layer relative flex min-h-0">
+        <ProblemsPanel issues={issues} onJump={jump} />
+        <div className="shell-layer relative min-w-0 flex-1">
+          <div className="absolute inset-0 overflow-auto">
+            <main className="mx-auto flex max-w-6xl flex-col gap-5 px-4 pt-5 pb-28 sm:px-6">
+              {editor.staleDraft ? (
+                <div
+                  role="alert"
+                  className="flex flex-wrap items-center gap-3 rounded-lg border border-subtle bg-raised p-3 text-sm"
+                >
+                  <p className="mr-auto text-secondary">
+                    A saved draft from an earlier version of this keymap was found.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => runDraftAction(editor.restoreDraft)}
+                    className="rounded-md border border-subtle px-2.5 py-1 hover:bg-hover"
+                  >
+                    Restore
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => runDraftAction(editor.discardDraft)}
+                    className="rounded-md px-2.5 py-1 text-secondary hover:bg-hover"
+                  >
+                    Discard
+                  </button>
+                </div>
+              ) : null}
+
+              <div className="flex justify-center">
+                <LayerTabs
+                  layers={tabs}
+                  active={activeLayer}
+                  onChange={editor.setActiveLayer}
+                  onAdd={() => setLayerDialog({ kind: 'add' })}
+                  onRename={(index) => setLayerDialog({ kind: 'rename', index })}
+                  onMove={(index, to) => runLayerAction(() => editor.moveLayer(index, to))}
+                  onDelete={(index) =>
+                    runLayerAction(
+                      () =>
+                        setLayerDialog({
+                          kind: 'delete',
+                          index,
+                          references: editor.layerReferences(index),
+                        }),
+                      false,
+                    )
+                  }
+                />
+              </div>
+
+              <section aria-label="Keyboard" className="w-full">
+                <Board
+                  layout={layout}
+                  bindings={bindings}
+                  legendContext={legend}
+                  selectedKey={selectedKey}
+                  changedKeys={changed}
+                  combos={model.combos}
+                  layerAccent={layerAccentOf(activeLayer)}
+                  layerIndex={activeLayer}
+                  showCombos={combosOn}
+                  onSelectKey={editor.selectKey}
+                  onActivateKey={openPicker}
+                />
+              </section>
+
+              {notice ? (
+                <p role="status" className="text-sm text-secondary">
+                  {notice}
+                </p>
+              ) : null}
+            </main>
           </div>
-        ) : null}
-
-        <div className="flex justify-center">
-          <LayerTabs layers={tabs} active={activeLayer} onChange={editor.setActiveLayer} />
+          <ChangesPill count={changeCount} onOpen={() => setSheetOpen(true)} />
         </div>
 
-        <section aria-label="Keyboard" className="w-full">
-          <Board
-            layout={layout}
-            bindings={bindings}
-            legendContext={legend}
-            selectedKey={selectedKey}
-            changedKeys={changed}
-            combos={model.combos}
-            layerAccent={layerAccentOf(activeLayer)}
-            layerIndex={activeLayer}
-            showCombos={combosOn}
-            onSelectKey={editor.selectKey}
-            onActivateKey={openPicker}
-          />
-        </section>
-
-        {notice ? (
-          <p role="status" className="text-sm text-secondary">
-            {notice}
-          </p>
-        ) : null}
-
-        <div className="w-full max-w-sm">
-          <ProblemsPanel issues={issues} onJump={jump} />
-        </div>
-      </main>
-
-      <ChangesPill count={changeCount} onOpen={() => setSheetOpen(true)} />
-
-      {sheetOpen ? (
-        <ChangesSheet
-          diff={diff}
-          summary={summary}
-          onClose={() => setSheetOpen(false)}
-          onDiscard={() => {
-            editor.reset()
-            setSheetOpen(false)
-          }}
-        />
-      ) : null}
-
-      {picker ? (
-        <PickerPopover
-          key={`${picker.layer}:${picker.key}`}
-          anchor={picker.anchor}
-          sheet={narrow}
-          onClose={() => setPicker(null)}
+        <div
+          className="contents"
+          onFocus={() => setDockFocused(true)}
+          onBlur={(event) => setDockFocused(focusStaysInside(event))}
         >
-          <BindingPicker
-            value={pickerValue}
-            layers={pickerInputs.layers}
-            macros={pickerInputs.macros}
-            holdTaps={pickerInputs.holdTaps}
-            holdTapInfo={holdTapInfo}
-            userKeycodes={model.userKeycodes}
-            preferredNames={preferredNames}
-            platform={settings.platform}
-            onChange={commitPicker}
-            onClose={() => setPicker(null)}
+          <BehaviorsDrawer open={panel === 'behaviors'} onClose={closePanel} />
+          {panel === 'settings' ? (
+            <SettingsDialog
+              platform={settings.platform}
+              onPlatform={setPlatform}
+              onClose={closePanel}
+            />
+          ) : null}
+        </div>
+
+        {sheetOpen ? (
+          <ChangesSheet
+            diff={diff}
+            summary={summary}
+            onClose={() => setSheetOpen(false)}
+            onDiscard={() => {
+              editor.reset()
+              setSheetOpen(false)
+            }}
           />
-        </PickerPopover>
-      ) : null}
+        ) : null}
 
-      <ThemePicker open={themeOpen} onClose={() => setThemeOpen(false)} />
+        {picker ? (
+          <PickerPopover
+            key={`${picker.layer}:${picker.key}`}
+            anchor={picker.anchor}
+            sheet={narrow}
+            onClose={() => setPicker(null)}
+          >
+            <BindingPicker
+              value={pickerValue}
+              layers={pickerInputs.layers}
+              macros={pickerInputs.macros}
+              holdTaps={pickerInputs.holdTaps}
+              holdTapInfo={holdTapInfo}
+              userKeycodes={model.userKeycodes}
+              preferredNames={preferredNames}
+              platform={settings.platform}
+              onChange={commitPicker}
+              onClose={() => setPicker(null)}
+            />
+          </PickerPopover>
+        ) : null}
 
-      <BehaviorsDrawer open={behaviorsOpen} onClose={() => setBehaviorsOpen(false)} />
-
-      {helpOpen ? (
-        <CheatSheet
-          scheme={scheme}
-          custom={custom}
-          arrowsAlwaysOn={arrowsAlwaysOn}
-          onClose={() => setHelpOpen(false)}
+        <CommandPalette
+          open={paletteOpen}
+          commands={commands}
+          onClose={() => setPaletteOpen(false)}
         />
-      ) : null}
 
-      {settingsOpen ? (
-        <SettingsDialog
-          platform={settings.platform}
-          onPlatform={setPlatform}
-          onClose={() => setSettingsOpen(false)}
-        />
-      ) : null}
+        <ThemePicker open={themeOpen} onClose={() => setThemeOpen(false)} />
+
+        {layerDialog?.kind === 'add' ? (
+          <AddLayerDialog
+            layers={tabs.map(({ index, name }) => ({ index, name }))}
+            onCreate={(input) => runLayerAction(() => editor.addLayer(input))}
+            onClose={() => setLayerDialog(null)}
+          />
+        ) : null}
+        {layerDialog?.kind === 'rename' ? (
+          <RenameLayerDialog
+            name={tabs[layerDialog.index]?.name ?? ''}
+            onRename={(label) => runLayerAction(() => editor.renameLayer(layerDialog.index, label))}
+            onClose={() => setLayerDialog(null)}
+          />
+        ) : null}
+        {layerDialog?.kind === 'delete' ? (
+          <DeleteLayerDialog
+            name={tabs[layerDialog.index]?.name ?? ''}
+            references={layerDialog.references}
+            layerNames={tabs.map((tab) => tab.name)}
+            onDelete={() => runLayerAction(() => editor.removeLayer(layerDialog.index))}
+            onClose={() => setLayerDialog(null)}
+          />
+        ) : null}
+
+        {helpOpen ? (
+          <CheatSheet
+            scheme={scheme}
+            custom={custom}
+            arrowsAlwaysOn={arrowsAlwaysOn}
+            onClose={() => setHelpOpen(false)}
+          />
+        ) : null}
+      </div>
     </div>
   )
 }

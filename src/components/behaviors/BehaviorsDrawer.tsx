@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import type { Behavior, Combo, Model } from '../../lib/zmk'
 import { useEditor } from '../../lib/editor-state'
-import { useFocusTrap } from '../panels/useFocusTrap'
+import { SidePanel } from '../editor/SidePanel'
 import { ComboEditor } from './ComboEditor'
 import { HoldTapEditor } from './HoldTapEditor'
 import { MacroEditor } from './MacroEditor'
-import { conditionLabel, keysUsing, macroOpaqueReason, macroStepsOf } from './forms'
+import { conditionLabel, holdTapSummary, keysUsing, macroOpaqueReason, macroStepsOf } from './forms'
 
 /** The three sections of the drawer. */
 export type BehaviorTab = 'hold-taps' | 'macros' | 'combos'
@@ -39,8 +39,6 @@ interface Selection {
 
 function Panel({ onClose }: { onClose(): void }) {
   const editor = useEditor()
-  const panel = useRef<HTMLElement>(null)
-  useFocusTrap(panel, true, onClose)
   const [tab, setTab] = useState<BehaviorTab>('hold-taps')
   const [selection, setSelection] = useState<Selection | null>(null)
   const [adding, setAdding] = useState(false)
@@ -62,123 +60,98 @@ function Panel({ onClose }: { onClose(): void }) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex justify-end bg-black/40"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose()
-      }}
-    >
-      <aside
-        ref={panel}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Behaviors"
-        className="flex h-full w-full max-w-lg flex-col overflow-hidden border-l border-subtle bg-raised text-primary shadow-[var(--shadow-float)]"
-      >
-        <header className="flex items-center gap-3 border-b border-subtle px-4 py-3">
-          {showEditor ? (
-            <button
-              type="button"
-              onClick={() => {
-                setSelection(null)
-                setAdding(false)
-              }}
-              className="rounded-md px-2 py-1 text-sm text-secondary hover:bg-hover"
-            >
-              ← All {TABS.find((entry) => entry.id === tab)?.label.toLowerCase()}
-            </button>
-          ) : (
-            <h2 className="text-base font-semibold">Behaviors</h2>
-          )}
+    <SidePanel title="Behaviors" onClose={onClose}>
+      {showEditor ? (
+        <div className="px-4 pt-4">
           <button
             type="button"
-            onClick={onClose}
-            aria-label="Close behaviors"
-            className="ml-auto rounded-md px-2 py-1 text-secondary hover:bg-hover"
+            onClick={() => {
+              setSelection(null)
+              setAdding(false)
+            }}
+            className="px-2 py-1 text-sm text-secondary hover:text-primary"
           >
-            ✕
+            ← All {TABS.find((entry) => entry.id === tab)?.label.toLowerCase()}
           </button>
-        </header>
-
-        {showEditor ? null : (
-          <div
-            role="tablist"
-            aria-label="Behavior type"
-            className="flex gap-1 border-b border-subtle px-3"
-          >
-            {TABS.map((entry) => (
-              <button
-                key={entry.id}
-                type="button"
-                role="tab"
-                aria-selected={tab === entry.id}
-                onClick={() => switchTab(entry.id)}
-                className={`border-b-2 px-3 py-2 text-sm ${tab === entry.id ? 'border-accent-primary font-medium' : 'border-transparent text-secondary hover:bg-hover'}`}
-              >
-                {entry.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div className="flex-1 overflow-y-auto px-4 py-4">
-          {showEditor && tab === 'hold-taps' && selectedBehavior ? (
-            <HoldTapEditor
-              key={JSON.stringify(selectedBehavior.properties)}
-              behavior={selectedBehavior}
-              model={model}
-              keys={layout.keys}
-            />
-          ) : null}
-          {showEditor && tab === 'macros' && selectedBehavior ? (
-            <MacroEditor
-              key={JSON.stringify(selectedBehavior.bindings.map((item) => item.text))}
-              macro={selectedBehavior}
-            />
-          ) : null}
-          {showEditor && tab === 'combos' ? (
-            <ComboEditor
-              key={
-                selectedCombo
-                  ? JSON.stringify([
-                      selectedCombo.name,
-                      selectedCombo.bindings,
-                      selectedCombo.keyPositions,
-                      selectedCombo.timeoutMs,
-                      selectedCombo.layers,
-                    ])
-                  : 'new'
-              }
-              combo={selectedCombo ?? null}
-              combos={model.combos}
-              model={model}
-              keys={layout.keys}
-              onDone={() => {
-                setSelection(null)
-                setAdding(false)
-              }}
-              onSaved={(name) => setSelection({ tab: 'combos', name })}
-            />
-          ) : null}
-          {!showEditor && tab === 'hold-taps' ? (
-            <HoldTapList items={holdTaps} model={model} onPick={pick} />
-          ) : null}
-          {!showEditor && tab === 'macros' ? (
-            <MacroList items={model.macros} onPick={pick} />
-          ) : null}
-          {!showEditor && tab === 'combos' ? (
-            <ComboList
-              items={model.combos}
-              onPick={pick}
-              onAdd={() => {
-                setSelection(null)
-                setAdding(true)
-              }}
-            />
-          ) : null}
         </div>
-      </aside>
-    </div>
+      ) : null}
+
+      {showEditor ? null : (
+        <div
+          role="tablist"
+          aria-label="Behavior type"
+          className="sticky top-0 z-10 flex gap-1 border-b border-subtle bg-raised px-3"
+        >
+          {TABS.map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === entry.id}
+              onClick={() => switchTab(entry.id)}
+              className={`border-b-2 px-3 py-2 text-sm ${tab === entry.id ? 'border-accent-primary font-medium' : 'border-transparent text-secondary hover:bg-hover'}`}
+            >
+              {entry.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="px-4 py-4">
+        {showEditor && tab === 'hold-taps' && selectedBehavior ? (
+          <HoldTapEditor
+            key={JSON.stringify(selectedBehavior.properties)}
+            behavior={selectedBehavior}
+            model={model}
+            keys={layout.keys}
+          />
+        ) : null}
+        {showEditor && tab === 'macros' && selectedBehavior ? (
+          <MacroEditor
+            key={JSON.stringify(selectedBehavior.bindings.map((item) => item.text))}
+            macro={selectedBehavior}
+          />
+        ) : null}
+        {showEditor && tab === 'combos' ? (
+          <ComboEditor
+            key={
+              selectedCombo
+                ? JSON.stringify([
+                    selectedCombo.name,
+                    selectedCombo.bindings,
+                    selectedCombo.keyPositions,
+                    selectedCombo.timeoutMs,
+                    selectedCombo.layers,
+                  ])
+                : 'new'
+            }
+            combo={selectedCombo ?? null}
+            combos={model.combos}
+            model={model}
+            keys={layout.keys}
+            onDone={() => {
+              setSelection(null)
+              setAdding(false)
+            }}
+            onSaved={(name) => setSelection({ tab: 'combos', name })}
+          />
+        ) : null}
+        {!showEditor && tab === 'hold-taps' ? (
+          <HoldTapList items={holdTaps} model={model} onPick={pick} />
+        ) : null}
+        {!showEditor && tab === 'macros' ? <MacroList items={model.macros} onPick={pick} /> : null}
+        {!showEditor && tab === 'combos' ? (
+          <ComboList
+            items={model.combos}
+            onPick={pick}
+            onAdd={() => {
+              setSelection(null)
+              setAdding(true)
+            }}
+          />
+        ) : null}
+      </div>
+    </SidePanel>
   )
 }
 
@@ -206,10 +179,7 @@ function HoldTapList({
           <li key={item.name}>
             <button type="button" className={ROW} onClick={() => onPick(item.name)}>
               <span className="text-sm font-medium">{item.label ?? item.name}</span>
-              <span className="text-xs text-muted">
-                {item.properties['tapping-term-ms'] ?? '—'} · used on {uses.length}{' '}
-                {uses.length === 1 ? 'key' : 'keys'}
-              </span>
+              <span className="text-xs text-muted">{holdTapSummary(item, uses.length)}</span>
             </button>
           </li>
         )

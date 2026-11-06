@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Layers · C keyboardy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Concept C: KEYBOARDY. Layers are keycaps on a plate, like a function row. The active layer is a
+   latched, depressed cap. Reach is shown as physical keys: which cap on which board. */
+:root{
+  --surface-canvas:#1e1e2e; --surface-panel:#181825; --surface-raised:#313244; --surface-dot:#262737;
+  --surface-glow:rgba(137,180,250,.07);
+  --border-base:#45475a; --border-subtle:#313244;
+  --text-primary:#cdd6f4; --text-secondary:#a6adc8; --text-muted:#7f849c;
+  --accent-primary:#89b4fa; --on-accent:#11111b;
+  --status-warning:#fab387; --on-warning:#11111b; --status-success:#a6e3a1;
+  --layer-1:#89b4fa; --layer-2:#a6e3a1; --layer-3:#f9e2af; --layer-4:#f5c2e7; --layer-5:#94e2d5;
+  --keycap-top:#45475a; --keycap-face:#313244; --keycap-side:#11111b; --keycap-legend:#cdd6f4;
+  --keycap-highlight:rgba(255,255,255,.07); --keycap-shadow:rgba(0,0,0,.55);
+  --plate:#11111b;
+  --shadow-float:0 14px 34px -14px rgba(0,0,0,.7);
+  --sans:"Instrument Sans","Helvetica Neue",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font:14px/1.45 var(--sans);-webkit-font-smoothing:antialiased;min-width:1200px}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+kbd{font:500 11px/1 var(--mono);background:var(--surface-raised);border:1px solid var(--border-base);border-bottom-width:2px;border-radius:5px;padding:2px 5px}
+.eyebrow{font:500 10.5px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted)}
+.fine{font-size:12px;color:var(--text-muted);margin:0}
+
+.top{height:52px;display:flex;align-items:center;gap:14px;padding:0 18px;border-bottom:1px solid var(--border-subtle);background:var(--surface-panel)}
+.top b{font-weight:700}
+.top .dev{font:500 12px var(--mono);color:var(--text-muted)}
+.ghost{background:transparent;border:1px solid var(--border-base);border-radius:7px;padding:5px 10px;font-size:12.5px;color:var(--text-secondary)}
+.sp{flex:1}
+
+.stage{min-height:calc(100vh - 53px);padding:22px 28px 30px;display:flex;flex-direction:column;gap:22px;
+  background:radial-gradient(60% 50% at 50% 35%,var(--surface-glow),transparent 70%),radial-gradient(var(--surface-dot) 1px,transparent 1.3px) 0 0/22px 22px,var(--surface-canvas)}
+
+/* the plate with layer keycaps */
+.plate{align-self:center;display:flex;align-items:flex-end;gap:12px;padding:16px 18px 18px;border-radius:22px;background:linear-gradient(180deg,#171724,var(--plate));
+  border:1px solid #232336;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 22px 40px -22px rgba(0,0,0,.9)}
+.cap{position:relative;width:150px;height:96px;border:0;border-radius:14px;padding:10px 12px 12px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--c) 88%,#fff 12%),color-mix(in srgb,var(--c) 78%,#11111b));
+  color:#11111b;box-shadow:inset 0 2px 0 rgba(255,255,255,.35),inset 0 -3px 0 rgba(0,0,0,.14),0 7px 0 #09090f,0 16px 24px -12px rgba(0,0,0,.9);
+  transition:transform .12s,box-shadow .12s,background .2s}
+.cap:hover{transform:translateY(-2px)}
+.cap .pos{font:600 11px/1 var(--mono);opacity:.6;display:flex;justify-content:space-between;align-items:center}
+.cap .cn{font:700 17px/1.1 var(--sans);letter-spacing:-.01em}
+.cap .sub{font:600 9.5px/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;opacity:.7}
+.cap .led{width:7px;height:7px;border-radius:50%;background:#11111b;opacity:.35}
+.cap[aria-pressed="true"]{transform:translateY(5px);box-shadow:inset 0 2px 0 rgba(0,0,0,.12),0 2px 0 #09090f,0 6px 10px -6px rgba(0,0,0,.8)}
+.cap[aria-pressed="true"] .led{background:#11111b;opacity:1;box-shadow:0 0 0 3px rgba(17,17,27,.25)}
+/* the base cap is wider and has no LED */
+.cap.base{width:170px}
+/* nothing reaches it: dim cap with an amber LED that blinks */
+.cap.orphan{background:linear-gradient(180deg,#45475a,#313244);color:var(--status-warning);box-shadow:inset 0 2px 0 rgba(255,255,255,.05),0 7px 0 #09090f,0 16px 24px -12px rgba(0,0,0,.9)}
+.cap.orphan .led{background:var(--status-warning);opacity:1;box-shadow:0 0 8px var(--status-warning);animation:blink 1.6s infinite}
+.cap.orphan .pos,.cap.orphan .sub{opacity:.75}
+.cap.orphan[aria-pressed="true"]{box-shadow:inset 0 2px 0 rgba(0,0,0,.2),0 2px 0 #09090f}
+@keyframes blink{50%{opacity:.25}}
+.cap.add{background:transparent;box-shadow:none;border:1.5px dashed var(--border-base);color:var(--text-muted);align-items:center;justify-content:center;font:500 13px var(--mono)}
+.cap.add:hover{border-color:var(--text-muted);color:var(--text-primary);transform:none}
+/* inline blank keycap during add */
+.cap.blank{background:linear-gradient(180deg,#45475a,#313244);color:var(--text-primary);box-shadow:inset 0 2px 0 rgba(255,255,255,.06),0 7px 0 #09090f;cursor:text}
+.cap.blank input{background:transparent;border:0;border-bottom:1.5px solid var(--accent-primary);color:var(--text-primary);font:700 17px var(--sans);outline:none;width:100%;padding:0 0 3px}
+.cap.blank .opts{display:flex;gap:4px}
+.cap.blank .opts button{font:600 10px var(--mono);border:1px solid var(--border-base);background:transparent;color:var(--text-secondary);border-radius:5px;padding:3px 5px}
+.cap.blank .opts button[aria-pressed="true"]{background:var(--accent-primary);color:var(--on-accent);border-color:transparent}
+
+/* two columns: board, and the reach readout */
+.lower{display:grid;grid-template-columns:1fr 400px;gap:26px;align-items:start}
+.boardcard{background:var(--surface-panel);border:1px solid var(--border-subtle);border-radius:20px;padding:18px 18px 14px;display:flex;flex-direction:column;gap:12px}
+.boardcard .hd{display:flex;align-items:center;gap:12px}
+.boardcard .hd h2{margin:0;font-size:16px;font-weight:700}
+.boardcard .hd .sp{flex:1}
+.board{display:flex;justify-content:center;gap:44px;padding:8px 0 4px}
+.side{display:flex;flex-direction:column;gap:7px}
+.grid{display:grid;grid-template-columns:repeat(6,48px);grid-auto-rows:48px;gap:5px}
+.thumbs{display:flex;gap:5px}
+.side:first-child .thumbs{justify-content:flex-end}
+.side:last-child .thumbs{justify-content:flex-start}
+.k{position:relative;border:0;padding:0;width:48px;height:48px;border-radius:10px;background:linear-gradient(180deg,var(--keycap-top),var(--keycap-face));
+  box-shadow:inset 0 2px 0 var(--keycap-highlight),0 4px 0 var(--keycap-side),0 10px 16px -8px var(--keycap-shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.thumbs .k{width:48px;height:48px}
+.k .md{font:600 8px/1 var(--mono);text-transform:uppercase;color:var(--c)}
+.k .lg{font:600 11.5px/1 var(--sans);color:var(--keycap-legend);white-space:nowrap;max-width:40px;overflow:hidden;text-overflow:ellipsis}
+.k.nav{background:linear-gradient(180deg,color-mix(in srgb,var(--c) 30%,var(--keycap-top)),color-mix(in srgb,var(--c) 18%,var(--keycap-face)));box-shadow:inset 0 2px 0 var(--keycap-highlight),0 4px 0 var(--keycap-side),0 0 0 1.5px var(--c),0 0 16px -4px var(--c)}
+.k.nav .lg{color:var(--c)}
+.board:not([data-layer="1"]) .k:not(.lit){opacity:.38}
+.board .k:not(.lit):not(.nav) .lg{color:var(--text-muted)}
+.board .k:not(.lit) .lg{opacity:.5}
+.boardfoot{display:flex;gap:10px;align-items:center;font-size:12.5px;color:var(--text-muted)}
+.boardfoot .sp{flex:1}
+.mini-btn{background:var(--surface-raised);border:0;border-radius:7px;padding:5px 9px;font-size:12px;font-weight:600;color:var(--text-primary)}
+.mini-btn:disabled{opacity:.4;cursor:default}
+
+/* readout */
+.readout{background:var(--surface-panel);border:1px solid var(--border-subtle);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:14px;position:relative}
+.readout h3{margin:4px 0 0;font-size:22px;letter-spacing:-.02em;font-weight:700;display:flex;align-items:center;gap:10px}
+.readout h3 i{width:12px;height:12px;border-radius:4px;background:var(--c);display:inline-block}
+.step{display:grid;grid-template-columns:118px 1fr;gap:12px;align-items:center;padding:10px;border-radius:14px;background:var(--surface-canvas);border:1px solid var(--border-subtle)}
+.step .mb{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;width:118px}
+.step .mb i{height:8px;border-radius:2px;background:var(--surface-raised)}
+.step .mb i.hi{background:var(--c);box-shadow:0 0 8px var(--c)}
+.step .mb i.free{background:transparent;border:1px dashed var(--status-warning)}
+.step p{margin:0;font-size:13px;color:var(--text-secondary)}
+.step p b{color:var(--text-primary)}
+.step .kc{display:inline-flex;align-items:center;gap:6px;margin-top:6px;font:600 11px var(--mono);color:#11111b;background:var(--c);border-radius:6px;padding:4px 7px;box-shadow:0 2px 0 #09090f}
+.step .kc.free{background:transparent;color:var(--status-warning);border:1px dashed var(--status-warning);box-shadow:none}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts button{background:var(--surface-raised);border:0;border-radius:8px;padding:7px 11px;font-size:12.5px;font-weight:600;color:var(--text-primary)}
+.acts .sp{flex:1}
+.acts .pull{background:transparent;border:1px solid color-mix(in srgb,var(--status-warning) 50%,transparent);color:var(--status-warning)}
+.pulling{display:none;flex-direction:column;gap:10px;border:1px solid color-mix(in srgb,var(--status-warning) 45%,var(--border-subtle));border-radius:14px;padding:12px;background:color-mix(in srgb,var(--status-warning) 6%,var(--surface-panel))}
+.pulling.open{display:flex}
+.pulling ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--text-secondary)}
+.pulling li{display:flex;gap:8px;align-items:center}
+.pulling li kbd{background:var(--surface-canvas)}
+.pulling .row{display:flex;justify-content:flex-end;gap:6px}
+.pulling .row button{border:0;border-radius:7px;padding:6px 11px;font-weight:600;font-size:12.5px;background:var(--surface-raised);color:var(--text-primary)}
+.pulling .row .go{background:var(--status-warning);color:var(--on-warning)}
+.pulling .eyebrow{color:var(--status-warning)}
+.ro-foot{font:500 11.5px var(--mono);color:var(--text-muted)}
+</style>
+</head>
+<body>
+<header class="top">
+  <b>adv360</b><span class="dev">Kinesis Advantage360 Pro</span>
+  <span class="sp"></span>
+  <button class="ghost">Catppuccin Mocha</button>
+  <button class="ghost">Settings</button>
+</header>
+
+<main class="stage">
+  <div class="plate" id="plate" role="group" aria-label="Layers">
+    <!-- caps are generated from LAYERS; the + cap is at the end -->
+  </div>
+
+  <div class="lower">
+    <section class="boardcard">
+      <div class="hd">
+        <h2 id="bTitle">Default</h2>
+        <span class="eyebrow" id="bSub">base · always on</span>
+        <span class="sp"></span>
+        <span class="eyebrow">hold / toggle keys glow in their target colour</span>
+      </div>
+      <div class="board" id="board" data-layer="1"></div>
+      <div class="boardfoot">
+        <span>Click a glowing key to jump to the layer it opens.</span>
+        <span class="sp"></span>
+        <button class="mini-btn" id="prevBtn">◂ Move cap</button>
+        <button class="mini-btn" id="nextBtn">Move cap ▸</button>
+      </div>
+    </section>
+
+    <aside class="readout" id="readout" aria-live="polite">
+      <div class="eyebrow" id="rKicker">How you reach it</div>
+      <h3 id="rTitle"><i></i>Default</h3>
+      <div id="steps" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div class="acts" id="acts">
+        <button>Rename</button>
+        <span class="sp"></span>
+        <button class="pull" id="pullBtn">Pull cap…</button>
+      </div>
+      <div class="pulling" id="pulling">
+        <div class="eyebrow">Removing Macro</div>
+        <ul>
+          <li><kbd>hold Macro</kbd> on Default would stop working</li>
+          <li><kbd>toggle W</kbd> ends here: Windows loses its only route</li>
+          <li>3 keys on Macro are deleted with the layer</li>
+        </ul>
+        <div class="row"><button id="keepBtn">Keep cap</button><button class="go">Remove layer</button></div>
+      </div>
+      <div class="ro-foot" id="rFoot"></div>
+    </aside>
+  </div>
+</main>
+
+<script>
+// Layer data. `to` marks a switching key. Positions: index 0-29 left half, 30-59 right half, 60-65 thumbs.
+const LAYERS = [
+  {id:1,name:'Default',base:true,keys:{60:{t:'Keypad',mode:'hold',to:2},61:{t:'Macro',mode:'hold',to:4}}},
+  {id:2,name:'Keypad',keys:{36:{t:'7'},37:{t:'8'},38:{t:'9'},42:{t:'4'},43:{t:'5'},44:{t:'6'},48:{t:'1'},49:{t:'2'},50:{t:'3'},55:{t:'0'}}},
+  {id:3,name:'Mod',keys:{0:{t:'BT 0'},1:{t:'BT 1'},2:{t:'BT 2'},3:{t:'BT clr'},4:{t:'BOOT'}}},
+  {id:4,name:'Macro',keys:{8:{t:'W',mode:'toggle',to:5},9:{t:'⌘⇧S'},14:{t:'⌘Spc'}}},
+  {id:5,name:'Windows',keys:{2:{t:'Ctrl+S'},3:{t:'Alt+Tab'},8:{t:'Win'}}}
+];
+const byId = id => LAYERS.find(l => l.id === id);
+let active = 1;
+const reachers = id => {
+  const out = [];
+  LAYERS.forEach(l => Object.entries(l.keys).forEach(([i,k]) => { if (k.to === id) out.push({from:l.id, key:+i, k}); }));
+  return out;
+};
+
+// Plate of keycaps
+const plate = document.getElementById('plate');
+function renderPlate(){
+  plate.innerHTML = '';
+  LAYERS.forEach(l => {
+    const r = reachers(l.id);
+    const orphan = !l.base && !r.length;
+    const b = document.createElement('button');
+    b.className = 'cap' + (l.base ? ' base' : '') + (orphan ? ' orphan' : '');
+    b.style.setProperty('--c', 'var(--layer-' + l.id + ')');
+    b.setAttribute('aria-pressed', l.id === active);
+    b.dataset.id = l.id;
+    const sub = l.base ? 'base' : orphan ? 'no key reaches' : r[0].k.mode + ' · ' + byId(r[0].from).name;
+    b.innerHTML = `<span class="pos"><span>${l.id}</span><span class="led"></span></span><span class="cn">${l.name}</span><span class="sub">${sub}</span>`;
+    b.onclick = () => setActive(l.id);
+    plate.appendChild(b);
+  });
+  const add = document.createElement('button');
+  add.className = 'cap add'; add.id = 'addCap'; add.textContent = '+ layer';
+  add.onclick = openBlank;
+  plate.appendChild(add);
+}
+
+// Inline add: the + cap becomes a blank keycap that you label
+function openBlank(){
+  const add = document.getElementById('addCap');
+  add.className = 'cap blank';
+  add.onclick = null;
+  add.innerHTML = `<span class="pos"><span>6</span><span class="led"></span></span>
+    <input id="newName" placeholder="Name" aria-label="Layer name">
+    <span class="opts"><button aria-pressed="true">Empty</button><button aria-pressed="false">Copy Default</button><button id="cancelBlank" aria-label="Cancel">×</button></span>`;
+  add.querySelectorAll('.opts button[aria-pressed]').forEach(x => x.onclick = e => {
+    e.stopPropagation();
+    add.querySelectorAll('.opts button[aria-pressed]').forEach(y => y.setAttribute('aria-pressed', y === x));
+  });
+  add.querySelector('#cancelBlank').onclick = e => { e.stopPropagation(); renderPlate(); };
+  add.style.setProperty('--c', 'var(--layer-5)');
+  add.querySelector('input').focus();
+}
+
+// Board
+const board = document.getElementById('board');
+function mkRange(a, n, cls){
+  const el = document.createElement('div'); el.className = cls;
+  for (let i = a; i < a + n; i++){
+    const b = document.createElement('button'); b.className = 'k'; b.dataset.i = i;
+    b.innerHTML = '<span class="md"></span><span class="lg"></span>';
+    el.appendChild(b);
+  }
+  return el;
+}
+(function build(){
+  const L = document.createElement('div'); L.className = 'side';
+  L.append(mkRange(0,30,'grid'), mkRange(60,3,'thumbs'));
+  const R = document.createElement('div'); R.className = 'side';
+  R.append(mkRange(30,30,'grid'), mkRange(63,3,'thumbs'));
+  board.append(L, R);
+})();
+function renderBoard(){
+  const layer = byId(active);
+  board.dataset.layer = active;
+  board.querySelectorAll('.k').forEach(b => {
+    const i = +b.dataset.i, k = layer.keys[i];
+    b.className = 'k' + (k ? ' lit' : '') + (k && k.to ? ' nav' : '');
+    b.style.setProperty('--c', k && k.to ? 'var(--layer-' + k.to + ')' : 'var(--layer-' + active + ')');
+    b.querySelector('.md').textContent = k && k.to ? k.mode : '';
+    b.querySelector('.lg').textContent = k ? k.t : '';
+    b.onclick = () => k && k.to && setActive(k.to);
+  });
+  document.getElementById('bTitle').textContent = layer.name;
+  document.getElementById('bSub').textContent = layer.base ? 'base · always on' : reachers(active).length ? 'layer ' + active : 'layer ' + active + ' · unreachable';
+}
+
+// Mini board used in the reach steps: highlights one key index on a given layer
+function miniIdx(r, c){
+  if (r < 5) return c < 6 ? r * 6 + c : 30 + r * 6 + (c - 6);
+  if (c >= 3 && c <= 5) return 60 + c - 3;
+  if (c >= 6 && c <= 8) return 63 + c - 6;
+  return -1;
+}
+// 12 x 6 cells: both halves plus thumb row. Highlights one index; `free` = dashed amber, nothing assigned
+function miniBoard(layerId, hiIdx, free){
+  let html = '';
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 12; c++){
+    const i = miniIdx(r, c);
+    if (i < 0) { html += '<i style="visibility:hidden"></i>'; continue; }
+    html += `<i class="${i === hiIdx ? (free ? 'free' : 'hi') : ''}"></i>`;
+  }
+  return html;
+}
+function renderReach(){
+  const l = byId(active);
+  const r = reachers(active);
+  const row = document.getElementById('rTitle');
+  row.innerHTML = `<i></i>${l.name}`;
+  row.style.setProperty('--c', 'var(--layer-' + l.id + ')');
+  document.getElementById('rKicker').textContent = l.base ? 'Base layer' : 'How you reach it';
+  const steps = document.getElementById('steps');
+  if (l.base){
+    steps.innerHTML = `<div class="step" style="--c:var(--layer-1)"><div class="mb">${miniBoard(1,-1,false)}</div>
+      <p><b>Always on underneath.</b> Other layers fall through to Default for keys they leave empty.</p></div>`;
+  } else if (!r.length){
+    steps.innerHTML = `<div class="step" style="--c:var(--status-warning)"><div class="mb">${miniBoard(1,-1,true)}</div>
+      <p><b>Nothing reaches Mod.</b> Its Bluetooth and bootloader keys can't be used. Put a key that selects it on Default.</p>
+      <span class="kc free">no key assigned</span></div>`;
+  } else {
+    const chain = []; let cur = l.id, guard = 0;
+    while (cur !== 1 && guard++ < 5){
+      const rr = reachers(cur)[0]; if (!rr) break;
+      chain.unshift(rr); cur = rr.from;
+    }
+    steps.innerHTML = chain.map(rr => {
+      const from = byId(rr.from);
+      const color = 'var(--layer-' + from.id + ')';
+      return `<div class="step" style="--c:${color}"><div class="mb">${miniBoard(from.id, rr.key, false)}</div>
+        <p>On <b>${from.name}</b>, ${rr.k.mode === 'hold' ? 'hold' : 'tap'} the key <b>${rr.k.t}</b><br><span style="color:var(--text-muted)">${rr.k.mode === 'hold' ? 'lets go and returns to ' + from.name : 'toggles ' + l.name + ' on and off'}</span></p>
+        <span class="kc" style="--c:${color}">${rr.k.mode} ${rr.k.t} → ${l.name}</span></div>`;
+    }).join('');
+  }
+  document.getElementById('rFoot').textContent = l.base ? '' : 'Keys on this layer: ' + Object.keys(l.keys).length;
+  document.getElementById('pulling').classList.remove('open');
+  document.getElementById('acts').style.display = 'flex';
+  document.getElementById('pullBtn').disabled = l.base;
+}
+
+function setActive(id){
+  active = id;
+  renderPlate(); renderBoard(); renderReach();
+}
+
+// Pull-cap (delete) flow: shows impact inside the readout
+document.getElementById('pullBtn').onclick = () => {
+  document.getElementById('pulling').classList.add('open');
+};
+document.getElementById('keepBtn').onclick = () => {
+  document.getElementById('pulling').classList.remove('open');
+};
+
+// Reorder demo: swap the cap with its neighbour in the plate (visual only)
+document.getElementById('prevBtn').onclick = () => swapOrder(-1);
+document.getElementById('nextBtn').onclick = () => swapOrder(1);
+function swapOrder(d){
+  const i = LAYERS.findIndex(l => l.id === active);
+  const j = i + d;
+  if (j < 0 || j >= LAYERS.length) return;
+  [LAYERS[i], LAYERS[j]] = [LAYERS[j], LAYERS[i]];
+  renderPlate();
+}
+
+setActive(1);
+</script>
+</body>
+</html>

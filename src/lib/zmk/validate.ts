@@ -102,7 +102,9 @@ function collectIssues(
     if (!fromZero.has(i))
       issues.push({
         code: 'unreachable-layer',
-        message: `Layer ${i} (${nextLayer.name}) is unreachable`,
+        message:
+          `${nextLayer.displayName ?? nextLayer.name} can't be reached: no key turns it on ` +
+          `(ZMK layer ${i})`,
         span: nextLayer,
       })
   })

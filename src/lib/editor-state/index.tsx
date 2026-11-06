@@ -1,6 +1,6 @@
 import { createContext, useContext, useRef, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
-import { createEditorForProfile, diff as fileDiff, validate } from '../zmk'
+import { LayerReferencedError, createEditorForProfile, diff as fileDiff, validate } from '../zmk'
 import type {
   BindingInput,
   ComboInput,
@@ -41,6 +41,16 @@ export interface EditorActions {
   addCombo(input: ComboInput): void
   updateCombo(name: string, changes: Partial<ComboInput>): void
   removeCombo(name: string): void
+  /** Append a layer named `label` (empty, or a copy of `copyFrom`) and return its index. */
+  addLayer(input: { label: string; copyFrom?: number }): number
+  /** Change a layer's display name. */
+  renameLayer(index: number, label: string): void
+  /** Move a layer, renumbering every reference to the layers in between. */
+  moveLayer(from: number, to: number): void
+  /** Delete a layer; keys that pointed at it become `&none` (confirm with layerReferences). */
+  removeLayer(index: number): void
+  /** What removeLayer would rewrite, other than renumbering higher layers. */
+  layerReferences(index: number): LayerReference[]
   undo(): void
   redo(): void
   diff(): Record<string, string>
@@ -52,6 +62,13 @@ export interface EditorActions {
   load(files: FileMap, profile: KeyboardProfile): void
   changedKeys(layer: number): Set<number>
   summary(): string[]
+}
+/** A binding or property that refers to a layer, as reported before deleting that layer. */
+export interface LayerReference {
+  layer: number | null
+  key: number | null
+  text: string
+  reason: string
 }
 export interface EditorStore extends EditorActions {
   getSnapshot(): EditorState
@@ -73,6 +90,19 @@ const hashFiles = (files: FileMap) =>
         .map((key) => [key, files[key]]),
     ),
   )
+/** A unique layer node name derived from a label, e.g. "My Layer" → `my_layer`. */
+export function layerNodeName(label: string, existing: string[]): string {
+  let base = label
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+  if (!base) base = 'layer'
+  if (/^\d/.test(base)) base = `layer_${base}`
+  let name = base
+  for (let suffix = 2; existing.includes(name); suffix++) name = `${base}_${suffix}`
+  return name
+}
 const pretty = (name: string) =>
   name.replace(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
 
@@ -238,6 +268,47 @@ export function createEditorStore(
     addCombo: (input) => edit((editor) => editor.addCombo(input)),
     updateCombo: (name, changes) => edit((editor) => editor.updateCombo(name, changes)),
     removeCombo: (name) => edit((editor) => editor.removeCombo(name)),
+    addLayer: ({ label, copyFrom }) => {
+      const existing = derived.model.layers.map((layer) => layer.name)
+      const name = layerNodeName(label, existing)
+      edit((editor) => editor.appendLayer({ name, label, copyFrom }))
+      const index = derived.model.layers.length - 1
+      current = { ...current, activeLayer: index, selectedKey: null }
+      emit()
+      return index
+    },
+    renameLayer: (index, label) => edit((editor) => editor.setLayerLabel(index, label)),
+    moveLayer: (from, to) => {
+      edit((editor) => {
+        editor.moveLayer(from, to)
+      })
+      current = { ...current, activeLayer: to }
+      emit()
+    },
+    removeLayer: (index) => {
+      edit((editor) => {
+        editor.removeLayer(index, { force: true })
+      })
+      const last = derived.model.layers.length - 1
+      const active = current.activeLayer > index ? current.activeLayer - 1 : current.activeLayer
+      current = { ...current, activeLayer: Math.max(0, Math.min(active, last)), selectedKey: null }
+      emit()
+    },
+    layerReferences: (index) => {
+      const editor = createEditorForProfile(profile, current.files)
+      try {
+        editor.removeLayer(index)
+        return []
+      } catch (error) {
+        if (!(error instanceof LayerReferencedError)) throw error
+        return error.references.map((reference) => ({
+          layer: reference.layer ?? null,
+          key: reference.key ?? null,
+          text: reference.before,
+          reason: reference.reason,
+        }))
+      }
+    },
     undo: () => {
       const previous = past.pop()
       if (!previous) return
@@ -303,33 +374,51 @@ export function createEditorStore(
       emit(true)
     },
     changedKeys: (layer) => {
-      const before = baselineModel.layers[layer]?.bindings ?? []
-      const after = derived.model.layers[layer]?.bindings ?? []
+      const after = derived.model.layers[layer]
+      // Match layers by node name so moved layers compare with themselves; new layers have no
+      // per-key changes (they show up as "Added layer" in the summary instead).
+      const before = after
+        ? baselineModel.layers.find((candidate) => candidate.name === after.name)
+        : undefined
+      if (!after || !before) return new Set<number>()
+      const length = Math.max(before.bindings.length, after.bindings.length)
       return new Set(
-        Array.from({ length: Math.max(before.length, after.length) }, (_, index) => index).filter(
-          (index) => before[index]?.text !== after[index]?.text,
+        Array.from({ length }, (_, index) => index).filter(
+          (index) => before.bindings[index]?.text !== after.bindings[index]?.text,
         ),
       )
     },
     summary: () => {
       const lines: string[] = []
-      const layerNames = derived.model.layers.map((layer) =>
-        pretty(layer.displayName ?? layer.name),
-      )
-      for (
-        let layer = 0;
-        layer < Math.max(baselineModel.layers.length, derived.model.layers.length);
-        layer++
-      ) {
-        for (const key of actions.changedKeys(layer)) {
-          const before = baselineModel.layers[layer]?.bindings[key]
-          const after = derived.model.layers[layer]?.bindings[key]
-          const label = before ? describeBinding(before, { layerNames }).primary : ''
+      const label = (layer: { name: string; displayName?: string }) =>
+        pretty(layer.displayName ?? layer.name)
+      const layerNames = derived.model.layers.map(label)
+      const beforeNames = baselineModel.layers.map((layer) => layer.name)
+      const afterNames = derived.model.layers.map((layer) => layer.name)
+      for (const layer of baselineModel.layers)
+        if (!afterNames.includes(layer.name)) lines.push(`Removed layer ${label(layer)}`)
+      for (const layer of derived.model.layers) {
+        const before = baselineModel.layers.find((candidate) => candidate.name === layer.name)
+        if (!before) lines.push(`Added layer ${label(layer)}`)
+        else if (label(before) !== label(layer))
+          lines.push(`Renamed layer ${label(before)} → ${label(layer)}`)
+      }
+      const kept = afterNames.filter((name) => beforeNames.includes(name))
+      if (kept.join() !== beforeNames.filter((name) => afterNames.includes(name)).join())
+        lines.push(`Reordered layers: ${layerNames.join(', ')}`)
+      derived.model.layers.forEach((layer, index) => {
+        const before = baselineModel.layers.find((candidate) => candidate.name === layer.name)
+        if (!before) return
+        for (const key of actions.changedKeys(index)) {
+          const old = before.bindings[key]
+          const now = layer.bindings[key]
+          const legend = old ? describeBinding(old, { layerNames }).primary : ''
           lines.push(
-            `${layerNames[layer] ?? pretty(baselineModel.layers[layer]?.name ?? `Layer ${layer}`)} · key ${key}${label ? ` (${label})` : ''}: ${before?.text ?? '∅'} → ${after?.text ?? '∅'}`,
+            `${layerNames[index]} · key ${key}${legend ? ` (${legend})` : ''}: ` +
+              `${old?.text ?? '∅'} → ${now?.text ?? '∅'}`,
           )
         }
-      }
+      })
       if (!lines.length) {
         for (const file of Object.keys(fileDiff(baseline, current.files))) {
           lines.push(`Changed ${file}`)

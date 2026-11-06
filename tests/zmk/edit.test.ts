@@ -72,7 +72,7 @@ it('inserts a combo without changing existing lines', () => {
   expect(
     updated.replace('        new_combo { bindings = <&kp A>; key-positions = <1 2>; };\n', ''),
   ).toBe(files['adv360.keymap'])
-  expect(nextEditor.model.combos).toHaveLength(4)
+  expect(nextEditor.model.combos).toHaveLength(3)
 })
 
 it('edits macros in their source file', () => {
@@ -118,9 +118,9 @@ it('adds, updates and removes macros, combos and layers', () => {
   ).toEqual(['B'])
   selectedEditor.removeCombo('new_combo')
   selectedEditor.addLayer('        extra { bindings = <&none>; };')
+  expect(selectedEditor.model.layers).toHaveLength(6)
+  selectedEditor.removeLayer(5)
   expect(selectedEditor.model.layers).toHaveLength(5)
-  selectedEditor.removeLayer(4)
-  expect(selectedEditor.model.layers).toHaveLength(4)
 })
 
 it('reverts fixture binding sequences and changes exactly one line per edit', () => {
