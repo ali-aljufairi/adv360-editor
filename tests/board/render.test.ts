@@ -42,7 +42,13 @@ describe('Board server render', () => {
   it('renders layer tabs as a tablist with one tab per layer and a warning for unreachable ones', () => {
     const html = renderToStaticMarkup(
       createElement(LayerTabs, {
-        layers: layerNames.map((name, index) => ({ index, name, unreachable: index === 1 })),
+        layers: layerNames.map((name, index) => ({
+          index,
+          name,
+          unreachable: index === 1,
+          access: [],
+          summary: '',
+        })),
         active: 0,
         onChange: () => undefined,
       }),

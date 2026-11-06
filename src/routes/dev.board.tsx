@@ -62,6 +62,8 @@ function BoardPage() {
         index,
         name: LAYER_NAMES[index] ?? item.name,
         unreachable: UNREACHABLE.has(index),
+        access: [],
+        summary: '',
       })),
     [],
   )

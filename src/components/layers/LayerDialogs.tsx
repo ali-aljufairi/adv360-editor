@@ -181,8 +181,8 @@ export function RenameLayerDialog({ name, onRename, onClose }: RenameLayerDialog
 
 /** A key elsewhere in the keymap that points at the layer being deleted. */
 export interface LayerReference {
-  /** Index of the layer that holds the key. */
-  layer: number
+  /** Index of the layer that holds the key; null for combos, macros and other nodes. */
+  layer: number | null
   key: number | null
   text: string
   reason: string
@@ -237,7 +237,9 @@ export function DeleteLayerDialog({
                   className="rounded-md border border-subtle bg-canvas px-2.5 py-1.5"
                 >
                   <div className="font-mono text-xs break-words text-primary">
-                    {layerNames[reference.layer] ?? `Layer ${reference.layer}`}
+                    {reference.layer === null
+                      ? 'Combo or behavior'
+                      : (layerNames[reference.layer] ?? `Layer ${reference.layer}`)}
                     {reference.key !== null ? ` · key ${reference.key}` : ''}
                     {reference.text ? ` · ${reference.text}` : ''}
                   </div>

@@ -7,7 +7,7 @@ const model = () => resolve(files, 'adv360.keymap')
 it('flags the unreachable mod layer', () => {
   expect(
     validate(model()).some(
-      (item) => item.code === 'unreachable-layer' && item.message.includes('Layer 2 (mod)'),
+      (item) => item.code === 'unreachable-layer' && item.message.includes("mod can't be reached"),
     ),
   ).toBe(true)
 })

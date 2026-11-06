@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Board } from '../board/Board'
 import { LayerTabs } from '../board/LayerTabs'
+import { AddLayerDialog, DeleteLayerDialog, RenameLayerDialog } from '../layers/LayerDialogs'
+import type { LayerReference } from '../layers/LayerDialogs'
 import { layerAccentOf } from '../board/bindings'
 import { ChangesPill } from '../panels/ChangesPill'
 import { ChangesSheet } from '../panels/ChangesSheet'
@@ -28,6 +30,12 @@ import { layerOfIssue, layerTabsOf, legendContextOf, pickerInputsOf } from './ed
 const COMBOS_KEY = 'adv360.editor.showCombos'
 /** Viewports narrower than this use the bottom sheet for the binding picker. */
 const NARROW_QUERY = '(max-width: 639px)'
+
+/** Which layer dialog is open. */
+type LayerDialogState =
+  | { kind: 'add' }
+  | { kind: 'rename'; index: number }
+  | { kind: 'delete'; index: number; references: LayerReference[] }
 
 /** The binding picker's target: which layer and key it edits, and where to draw it. */
 interface PickerTarget {
@@ -85,10 +93,28 @@ export function EditorPage() {
   const [behaviorsOpen, setBehaviorsOpen] = useState(false)
   const [combosOn, setCombosOn] = useState(true)
   const [notice, setNotice] = useState<string | null>(null)
+  const [layerDialog, setLayerDialog] = useState<LayerDialogState | null>(null)
+  /** Run a layer edit; on failure (e.g. a layer number written as an expression) show why. */
+  const runLayerAction = (action: () => void, close = true) => {
+    try {
+      action()
+      if (close) setLayerDialog(null)
+      setNotice(null)
+    } catch (error) {
+      setLayerDialog(null)
+      setNotice(error instanceof Error ? error.message : 'That layer change is not possible here.')
+    }
+  }
 
   const layerCount = model.layers.length
   const modalOpen =
-    picker !== null || themeOpen || sheetOpen || settingsOpen || helpOpen || behaviorsOpen
+    picker !== null ||
+    themeOpen ||
+    sheetOpen ||
+    settingsOpen ||
+    helpOpen ||
+    behaviorsOpen ||
+    layerDialog !== null
 
   // Read the stored preference after mount so server and first client render agree.
   useEffect(() => setCombosOn(readCombosPreference()), [])
@@ -170,7 +196,7 @@ export function EditorPage() {
   })
 
   // ⌘K / Ctrl-K opens the theme picker from anywhere.
-  // Digits 1–4 pick a layer in the arrows and emacs schemes, but only when not typing.
+  // Digits 1–9 pick a layer in the arrows and emacs schemes, but only when not typing.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
@@ -179,7 +205,7 @@ export function EditorPage() {
         return
       }
       if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return
-      if (!/^[1-4]$/.test(event.key) || modalOpen) return
+      if (!/^[1-9]$/.test(event.key) || modalOpen) return
       if (scheme !== 'arrows' && scheme !== 'emacs') return
       if (!shouldHandleKeydown(event)) return
       const index = Number(event.key) - 1
@@ -304,7 +330,25 @@ export function EditorPage() {
         ) : null}
 
         <div className="flex justify-center">
-          <LayerTabs layers={tabs} active={activeLayer} onChange={editor.setActiveLayer} />
+          <LayerTabs
+            layers={tabs}
+            active={activeLayer}
+            onChange={editor.setActiveLayer}
+            onAdd={() => setLayerDialog({ kind: 'add' })}
+            onRename={(index) => setLayerDialog({ kind: 'rename', index })}
+            onMove={(index, to) => runLayerAction(() => editor.moveLayer(index, to))}
+            onDelete={(index) =>
+              runLayerAction(
+                () =>
+                  setLayerDialog({
+                    kind: 'delete',
+                    index,
+                    references: editor.layerReferences(index),
+                  }),
+                false,
+              )
+            }
+          />
         </div>
 
         <section aria-label="Keyboard" className="w-full">
@@ -373,6 +417,30 @@ export function EditorPage() {
       <ThemePicker open={themeOpen} onClose={() => setThemeOpen(false)} />
 
       <BehaviorsDrawer open={behaviorsOpen} onClose={() => setBehaviorsOpen(false)} />
+
+      {layerDialog?.kind === 'add' ? (
+        <AddLayerDialog
+          layers={tabs.map(({ index, name }) => ({ index, name }))}
+          onCreate={(input) => runLayerAction(() => editor.addLayer(input))}
+          onClose={() => setLayerDialog(null)}
+        />
+      ) : null}
+      {layerDialog?.kind === 'rename' ? (
+        <RenameLayerDialog
+          name={tabs[layerDialog.index]?.name ?? ''}
+          onRename={(label) => runLayerAction(() => editor.renameLayer(layerDialog.index, label))}
+          onClose={() => setLayerDialog(null)}
+        />
+      ) : null}
+      {layerDialog?.kind === 'delete' ? (
+        <DeleteLayerDialog
+          name={tabs[layerDialog.index]?.name ?? ''}
+          references={layerDialog.references}
+          layerNames={tabs.map((tab) => tab.name)}
+          onDelete={() => runLayerAction(() => editor.removeLayer(layerDialog.index))}
+          onClose={() => setLayerDialog(null)}
+        />
+      ) : null}
 
       {helpOpen ? (
         <CheatSheet
