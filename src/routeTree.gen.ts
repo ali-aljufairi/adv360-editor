@@ -17,6 +17,7 @@ import { Route as DevLayersRouteImport } from './routes/dev.layers'
 import { Route as DevNavigationRouteImport } from './routes/dev.navigation'
 import { Route as DevPanelsRouteImport } from './routes/dev.panels'
 import { Route as DevPickerRouteImport } from './routes/dev.picker'
+import { Route as ApiArtifactsIdRouteImport } from './routes/api/artifacts/$id'
 import { Route as ApiAuthCallbackRouteImport } from './routes/api/auth/callback'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
@@ -61,6 +62,11 @@ const DevPickerRoute = DevPickerRouteImport.update({
   path: '/dev/picker',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiArtifactsIdRoute = ApiArtifactsIdRouteImport.update({
+  id: '/api/artifacts/$id',
+  path: '/api/artifacts/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthCallbackRoute = ApiAuthCallbackRouteImport.update({
   id: '/api/auth/callback',
   path: '/api/auth/callback',
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/dev/navigation': typeof DevNavigationRoute
   '/dev/panels': typeof DevPanelsRoute
   '/dev/picker': typeof DevPickerRoute
+  '/api/artifacts/$id': typeof ApiArtifactsIdRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/dev/navigation': typeof DevNavigationRoute
   '/dev/panels': typeof DevPanelsRoute
   '/dev/picker': typeof DevPickerRoute
+  '/api/artifacts/$id': typeof ApiArtifactsIdRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/dev/navigation': typeof DevNavigationRoute
   '/dev/panels': typeof DevPanelsRoute
   '/dev/picker': typeof DevPickerRoute
+  '/api/artifacts/$id': typeof ApiArtifactsIdRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/dev/navigation'
     | '/dev/panels'
     | '/dev/picker'
+    | '/api/artifacts/$id'
     | '/api/auth/callback'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/dev/navigation'
     | '/dev/panels'
     | '/dev/picker'
+    | '/api/artifacts/$id'
     | '/api/auth/callback'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/dev/navigation'
     | '/dev/panels'
     | '/dev/picker'
+    | '/api/artifacts/$id'
     | '/api/auth/callback'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -168,6 +180,7 @@ export interface RootRouteChildren {
   DevNavigationRoute: typeof DevNavigationRoute
   DevPanelsRoute: typeof DevPanelsRoute
   DevPickerRoute: typeof DevPickerRoute
+  ApiArtifactsIdRoute: typeof ApiArtifactsIdRoute
   ApiAuthCallbackRoute: typeof ApiAuthCallbackRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
@@ -231,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevPickerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/artifacts/$id': {
+      id: '/api/artifacts/$id'
+      path: '/api/artifacts/$id'
+      fullPath: '/api/artifacts/$id'
+      preLoaderRoute: typeof ApiArtifactsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/callback': {
       id: '/api/auth/callback'
       path: '/api/auth/callback'
@@ -264,6 +284,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevNavigationRoute: DevNavigationRoute,
   DevPanelsRoute: DevPanelsRoute,
   DevPickerRoute: DevPickerRoute,
+  ApiArtifactsIdRoute: ApiArtifactsIdRoute,
   ApiAuthCallbackRoute: ApiAuthCallbackRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
