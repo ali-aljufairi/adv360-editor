@@ -9,6 +9,9 @@ import { ChangesSheet } from '../panels/ChangesSheet'
 import { ProblemsPanel } from '../panels/ProblemsPanel'
 import { BindingPicker } from '../picker/BindingPicker'
 import { ThemePicker } from '../theme-picker/ThemePicker'
+import { CommandPalette } from '../command-palette/CommandPalette'
+import { buildCommands } from '../../lib/commands'
+import { resolvePlatform } from '../../lib/keycodes/platform'
 import { BehaviorsDrawer } from '../behaviors/BehaviorsDrawer'
 import { useTheme } from '../../lib/theme/ThemeProvider'
 import { useEditor } from '../../lib/editor-state'
@@ -79,13 +82,14 @@ function messageOf(error: unknown): string {
  */
 export function EditorPage() {
   const editor = useEditor()
-  const { settings, setPlatform } = useSettings()
+  const { settings, setPlatform, updateNavigation } = useSettings()
   const theme = useTheme()
   const narrow = useNarrow()
   const { model, layout, issues, activeLayer, selectedKey, profile, files } = editor
-  const { scheme, arrowsAlwaysOn, custom } = settings.navigation
+  const { scheme, arrowsAlwaysOn, wrap, custom } = settings.navigation
 
   const [picker, setPicker] = useState<PickerTarget | null>(null)
+  const [paletteOpen, setPaletteOpen] = useState(false)
   const [themeOpen, setThemeOpen] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -109,6 +113,7 @@ export function EditorPage() {
   const layerCount = model.layers.length
   const modalOpen =
     picker !== null ||
+    paletteOpen ||
     themeOpen ||
     sheetOpen ||
     settingsOpen ||
@@ -195,13 +200,13 @@ export function EditorPage() {
     },
   })
 
-  // ⌘K / Ctrl-K opens the theme picker from anywhere.
+  // ⌘K / Ctrl-K opens the command palette from anywhere.
   // Digits 1–9 pick a layer in the arrows and emacs schemes, but only when not typing.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
-        setThemeOpen(true)
+        setPaletteOpen(true)
         return
       }
       if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return
@@ -256,6 +261,50 @@ export function EditorPage() {
     }))
   const changeCount = summary.length
 
+  const displayPlatform = resolvePlatform(settings.platform)
+  const commands = buildCommands({
+    layers: tabs.map(({ index, name }) => ({ index, name })),
+    activeLayer,
+    setActiveLayer: editor.setActiveLayer,
+    addLayer: () => setLayerDialog({ kind: 'add' }),
+    renameLayer: (index) => setLayerDialog({ kind: 'rename', index }),
+    moveLayer: (index, to) => runLayerAction(() => editor.moveLayer(index, to)),
+    deleteLayer: (index) =>
+      runLayerAction(
+        () =>
+          setLayerDialog({
+            kind: 'delete',
+            index,
+            references: editor.layerReferences(index),
+          }),
+        false,
+      ),
+    canUndo: editor.canUndo,
+    canRedo: editor.canRedo,
+    undo: editor.undo,
+    redo: editor.redo,
+    dirty: editor.dirty,
+    reviewChanges: () => setSheetOpen(true),
+    discardChanges: () => editor.reset(),
+    combosShown: combosOn,
+    toggleCombos,
+    openBehaviors: () => setBehaviorsOpen(true),
+    openThemePicker: () => setThemeOpen(true),
+    themeMode: theme.preference.mode,
+    setThemeMode: (mode) => theme.setPreference({ ...theme.preference, mode }),
+    openSettings: () => setSettingsOpen(true),
+    openHelp: () => setHelpOpen(true),
+    scheme,
+    setScheme: (next) => updateNavigation({ scheme: next }),
+    arrowsAlwaysOn,
+    setArrowsAlwaysOn: (on) => updateNavigation({ arrowsAlwaysOn: on }),
+    wrap,
+    setWrap: (on) => updateNavigation({ wrap: on }),
+    platform: settings.platform,
+    setPlatform,
+    displayPlatform,
+  })
+
   return (
     <div className="min-h-dvh bg-canvas text-primary">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-subtle px-4 py-3 sm:px-6">
@@ -272,11 +321,18 @@ export function EditorPage() {
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <button
             type="button"
+            aria-label="Open command palette"
+            onClick={() => setPaletteOpen(true)}
+            className="rounded-none border border-subtle px-2 py-1 font-mono text-xs text-muted hover:bg-hover"
+          >
+            {displayPlatform === 'mac' ? '⌘K' : 'Ctrl K'}
+          </button>
+          <button
+            type="button"
             onClick={() => setThemeOpen(true)}
             className="inline-flex items-center gap-2 rounded-md border border-subtle px-2.5 py-1 text-sm hover:bg-hover"
           >
             {theme.active.name}
-            <kbd className="rounded border border-subtle px-1 text-xs text-muted">⌘K</kbd>
           </button>
           <button
             type="button"
@@ -413,6 +469,12 @@ export function EditorPage() {
           />
         </PickerPopover>
       ) : null}
+
+      <CommandPalette
+        open={paletteOpen}
+        commands={commands}
+        onClose={() => setPaletteOpen(false)}
+      />
 
       <ThemePicker open={themeOpen} onClose={() => setThemeOpen(false)} />
 
