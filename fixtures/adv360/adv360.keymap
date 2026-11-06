@@ -62,11 +62,6 @@
             key-positions = <61>;
             layers = <0>;
         };
-
-        Dfffsdfa {
-            bindings = <&kp D>;
-            key-positions = <35 37>;
-        };
     };
 
     keymap {
@@ -105,10 +100,21 @@
         macro {
             bindings = <
 &trans  &trans      &trans  &trans      &trans  &trans      &trans                                      &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &kp C_PREV  &trans  &kp C_NEXT  &trans  &bl BL_OFF  &trans                                      &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &kp C_PREV  &tog 4  &kp C_NEXT  &trans  &bl BL_OFF  &trans                                      &trans  &trans  &trans  &trans  &trans  &trans  &trans
 &trans  &mail       &name   &trans      &trans  &trans      &trans  &trans  &trans      &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
 &trans  &trans      &trans  &trans      &trans  &trans                      &trans      &trans                  &trans  &trans  &trans  &trans  &trans  &trans
 &trans  &trans      &trans  &trans      &trans              &trans  &trans  &trans      &trans  &trans  &trans          &trans  &trans  &trans  &trans  &trans
+            >;
+        };
+        windows {
+            // Windows overlay: toggle with Macro key (hold bottom-right) + W.
+            // Transparent except where macOS and Windows differ.
+            bindings = <
+&trans                &trans                &trans                &trans                &trans                &trans                &kp LG(LS(S))         &trans                &trans                &trans                &trans                &trans                &trans                &trans
+&trans                &trans                &tpf LC(LS(W)) W      &trans                &trans                &trans                &trans                &trans                &trans                &trans                &trans                &trans                &trans                &trans
+&trans                &trans                &trans                &trans                &trans                &trans                &kp LG(SPACE)         &trans                &trans                &kp RGUI              &trans                &trans                &trans                &trans                &trans                &trans                &trans                &trans
+&trans                &trans                &trans                &tpf LS(LC(LA(C))) C  &trans                &trans                &kp LGUI              &trans                &trans                &trans                &trans                &trans                &trans                &trans
+&trans                &trans                &trans                &trans                &trans                &trans                &trans                &kp LCTRL             &kp LCTRL             &trans                &trans                &trans                &trans                &trans                &trans                &trans
             >;
         };
     };

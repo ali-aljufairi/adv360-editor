@@ -5,8 +5,16 @@ const model = () => resolve(files, 'adv360.keymap')
 
 it('extracts layers, behaviors, included and inline macros, and guarded combos', () => {
   const match = model()
-  expect(match.layers.map((item) => item.name)).toEqual(['default_layer', 'keypad', 'mod', 'macro'])
-  expect(match.layers.map((currentItem) => currentItem.bindings.length)).toEqual([76, 76, 76, 76])
+  expect(match.layers.map((item) => item.name)).toEqual([
+    'default_layer',
+    'keypad',
+    'mod',
+    'macro',
+    'windows',
+  ])
+  expect(match.layers.map((currentItem) => currentItem.bindings.length)).toEqual([
+    76, 76, 76, 76, 76,
+  ])
   expect(match.behaviors.find((nextItem) => nextItem.label === 'tpf')?.compatible).toBe(
     'zmk,behavior-hold-tap',
   )
@@ -21,7 +29,7 @@ it('extracts layers, behaviors, included and inline macros, and guarded combos',
       (candidateItem) => candidateItem.label === 'Win_Copy' && candidateItem.file === 'macros.dtsi',
     ),
   ).toBe(true)
-  expect(match.combos).toHaveLength(3)
+  expect(match.combos).toHaveLength(2)
   expect(
     match.combos.find((selectedItem) => selectedItem.name === 'combo_studio_unlock')?.condition,
   ).toContain('CONFIG_ZMK_STUDIO')

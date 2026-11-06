@@ -131,7 +131,7 @@ it('force removes the fixture keypad and round trips the result', () => {
   expect(changes.some((nextEntry) => nextEntry.before === '3' && nextEntry.after === '2')).toBe(
     true,
   )
-  expect(selectedEditor.model.layers).toHaveLength(3)
+  expect(selectedEditor.model.layers).toHaveLength(4)
   for (const [file, source] of Object.entries(selectedEditor.serialize()))
     expect(serialize(parse(source, file))).toBe(source)
 })

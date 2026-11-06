@@ -208,9 +208,15 @@ describe('macros', () => {
 
 describe('combos', () => {
   it('treats a combo with no layers property as all layers', () => {
-    const dfffsdfa = comboFormOf(comboNamed(fixture, 'Dfffsdfa'))
-    expect(dfffsdfa.allLayers).toBe(true)
-    expect(comboInputOf(dfffsdfa).layers).toBeUndefined()
+    const files = loadFixtureFiles()
+    const keymap = 'config/adv360.keymap'
+    files[keymap] = files[keymap].replace(
+      'key-positions = <61>;\n            layers = <0>;',
+      'key-positions = <61>;',
+    )
+    const allLayers = comboFormOf(comboNamed(resolve(files, keymap), 'combo'))
+    expect(allLayers.allLayers).toBe(true)
+    expect(comboInputOf(allLayers).layers).toBeUndefined()
   })
 
   it('keeps explicit layers and writes them back', () => {
