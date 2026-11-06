@@ -15,6 +15,10 @@ import { resolvePlatform } from '../../lib/keycodes/platform'
 import { BehaviorsDrawer } from '../behaviors/BehaviorsDrawer'
 import { useTheme } from '../../lib/theme/ThemeProvider'
 import { useEditor } from '../../lib/editor-state'
+import { defaultBranchName, useSync } from '../../lib/github-sync'
+import { BuildPanel } from '../github/BuildPanel'
+import { SyncHeader } from '../github/SyncHeader'
+import { syncErrorText } from '../github/errorText'
 import { useSettings } from '../../lib/settings/context'
 import { useBoardNavigation } from '../../lib/settings/useBoardNavigation'
 import type { Action } from '../../lib/navigation/actions'
@@ -26,7 +30,7 @@ import {
 } from '../../lib/keycodes/binding'
 import type { Issue } from '../../lib/zmk/types'
 import { CheatSheet, SettingsDialog } from './Dialog'
-import { focusStaysInside } from './SidePanel'
+import { SidePanel, focusStaysInside } from './SidePanel'
 import { PickerPopover } from './PickerPopover'
 import { layerOfIssue, layerTabsOf, legendContextOf, pickerInputsOf } from './editorModel'
 
@@ -50,7 +54,7 @@ interface PickerTarget {
 
 /** Reads a boolean preference, falling back when storage is unavailable. */
 /** Panels that can be docked beside the board. */
-type PanelName = 'behaviors' | 'settings'
+type PanelName = 'behaviors' | 'settings' | 'build'
 
 /**
  * Class for a top-bar toggle: text with an underline when active, never a fill.
@@ -114,6 +118,10 @@ export function EditorPage() {
   /** True while keyboard focus is inside the docked panel; board keys then pause. */
   const [dockFocused, setDockFocused] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
+  const sync = useSync()
+  /** The sync error the user dismissed, compared by identity. */
+  const [dismissedError, setDismissedError] = useState<unknown>(null)
+  const [authNotice, setAuthNotice] = useState<string | null>(null)
   const [combosOn, setCombosOn] = useState(true)
   const [notice, setNotice] = useState<string | null>(null)
   const [layerDialog, setLayerDialog] = useState<LayerDialogState | null>(null)
@@ -146,6 +154,22 @@ export function EditorPage() {
 
   // Read the stored preference after mount so server and first client render agree.
   useEffect(() => setCombosOn(readCombosPreference()), [])
+
+  // A bounced sign-in returns with ?auth=not-allowed: show it once, then drop the parameter.
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (url.searchParams.get('auth') !== 'not-allowed') return
+    setAuthNotice(syncErrorText({ code: 'not-allowed', message: '' }))
+    url.searchParams.delete('auth')
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`)
+  }, [])
+
+  // A successful commit closes the review and shows the build dock.
+  useEffect(() => {
+    if (!sync.lastCommit) return
+    setSheetOpen(false)
+    setPanel('build')
+  }, [sync.lastCommit])
 
   const tabs = useMemo(() => layerTabsOf(model, issues), [model, issues])
   const legend = useMemo(() => legendContextOf(model), [model])
@@ -285,6 +309,19 @@ export function EditorPage() {
   const changeCount = summary.length
 
   const displayPlatform = resolvePlatform(settings.platform)
+  const syncError = sync.error && sync.error !== dismissedError ? sync.error : null
+  const errorText = syncError ? syncErrorText(syncError) : authNotice
+  const dismissError = () => {
+    setDismissedError(sync.error)
+    setAuthNotice(null)
+  }
+  const retryFromError = () => {
+    dismissError()
+    void sync.reload()
+  }
+
+  // TODO(m4, ⌘K): add commands once src/lib/commands accepts them: Sign in with GitHub,
+  // Sign out, Reload from GitHub, Commit & build (opens the review), Show build.
   const commands = buildCommands({
     layers: tabs.map(({ index, name }) => ({ index, name })),
     activeLayer,
@@ -350,10 +387,31 @@ export function EditorPage() {
           >
             {displayPlatform === 'mac' ? '⌘K' : 'Ctrl K'}
           </button>
+          {sync.lastCommit || sync.build ? (
+            <button
+              type="button"
+              aria-pressed={panel === 'build'}
+              onClick={() => togglePanel('build')}
+              className={navButton(panel === 'build')}
+            >
+              Build
+            </button>
+          ) : null}
+          <SyncHeader
+            phase={sync.phase}
+            user={sync.user}
+            source={sync.source}
+            errorText={errorText}
+            onRetry={syncError ? retryFromError : null}
+            onSignIn={sync.signIn}
+            onSignOut={sync.signOut}
+            onReload={sync.reload}
+            onDismiss={dismissError}
+          />
           <button
             type="button"
             onClick={() => setThemeOpen(true)}
-            className="inline-flex items-center gap-2 rounded-md border border-subtle px-2.5 py-1 text-sm hover:bg-hover"
+            className="inline-flex items-center gap-2 px-2.5 py-1 text-sm hover:bg-hover"
           >
             {theme.active.name}
           </button>
@@ -468,6 +526,11 @@ export function EditorPage() {
           onBlur={(event) => setDockFocused(focusStaysInside(event))}
         >
           <BehaviorsDrawer open={panel === 'behaviors'} onClose={closePanel} />
+          {panel === 'build' ? (
+            <SidePanel title="Build" onClose={closePanel}>
+              <BuildPanel commit={sync.lastCommit} build={sync.build} />
+            </SidePanel>
+          ) : null}
           {panel === 'settings' ? (
             <SettingsDialog
               platform={settings.platform}
@@ -485,6 +548,22 @@ export function EditorPage() {
             onDiscard={() => {
               editor.reset()
               setSheetOpen(false)
+            }}
+            commit={{
+              signedIn: sync.user !== null,
+              committing: sync.phase === 'committing',
+              defaultBranch: defaultBranchName(new Date()),
+              onSignIn: sync.signIn,
+              onCommit: ({ message, branch }) => {
+                const changed = Object.keys(editor.diff()).filter((path) => path in editor.files)
+                void sync.commit({
+                  message,
+                  branch,
+                  changedFiles: Object.fromEntries(
+                    changed.map((path) => [path, editor.files[path]]),
+                  ),
+                })
+              },
             }}
           />
         ) : null}
