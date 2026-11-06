@@ -385,6 +385,7 @@ export function EditorPage() {
       </header>
 
       <div className="shell-layer relative flex min-h-0">
+        <ProblemsPanel issues={issues} onJump={jump} />
         <div className="shell-layer relative min-w-0 flex-1">
           <div className="absolute inset-0 overflow-auto">
             <main className="mx-auto flex max-w-6xl flex-col gap-5 px-4 pt-5 pb-28 sm:px-6">
@@ -456,10 +457,6 @@ export function EditorPage() {
                   {notice}
                 </p>
               ) : null}
-
-              <div className="w-full max-w-sm">
-                <ProblemsPanel issues={issues} onJump={jump} />
-              </div>
             </main>
           </div>
           <ChangesPill count={changeCount} onOpen={() => setSheetOpen(true)} />
