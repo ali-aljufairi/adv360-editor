@@ -137,7 +137,7 @@ export interface HoldTapForm {
 export function holdTapFormOf(behavior: Behavior): HoldTapForm {
   const props = behavior.properties
   return {
-    flavor: stringValue(props.flavor) ?? 'balanced',
+    flavor: stringValue(props.flavor) ?? 'hold-preferred',
     tappingTermMs: cellNumbers(props['tapping-term-ms'])[0],
     quickTapMs: cellNumbers(props['quick-tap-ms'])[0],
     requirePriorIdleMs: cellNumbers(props['require-prior-idle-ms'])[0],
@@ -146,6 +146,13 @@ export function holdTapFormOf(behavior: Behavior): HoldTapForm {
     retroTap: props['retro-tap'] !== undefined,
     bindings: behavior.bindings.map((binding) => binding.text),
   }
+}
+
+/** Describe a hold-tap's timing, flavor, and usage. */
+export function holdTapSummary(behavior: Behavior, usedCount: number): string {
+  const form = holdTapFormOf(behavior)
+  const term = form.tappingTermMs === undefined ? '—' : `${form.tappingTermMs} ms`
+  return `${term} · ${form.flavor} · used on ${usedCount} ${usedCount === 1 ? 'key' : 'keys'}`
 }
 
 /** Only the hold-tap fields that changed, ready for `updateHoldTap`. */

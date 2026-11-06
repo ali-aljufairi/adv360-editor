@@ -5,7 +5,7 @@ import { SidePanel } from '../editor/SidePanel'
 import { ComboEditor } from './ComboEditor'
 import { HoldTapEditor } from './HoldTapEditor'
 import { MacroEditor } from './MacroEditor'
-import { conditionLabel, keysUsing, macroOpaqueReason, macroStepsOf } from './forms'
+import { conditionLabel, holdTapSummary, keysUsing, macroOpaqueReason, macroStepsOf } from './forms'
 
 /** The three sections of the drawer. */
 export type BehaviorTab = 'hold-taps' | 'macros' | 'combos'
@@ -179,10 +179,7 @@ function HoldTapList({
           <li key={item.name}>
             <button type="button" className={ROW} onClick={() => onPick(item.name)}>
               <span className="text-sm font-medium">{item.label ?? item.name}</span>
-              <span className="text-xs text-muted">
-                {item.properties['tapping-term-ms'] ?? '—'} · used on {uses.length}{' '}
-                {uses.length === 1 ? 'key' : 'keys'}
-              </span>
+              <span className="text-xs text-muted">{holdTapSummary(item, uses.length)}</span>
             </button>
           </li>
         )

@@ -13,6 +13,7 @@ import {
   holdTapChanges,
   holdTapFormOf,
   holdTapProblems,
+  holdTapSummary,
   isBindingText,
   isKeyText,
   keysUsing,
@@ -62,12 +63,31 @@ const SHOUT = `/ {
 const shoutModel = resolve({ 'shout.keymap': SHOUT }, 'shout.keymap')
 
 describe('hold-taps', () => {
-  it('reads the fixture tpf into form values, defaulting the flavor to balanced', () => {
+  it('reads the fixture tpf into form values, defaulting its flavor', () => {
     const form = holdTapFormOf(named(fixture, 'tpf'))
-    expect(form.flavor).toBe('balanced')
+    expect(form.flavor).toBe('hold-preferred')
     expect(form.tappingTermMs).toBe(200)
     expect(form.quickTapMs).toBeUndefined()
     expect(form.holdTriggerKeyPositions).toEqual([1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 27])
+  })
+
+  it('summarizes timing, flavor, and usage with the ZMK default', () => {
+    const behavior = named(fixture, 'tpf')
+    expect(
+      holdTapSummary(
+        { ...behavior, properties: { ...behavior.properties, flavor: '"balanced"' } },
+        19,
+      ),
+    ).toBe('200 ms · balanced · used on 19 keys')
+    const properties = { ...behavior.properties }
+    delete properties.flavor
+    expect(holdTapSummary({ ...behavior, properties }, 1)).toBe(
+      '200 ms · hold-preferred · used on 1 key',
+    )
+    delete properties['tapping-term-ms']
+    expect(holdTapSummary({ ...behavior, properties }, 0)).toBe(
+      '— · hold-preferred · used on 0 keys',
+    )
   })
 
   it('writes only the fields that changed', () => {
