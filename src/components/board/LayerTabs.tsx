@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { layerAccentOf } from './bindings'
 
 /** One way a layer is reached: a key, combo, or behaviour on another layer. */
@@ -46,30 +46,24 @@ interface MenuItem {
   run(): void
 }
 
+/** The open actions menu: the layer it belongs to and the position of its tab. */
+interface OpenMenu {
+  index: number
+  at: number
+}
+
 /** Focuses a menu item as soon as it mounts, so opening the menu lands on its first item. */
 function focusOnMount(node: HTMLButtonElement | null) {
   node?.focus()
 }
 
-/** Short label for an access chip, e.g. "hold · Base · key 70" or "combo · 46+59". */
-function chipLabel(access: LayerAccess, layers: LayerTab[]): string {
-  const parts: string[] = [access.kind]
-  if (access.fromLayer !== null) {
-    const source = layers.find((layer) => layer.index === access.fromLayer)
-    parts.push(source?.name ?? `Layer ${access.fromLayer}`)
-  }
-  if (access.key !== null) parts.push(`key ${access.key}`)
-  if (access.positions && access.positions.length > 0) parts.push(access.positions.join('+'))
-  return parts.join(' · ')
-}
-
 /**
- * Layer tabs with a number badge, colour dot and warning marker per layer, an "+ Layer" button,
- * and an info strip for the active layer with its access chips and a rename/move/delete menu.
- * Arrow keys, Home and End move between tabs and select them, following the WAI-ARIA tabs
- * pattern. Number-key shortcuts belong to the page, not to this component.
+ * Layer tabs in the WAI-ARIA tabs pattern: a colour dot per layer, an underline on the active
+ * tab and a warning marker on unreachable layers. Right-clicking a tab (or pressing ArrowDown on
+ * it) opens its rename, move and delete actions, and double-clicking it renames the layer. A
+ * plain "+ Layer" text button ends the row. Number-key shortcuts belong to the page.
  * @param props - The layers, the active index and the optional layer actions.
- * @returns The layer tabs and the active-layer strip.
+ * @returns The layer tab row.
  */
 export function LayerTabs({
   layers,
@@ -81,15 +75,66 @@ export function LayerTabs({
   onDelete,
 }: LayerTabsProps) {
   const buttons = useRef<(HTMLButtonElement | null)[]>([])
-  const trigger = useRef<HTMLButtonElement>(null)
-  const menuWrap = useRef<HTMLDivElement>(null)
-  const [menuOpen, setMenuOpen] = useState(false)
-
-  const position = layers.findIndex((layer) => layer.index === active)
-  const current = position >= 0 ? layers[position] : undefined
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [menu, setMenu] = useState<OpenMenu | null>(null)
   const last = layers.length - 1
 
+  // A pointer press anywhere outside the open menu closes it.
+  useEffect(() => {
+    if (menu === null) return undefined
+    function closeOnPress(event: PointerEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) setMenu(null)
+    }
+    document.addEventListener('pointerdown', closeOnPress)
+    return () => document.removeEventListener('pointerdown', closeOnPress)
+  }, [menu])
+
+  /** The actions for a tab, with the same disabled rules as before. */
+  function itemsFor(layer: LayerTab, at: number): MenuItem[] {
+    const index = layer.index
+    const items: MenuItem[] = []
+    if (onRename) {
+      items.push({
+        key: 'rename',
+        label: 'Rename',
+        disabled: false,
+        run: () => onRename(index),
+      })
+    }
+    if (onMove) {
+      items.push({
+        key: 'left',
+        label: 'Move left',
+        // Layer 0 is the default layer; layer 1 cannot move in front of it.
+        disabled: index <= 1,
+        run: () => onMove(index, index - 1),
+      })
+      items.push({
+        key: 'right',
+        label: 'Move right',
+        disabled: index === 0 || at === last,
+        run: () => onMove(index, index + 1),
+      })
+    }
+    if (onDelete) {
+      items.push({
+        key: 'delete',
+        label: 'Delete',
+        disabled: index === 0,
+        danger: true,
+        run: () => onDelete(index),
+      })
+    }
+    return items
+  }
+
   function handleKey(event: KeyboardEvent<HTMLButtonElement>, at: number) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      const layer = layers[at]
+      if (itemsFor(layer, at).length > 0) setMenu({ index: layer.index, at })
+      return
+    }
     const targets: Record<string, number> = {
       ArrowRight: at === last ? 0 : at + 1,
       ArrowLeft: at === 0 ? last : at - 1,
@@ -103,12 +148,14 @@ export function LayerTabs({
     buttons.current[next]?.focus()
   }
 
+  /** Closes the menu, optionally returning focus to the tab it was opened from. */
   function closeMenu(restoreFocus: boolean) {
-    setMenuOpen(false)
-    if (restoreFocus) trigger.current?.focus()
+    const at = menu?.at
+    setMenu(null)
+    if (restoreFocus && at !== undefined) buttons.current[at]?.focus()
   }
 
-  /** Runs a menu action after closing the menu and returning focus to its trigger. */
+  /** Runs a menu action after closing the menu and returning focus to its tab. */
   function choose(run: () => void) {
     closeMenu(true)
     run()
@@ -121,7 +168,7 @@ export function LayerTabs({
       return
     }
     const enabled = Array.from(
-      menuWrap.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)') ??
+      menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)') ??
         [],
     )
     if (enabled.length === 0) return
@@ -138,201 +185,95 @@ export function LayerTabs({
     }
   }
 
-  const menuItems: MenuItem[] = []
-  if (current) {
-    const index = current.index
-    if (onRename) {
-      menuItems.push({
-        key: 'rename',
-        label: 'Rename',
-        disabled: false,
-        run: () => onRename(index),
-      })
-    }
-    if (onMove) {
-      menuItems.push({
-        key: 'left',
-        label: 'Move left',
-        // Layer 0 is the default layer; layer 1 cannot move in front of it.
-        disabled: index <= 1,
-        run: () => onMove(index, index - 1),
-      })
-      menuItems.push({
-        key: 'right',
-        label: 'Move right',
-        disabled: index === 0 || position === last,
-        run: () => onMove(index, index + 1),
-      })
-    }
-    if (onDelete) {
-      menuItems.push({
-        key: 'delete',
-        label: 'Delete',
-        disabled: index === 0,
-        danger: true,
-        run: () => onDelete(index),
-      })
-    }
-  }
-  const firstEnabledKey = menuItems.find((item) => !item.disabled)?.key
-
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <div role="tablist" aria-label="Layers" className="flex flex-wrap items-center gap-1">
-          {layers.map((layer, at) => {
-            const selected = layer.index === active
-            const accent = `var(--layer-${layerAccentOf(layer.index)})`
-            const onAccent = `var(--on-layer-${layerAccentOf(layer.index)})`
-            const tipId = `layer-tab-tip-${layer.index}`
-            return (
-              <div key={layer.index} className="group relative">
-                <button
-                  ref={(node) => {
-                    buttons.current[at] = node
-                  }}
-                  type="button"
-                  role="tab"
-                  id={`layer-tab-${layer.index}`}
-                  aria-selected={selected}
-                  aria-describedby={layer.unreachable ? tipId : undefined}
-                  tabIndex={selected ? 0 : -1}
-                  onClick={() => onChange(layer.index)}
-                  onKeyDown={(event) => handleKey(event, at)}
-                  className="inline-flex items-center gap-2 rounded-full px-3 py-2 font-semibold whitespace-nowrap transition-[background-color,color,transform] duration-150 hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
-                  style={
-                    selected
-                      ? {
-                          background: accent,
-                          color: onAccent,
-                          boxShadow: `0 6px 16px -8px ${accent}`,
-                        }
-                      : { color: 'var(--text-secondary)' }
-                  }
-                >
-                  <span
-                    aria-hidden="true"
-                    className="flex size-5 items-center justify-center rounded-full text-xs font-bold tabular-nums"
-                    style={{ background: 'color-mix(in srgb, currentColor 18%, transparent)' }}
-                  >
-                    {layer.index + 1}
-                  </span>
-                  {layer.name}
-                  <span
-                    aria-hidden="true"
-                    className="size-2.5 rounded-full"
-                    style={{
-                      background: selected ? onAccent : accent,
-                      boxShadow: selected
-                        ? 'none'
-                        : `0 0 0 3px color-mix(in srgb, ${accent} 22%, transparent)`,
-                    }}
-                  />
-                  {layer.unreachable ? (
-                    <span
-                      aria-hidden="true"
-                      className="size-2 animate-pulse rounded-full"
-                      style={{ background: 'var(--status-warning)' }}
-                    />
-                  ) : null}
-                </button>
+    <div className="flex w-full flex-wrap items-stretch border-b border-subtle">
+      <div role="tablist" aria-label="Layers" className="flex flex-wrap items-stretch">
+        {layers.map((layer, at) => {
+          const selected = layer.index === active
+          const accent = `var(--layer-${layerAccentOf(layer.index)})`
+          const tipId = `layer-tab-tip-${layer.index}`
+          const items = menu?.index === layer.index ? itemsFor(layer, at) : []
+          const firstEnabled = items.findIndex((item) => !item.disabled)
+          return (
+            <div key={layer.index} className="group relative flex">
+              <button
+                ref={(node) => {
+                  buttons.current[at] = node
+                }}
+                type="button"
+                role="tab"
+                id={`layer-tab-${layer.index}`}
+                title={layer.summary}
+                aria-selected={selected}
+                aria-describedby={layer.unreachable ? tipId : undefined}
+                tabIndex={selected ? 0 : -1}
+                onClick={() => onChange(layer.index)}
+                onDoubleClick={() => onRename?.(layer.index)}
+                onContextMenu={(event: MouseEvent<HTMLButtonElement>) => {
+                  if (itemsFor(layer, at).length === 0) return
+                  event.preventDefault()
+                  setMenu({ index: layer.index, at })
+                }}
+                onKeyDown={(event) => handleKey(event, at)}
+                className={`-mb-px inline-flex items-center gap-2 border-b-2 px-3 py-2 whitespace-nowrap transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)] ${
+                  selected
+                    ? 'font-semibold text-[var(--text-primary)]'
+                    : 'font-medium text-secondary hover:text-[var(--text-primary)]'
+                }`}
+                style={{ borderBottomColor: selected ? accent : 'transparent' }}
+              >
+                <span
+                  aria-hidden="true"
+                  className="size-2 rounded-full"
+                  style={{ background: accent }}
+                />
+                {layer.name}
                 {layer.unreachable ? (
                   <span
-                    role="tooltip"
-                    id={tipId}
-                    className="pointer-events-none absolute top-full left-1/2 z-10 mt-2 hidden w-max max-w-56 -translate-x-1/2 rounded-md border px-2 py-1 text-xs group-focus-within:block group-hover:block"
-                    style={{
-                      background: 'var(--surface-raised)',
-                      borderColor: 'var(--status-warning)',
-                      color: 'var(--text-primary)',
-                      boxShadow: 'var(--shadow-float)',
-                    }}
-                  >
-                    {layer.name} can’t be reached from another layer
-                  </span>
+                    aria-hidden="true"
+                    className="size-2 animate-pulse rounded-full"
+                    style={{ background: 'var(--status-warning)' }}
+                  />
                 ) : null}
-              </div>
-            )
-          })}
-        </div>
-        {onAdd ? (
-          <button
-            type="button"
-            onClick={onAdd}
-            className="rounded-full border border-subtle px-3 py-2 text-sm font-semibold text-secondary hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
-          >
-            + Layer
-          </button>
-        ) : null}
-      </div>
-
-      {current ? (
-        <div
-          aria-label={`${current.name} layer`}
-          role="region"
-          className="flex items-start gap-2 rounded-lg border border-subtle bg-surface px-3 py-2 text-sm"
-        >
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-            <span
-              className="min-w-0 font-medium break-words"
-              style={current.unreachable ? { color: 'var(--status-warning)' } : undefined}
-            >
-              {current.summary}
-            </span>
-            {current.access.map((access, at) => (
-              <span
-                // Access entries have no id; their order is stable for a given layer.
-                key={at}
-                title={access.text}
-                className="rounded-full border border-subtle px-2 py-0.5 font-mono text-xs text-secondary"
-              >
-                {chipLabel(access, layers)}
-              </span>
-            ))}
-          </div>
-          {menuItems.length > 0 ? (
-            <div
-              ref={menuWrap}
-              className="relative shrink-0"
-              onBlur={(event) => {
-                // Clicking outside the menu, or tabbing away, closes it.
-                if (!menuWrap.current?.contains(event.relatedTarget as Node | null)) {
-                  setMenuOpen(false)
-                }
-              }}
-            >
-              <button
-                ref={trigger}
-                type="button"
-                aria-label={`Actions for ${current.name}`}
-                aria-haspopup="menu"
-                aria-expanded={menuOpen}
-                onClick={() => setMenuOpen((open) => !open)}
-                onKeyDown={(event) => {
-                  if (event.key !== 'ArrowDown') return
-                  event.preventDefault()
-                  setMenuOpen(true)
-                }}
-                className="rounded-md px-2 py-0.5 text-lg leading-none text-secondary hover:bg-hover focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
-              >
-                ⋯
               </button>
-              {menuOpen ? (
-                <div
-                  role="menu"
-                  aria-label={`${current.name} actions`}
-                  onKeyDown={handleMenuKey}
-                  className="absolute top-full right-0 z-20 mt-1 flex min-w-40 flex-col rounded-md border border-subtle bg-raised p-1 shadow-[var(--shadow-float)]"
+              {layer.unreachable ? (
+                <span
+                  role="tooltip"
+                  id={tipId}
+                  className="pointer-events-none absolute top-full left-1/2 z-10 mt-2 hidden w-max max-w-56 -translate-x-1/2 border px-2 py-1 text-xs group-focus-within:block group-hover:block"
+                  style={{
+                    background: 'var(--surface-raised)',
+                    borderColor: 'var(--status-warning)',
+                    color: 'var(--text-primary)',
+                    boxShadow: 'var(--shadow-float)',
+                  }}
                 >
-                  {menuItems.map((item) => (
+                  {layer.name} can’t be reached from another layer
+                </span>
+              ) : null}
+              {items.length > 0 ? (
+                <div
+                  ref={menuRef}
+                  role="menu"
+                  aria-label={`${layer.name} actions`}
+                  onKeyDown={handleMenuKey}
+                  onBlur={(event) => {
+                    // Tabbing out of the menu closes it.
+                    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                      setMenu(null)
+                    }
+                  }}
+                  className="absolute top-full left-0 z-20 mt-1 flex min-w-40 flex-col border border-subtle bg-raised p-1"
+                >
+                  {items.map((item, itemAt) => (
                     <button
                       key={item.key}
-                      ref={item.key === firstEnabledKey ? focusOnMount : undefined}
+                      ref={itemAt === firstEnabled ? focusOnMount : undefined}
                       type="button"
                       role="menuitem"
                       disabled={item.disabled}
                       onClick={() => choose(item.run)}
-                      className="rounded px-3 py-1.5 text-left hover:bg-hover disabled:opacity-40 disabled:hover:bg-transparent"
+                      className="px-3 py-1.5 text-left hover:bg-hover focus-visible:bg-hover focus-visible:outline-none disabled:opacity-40 disabled:hover:bg-transparent"
                       style={item.danger ? { color: 'var(--status-error)' } : undefined}
                     >
                       {item.label}
@@ -341,8 +282,17 @@ export function LayerTabs({
                 </div>
               ) : null}
             </div>
-          ) : null}
-        </div>
+          )
+        })}
+      </div>
+      {onAdd ? (
+        <button
+          type="button"
+          onClick={onAdd}
+          className="ml-auto px-3 py-2 text-sm font-semibold text-secondary hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+        >
+          + Layer
+        </button>
       ) : null}
     </div>
   )
