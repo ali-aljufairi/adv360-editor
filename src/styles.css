@@ -27,3 +27,50 @@
     0 2px 8px rgb(0 0 0 / 0.2)
   );
 }
+
+/* Scrollbars come from the active theme, so every preset gets them automatically. */
+:root {
+  --scrollbar-thumb: color-mix(in srgb, var(--text-secondary) 35%, transparent);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--text-secondary) 60%, transparent);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+html,
+body,
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/*
+ * Layer containment makes fixed descendants (popovers, sheets, dialogs, the changes pill) resolve
+ * against this box instead of the viewport, so floating UI stays below the header.
+ */
+.shell-layer {
+  contain: layout;
+}

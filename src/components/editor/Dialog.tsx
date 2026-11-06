@@ -4,6 +4,7 @@ import { ACTIONS, ACTION_LABELS } from '../../lib/navigation/actions'
 import { describeSequence } from '../../lib/navigation/keys'
 import { resolveBindings, type CustomBindings, type SchemeName } from '../../lib/navigation/schemes'
 import { NavigationSettings } from '../settings/NavigationSettings'
+import { SidePanel } from './SidePanel'
 import { isPlatformSetting, type PlatformSetting } from '../../lib/keycodes/platform'
 
 /** Props for a centred modal dialog. */
@@ -61,13 +62,14 @@ export interface SettingsDialogProps {
 
 /**
  * Settings: navigation scheme and options, plus the platform used for shortcut labels.
+ * Rendered as a docked side panel rather than a modal.
  * @param props - The current platform, its setter and the close handler.
- * @returns The settings dialog.
+ * @returns The settings panel.
  */
 export function SettingsDialog({ platform, onPlatform, onClose }: SettingsDialogProps) {
   return (
-    <Dialog title="Settings" onClose={onClose}>
-      <div className="space-y-6">
+    <SidePanel title="Settings" onClose={onClose}>
+      <div className="space-y-6 p-4">
         <NavigationSettings />
         <section aria-labelledby="platform-heading" className="space-y-2">
           <h3 id="platform-heading" className="text-sm font-semibold">
@@ -90,7 +92,7 @@ export function SettingsDialog({ platform, onPlatform, onClose }: SettingsDialog
           </label>
         </section>
       </div>
-    </Dialog>
+    </SidePanel>
   )
 }
 
