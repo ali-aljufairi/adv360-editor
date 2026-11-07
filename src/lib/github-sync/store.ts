@@ -314,7 +314,9 @@ export function createSyncStore(deps: SyncDeps) {
     },
     stopPolling,
     dispose: () => {
+      // Cancel in-flight work and let a later init (e.g. a StrictMode remount) start fresh.
       ++loadGeneration
+      initPromise = undefined
       stopPolling()
     },
   }

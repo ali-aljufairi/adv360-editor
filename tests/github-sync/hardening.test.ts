@@ -141,3 +141,15 @@ describe('sync cache pruning', () => {
     expect(shaKeys).toEqual(['adv360-editor:config:p:sha:second'])
   })
 })
+
+describe('sync dispose', () => {
+  it('lets init run again after dispose cancels an in-flight init', async () => {
+    const { store, deps } = setup()
+    deps.getSession.mockResolvedValue(null as never)
+    const first = store.init()
+    store.dispose()
+    await first
+    await store.init()
+    expect(store.getSnapshot().phase).toBe('signed-out')
+  })
+})
