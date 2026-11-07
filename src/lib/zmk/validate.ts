@@ -1,3 +1,4 @@
+import { isValidKeyParam, unwrapMods } from '../keycodes/binding'
 import type { Binding, Issue, Model, PhysicalKey, Span } from './types'
 function collectIssues(
   model: Model,
@@ -30,7 +31,27 @@ function collectIssues(
         message: `Layer ${i} has ${currentLayer.bindings.length} bindings, expected ${expected}`,
         span: currentLayer,
       })
-    currentLayer.bindings.forEach((nextBinding) => add(i, nextBinding))
+    currentLayer.bindings.forEach((nextBinding) => {
+      add(i, nextBinding)
+      const keyParams =
+        nextBinding.behavior === 'kp' ||
+        nextBinding.behavior === 'sk' ||
+        nextBinding.behavior === 'kt'
+          ? nextBinding.params.slice(0, 1)
+          : nextBinding.behavior === 'lt'
+            ? nextBinding.params.slice(1, 2)
+            : nextBinding.behavior === 'mt'
+              ? nextBinding.params.slice(0, 2)
+              : []
+      for (const param of keyParams) {
+        if (!isValidKeyParam(param))
+          issues.push({
+            code: 'unknown-keycode',
+            message: `Unlisted key code ${unwrapMods(param).code} is preserved as raw text; verify its definition`,
+            span: nextBinding,
+          })
+      }
+    })
   })
   for (const entry of model.combos) {
     const active = entry.layers ?? model.layers.map((_, i) => i)

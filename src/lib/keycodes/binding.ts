@@ -386,7 +386,7 @@ export type ParseResult =
   { ok: true; value: BindingValue; warning?: string } | { ok: false; error: string }
 
 function isRawKeyParam(param: string): boolean {
-  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(unwrapMods(param).code)
+  return /^(?:[A-Za-z_][A-Za-z0-9_]*|0x[0-9a-f]+|[0-9]+)$/i.test(unwrapMods(param).code)
 }
 
 /**
@@ -454,11 +454,8 @@ export function parseBindingText(
       !isValidKeyParam(params[0]) &&
       !customKeys.has(unwrapMods(params[0]).code.toUpperCase())) ||
     ((behavior === '&mt' || behavior === '&lt') &&
-      params.some(
-        (param) =>
-          !NUMBER_PATTERN.test(param) &&
-          !isValidKeyParam(param) &&
-          !customKeys.has(unwrapMods(param).code.toUpperCase()),
+      (behavior === '&lt' ? params.slice(1) : params).some(
+        (param) => !isValidKeyParam(param) && !customKeys.has(unwrapMods(param).code.toUpperCase()),
       ))
   return {
     ok: true,
