@@ -11,7 +11,7 @@ import {
   themeHash,
 } from './runtime'
 import type { ThemePreference } from './runtime'
-import type { Mode, ThemeDef } from './tokens'
+import type { Mode, ThemeDef, Tokens } from './tokens'
 
 type ThemeContextValue = {
   preference: ThemePreference
@@ -21,6 +21,8 @@ type ThemeContextValue = {
   commit: () => void
   importCustom: (theme: ThemeDef) => void
   active: ThemeDef
+  /** Resolved colour tokens for the mode in use. */
+  tokens: Tokens
 }
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 export function ThemeProvider({
@@ -135,6 +137,7 @@ export function ThemeProvider({
       })
     },
     active: resolved.theme,
+    tokens: resolved.tokens,
   }
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }

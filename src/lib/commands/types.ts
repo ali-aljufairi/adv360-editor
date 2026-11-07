@@ -4,6 +4,7 @@ import type { PlatformSetting } from '../keycodes/platform'
 /** Section a command is listed under in the ⌘K palette, in display order. */
 export const COMMAND_GROUPS = [
   'Layers',
+  'File',
   'Edit',
   'View',
   'Behaviors',
@@ -44,6 +45,20 @@ export interface CommandContext {
   /** Open the delete confirmation for a layer. */
   deleteLayer(index: number): void
 
+  /** Batch command integration; dialog-backed operations may be supplied by the UI. */
+  batch?: {
+    selectedCount: number
+    canPaste: boolean
+    copy(): void
+    paste(): void
+    cut(): void
+    clear(): void
+    swap(): void
+    swapAcrossLayers(): void
+    assign(): void
+    copyLayer(): void
+  }
+
   canUndo: boolean
   canRedo: boolean
   undo(): void
@@ -74,4 +89,6 @@ export interface CommandContext {
   setPlatform(platform: PlatformSetting): void
   /** Platform used to format shortcuts. */
   displayPlatform: 'mac' | 'windows' | 'linux'
+  /** Opens the export dialog. */
+  openExport(): void
 }

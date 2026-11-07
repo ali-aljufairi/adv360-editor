@@ -36,6 +36,8 @@ export interface LayerTabsProps {
   /** Moves a layer to `to`, a neighbouring index. */
   onMove?(index: number, to: number): void
   onDelete?(index: number): void
+  /** Opens the copy-layer dialog for a layer. The menu item is hidden when this is missing. */
+  onCopy?(index: number): void
 }
 
 interface MenuItem {
@@ -73,6 +75,7 @@ export function LayerTabs({
   onRename,
   onMove,
   onDelete,
+  onCopy,
 }: LayerTabsProps) {
   const buttons = useRef<(HTMLButtonElement | null)[]>([])
   const menuRef = useRef<HTMLDivElement>(null)
@@ -114,6 +117,14 @@ export function LayerTabs({
         label: 'Move right',
         disabled: index === 0 || at === last,
         run: () => onMove(index, index + 1),
+      })
+    }
+    if (onCopy) {
+      items.push({
+        key: 'copy',
+        label: 'Copy layer to…',
+        disabled: layers.length < 2,
+        run: () => onCopy(index),
       })
     }
     if (onDelete) {

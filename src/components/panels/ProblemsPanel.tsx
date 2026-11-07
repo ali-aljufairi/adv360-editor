@@ -31,6 +31,8 @@ const WIDE_QUERY = '(min-width: 1024px)'
  * @returns True when the sidebar starts collapsed to its floating button.
  */
 function readCollapsed(): boolean {
+  // Server render: no window; start expanded and let the client settle it.
+  if (typeof window === 'undefined') return false
   try {
     const stored = window.localStorage.getItem(COLLAPSED_KEY)
     if (stored === 'true' || stored === 'false') return stored === 'true'

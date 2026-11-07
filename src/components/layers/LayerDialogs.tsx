@@ -262,3 +262,132 @@ export function DeleteLayerDialog({
     </Dialog>
   )
 }
+
+/** A layer offered as the target of a batch layer operation. */
+export interface LayerOption {
+  index: number
+  name: string
+}
+
+/** Props for the copy-layer dialog. */
+export interface CopyLayerDialogProps {
+  source: LayerOption
+  /** Every layer; the source is left out of the choices. */
+  layers: LayerOption[]
+  onCopy(target: number): void
+  onClose(): void
+}
+
+/**
+ * Picks the layer to overwrite with the source layer's keys. The copy only happens after the
+ * explicit overwrite button, because every key on the target is replaced.
+ * @param props - The source layer, all layers, the copy handler and the close handler.
+ * @returns The copy-layer dialog.
+ */
+export function CopyLayerDialog({ source, layers, onCopy, onClose }: CopyLayerDialogProps) {
+  const targets = layers.filter((layer) => layer.index !== source.index)
+  const [target, setTarget] = useState<number | null>(targets[0]?.index ?? null)
+  const targetName = targets.find((layer) => layer.index === target)?.name ?? ''
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (target !== null) onCopy(target)
+  }
+
+  return (
+    <Dialog title={`Copy ${source.name}`} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-5">
+        <fieldset className="space-y-2 text-sm">
+          <legend className="mb-1.5 font-medium">Copy to</legend>
+          {targets.map((layer) => (
+            <label key={layer.index} className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="copy-target"
+                checked={target === layer.index}
+                onChange={() => setTarget(layer.index)}
+              />
+              <span>{layer.name}</span>
+            </label>
+          ))}
+        </fieldset>
+
+        <p className="text-sm text-secondary">
+          Every key on {targetName || 'the target layer'} will be replaced with the keys from{' '}
+          {source.name}.
+        </p>
+
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={onClose} className={SECONDARY}>
+            Cancel
+          </button>
+          <button type="submit" className={DANGER} disabled={target === null}>
+            Overwrite {targetName || 'layer'}
+          </button>
+        </div>
+      </form>
+    </Dialog>
+  )
+}
+
+/** Props for the swap-key-across-layers dialog. */
+export interface SwapLayerDialogProps {
+  /** Physical key position to swap. */
+  keyIndex: number
+  /** The active layer, which the key is swapped from. */
+  source: LayerOption
+  /** Layers that can receive the swap, excluding the source. */
+  targets: LayerOption[]
+  onSwap(target: number): void
+  onClose(): void
+}
+
+/**
+ * Picks the layer whose binding on one key trades places with the active layer's binding.
+ * @param props - The key, the source layer, the candidate layers and the swap and close handlers.
+ * @returns The swap dialog.
+ */
+export function SwapLayerDialog({
+  keyIndex,
+  source,
+  targets,
+  onSwap,
+  onClose,
+}: SwapLayerDialogProps) {
+  const [target, setTarget] = useState<number | null>(targets[0]?.index ?? null)
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (target !== null) onSwap(target)
+  }
+
+  return (
+    <Dialog title={`Swap key ${keyIndex} with layer`} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-5">
+        <fieldset className="space-y-2 text-sm">
+          <legend className="mb-1.5 font-medium">Layer</legend>
+          {targets.map((layer) => (
+            <label key={layer.index} className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="swap-target"
+                checked={target === layer.index}
+                onChange={() => setTarget(layer.index)}
+              />
+              <span>{layer.name}</span>
+            </label>
+          ))}
+        </fieldset>
+
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={onClose} className={SECONDARY}>
+            Cancel
+          </button>
+          <button type="submit" className={PRIMARY} disabled={target === null}>
+            Swap with {source.name}
+          </button>
+        </div>
+      </form>
+    </Dialog>
+  )
+}
