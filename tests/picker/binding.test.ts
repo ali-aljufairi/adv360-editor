@@ -178,3 +178,11 @@ describe('raw ZMK text validation', () => {
     expect(parseBindingText('   ').ok).toBe(false)
   })
 })
+
+it('accepts numeric raw key codes with a warning', () => {
+  expect(parseBindingText('&kp 0x70004')).toMatchObject({
+    ok: true,
+    warning: expect.any(String),
+    value: { params: ['0x70004'] },
+  })
+})

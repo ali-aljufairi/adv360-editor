@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { ADV360_PROFILE } from '../../lib/profile/registry'
 
 /** Props for the commit form. Plain data and callbacks only. */
 export interface CommitFormProps {
@@ -8,6 +7,8 @@ export interface CommitFormProps {
   committing: boolean
   /** Prefilled branch name; the user may change it. */
   defaultBranch: string
+  /** Protected branch of the active profile. */
+  protectedBranch: string
   onSignIn(): void
   onCommit(input: { message: string; branch: string; allowDefaultBranch: boolean }): void
 }
@@ -23,13 +24,14 @@ export function CommitForm({
   signedIn,
   committing,
   defaultBranch,
+  protectedBranch,
   onSignIn,
   onCommit,
 }: CommitFormProps) {
   const [message, setMessage] = useState(DEFAULT_MESSAGE)
   const [branch, setBranch] = useState(defaultBranch)
   const [allowDefault, setAllowDefault] = useState(false)
-  const defaultName = ADV360_PROFILE.branch
+  const defaultName = protectedBranch
   const onDefault = branch.trim() === defaultName
   if (!signedIn) {
     return (

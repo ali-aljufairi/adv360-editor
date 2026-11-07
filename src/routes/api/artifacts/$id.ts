@@ -1,17 +1,23 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { ADV360_PROFILE } from '../../../lib/profile/registry'
+import { getKeyboardProfile } from '../../../lib/profile/registry'
 
 export const Route = createFileRoute('/api/artifacts/$id')({
   server: {
     handlers: {
-      GET: async ({ params }) => {
+      GET: async ({ params, request }) => {
         if (!/^\d+$/.test(params.id)) return new Response('Invalid artifact', { status: 400 })
+        let profile
+        try {
+          profile = getKeyboardProfile(new URL(request.url).searchParams.get('profileId') ?? '')
+        } catch {
+          return new Response('Invalid profile', { status: 400 })
+        }
         try {
           const { requireGitHubToken } = await import('../../../server/auth/session')
           const { GitHubClient } = await import('../../../server/repo/client')
           const { token, user } = await requireGitHubToken()
           const client = new GitHubClient(token, user.login)
-          const root = `/repos/${ADV360_PROFILE.repo.owner}/${ADV360_PROFILE.repo.name}/actions/artifacts/${params.id}`
+          const root = `/repos/${profile.repo.owner}/${profile.repo.name}/actions/artifacts/${params.id}`
           const artifact = await client.get<{ name: string }>(root)
           const redirect = await client.raw(`${root}/zip`, { redirect: 'manual' })
           const location = redirect.headers.get('location')

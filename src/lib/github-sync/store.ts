@@ -110,9 +110,9 @@ export function createSyncStore(deps: SyncDeps) {
     }
   }
   const apply = (value: LoadedConfig, fromCache: boolean) => {
+    deps.onLoaded(value.files, value.headSha)
     config = value
     remote = null
-    deps.onLoaded(value.files, value.headSha)
     update({
       phase: 'ready',
       source: { branch: value.branch, headSha: value.headSha, loadedAt: value.loadedAt, fromCache },
@@ -280,11 +280,7 @@ export function createSyncStore(deps: SyncDeps) {
         update({ error: mapError(new Error('remote-changed: resolve remote changes first')) })
         return
       }
-      if (
-        profileId === ADV360_PROFILE.id &&
-        input.branch === ADV360_PROFILE.branch &&
-        !input.allowDefaultBranch
-      ) {
+      if (input.branch === branch && !input.allowDefaultBranch) {
         update({
           error: mapError(new Error('protected-branch: default branch requires explicit approval')),
         })
@@ -317,7 +313,12 @@ export function createSyncStore(deps: SyncDeps) {
       }
     },
     stopPolling,
-    dispose: stopPolling,
+    dispose: () => {
+      // Cancel in-flight work and let a later init (e.g. a StrictMode remount) start fresh.
+      ++loadGeneration
+      initPromise = undefined
+      stopPolling()
+    },
   }
 }
 /** Store returned by createSyncStore. */

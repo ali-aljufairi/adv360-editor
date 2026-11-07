@@ -1,9 +1,22 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { KEY_OVERLAY, resolveKeyCode } from '../../src/lib/keycodes/catalog'
 import data from '../../src/lib/keycodes/zmk-keys.generated.json'
 
 describe('firmware key definitions', () => {
   const labels = data.labels as Record<string, string>
+  it('covers every key name in the vendored header', () => {
+    const header = readFileSync('vendor/zmk/adv360-z3.5-2/keys.h', 'utf8')
+      .replace(/\\\r?\n/g, ' ')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/[^\n]*/g, '')
+    const names = [...header.matchAll(/^#define\s+(\w+)\s+\(/gm)].map((match) => match[1])
+    expect(names).toHaveLength(644)
+    for (const name of names) {
+      const key = resolveKeyCode(name)
+      expect(key?.label || key?.rawFallback, name).toBeTruthy()
+    }
+  })
   it('contains every overlay name and alias', () => {
     for (const entry of KEY_OVERLAY)
       for (const name of [entry.code, ...entry.aliases]) expect(data.values).toHaveProperty(name)

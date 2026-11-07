@@ -9,7 +9,7 @@ vi.mock('../../src/server/repo/client', () => ({
 }))
 import { Route } from '../../src/routes/api/artifacts/$id'
 const handlers = Route.options.server!.handlers as {
-  GET: (context: { params: { id: string } }) => Promise<Response>
+  GET: (context: { params: { id: string }; request: Request }) => Promise<Response>
 }
 const get = handlers.GET
 beforeEach(() => {
@@ -25,9 +25,21 @@ describe('artifact route', () => {
   ])('returns a safe JSON response for %s', async (message, status) => {
     if (status === 401) mocks.auth.mockRejectedValue(new Error(message))
     else mocks.get.mockRejectedValue(new Error(message))
-    const response = await get({ params: { id: '123' } })
+    const response = await get({
+      params: { id: '123' },
+      request: new Request('http://localhost/api/artifacts/123?profileId=adv360'),
+    })
     expect(response.status).toBe(status)
     expect(response.headers.get('content-type')).toContain('application/json')
     expect(await response.text()).not.toContain('secret-token')
   })
+})
+
+it('rejects unknown profile IDs before contacting GitHub', async () => {
+  const response = await get({
+    params: { id: '123' },
+    request: new Request('http://localhost/api/artifacts/123?profileId=unknown'),
+  })
+  expect(response.status).toBe(400)
+  expect(mocks.auth).not.toHaveBeenCalled()
 })

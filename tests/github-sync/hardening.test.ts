@@ -111,7 +111,7 @@ describe('sync revalidation', () => {
   it('exposes timeout and permits repolling', async () => {
     const { store, deps, queue, advance } = setup()
     await store.init()
-    await store.commit({ branch: 'b', message: 'x', changedFiles: {} })
+    await store.commit({ branch: 'b', message: 'x', allowDefaultBranch: true, changedFiles: {} })
     await flush()
     advance()
     queue.shift()!()
@@ -139,5 +139,17 @@ describe('sync cache pruning', () => {
     await store.reload()
     const shaKeys = [...memory.keys()].filter((name) => name.includes(':sha:'))
     expect(shaKeys).toEqual(['adv360-editor:config:p:sha:second'])
+  })
+})
+
+describe('sync dispose', () => {
+  it('lets init run again after dispose cancels an in-flight init', async () => {
+    const { store, deps } = setup()
+    deps.getSession.mockResolvedValue(null as never)
+    const first = store.init()
+    store.dispose()
+    await first
+    await store.init()
+    expect(store.getSnapshot().phase).toBe('signed-out')
   })
 })
