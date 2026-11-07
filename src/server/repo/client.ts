@@ -13,7 +13,7 @@ export class GitHubClient {
       {
         request: async <T>(url: string, headers: Record<string, string>) => {
           const response = await this.raw(url, { headers })
-          if (response.status !== 304 && !response.ok) this.fail(response)
+          if (response.status !== 304 && !response.ok) await this.fail(response)
           return {
             status: response.status,
             headers: Object.fromEntries(response.headers),
@@ -25,13 +25,23 @@ export class GitHubClient {
       login,
     )
   }
-  private fail(response: Response): never {
+  private async fail(response: Response): Promise<never> {
     if (response.status === 404) throw new Error('not-found: GitHub resource')
-    if (
-      (response.status === 403 || response.status === 429) &&
-      (response.status === 429 || response.headers.has('x-ratelimit-remaining'))
-    ) {
-      throw new Error('rate-limited: GitHub API')
+    if (response.status === 429) throw new Error('rate-limited: GitHub API')
+    if (response.status === 403) {
+      let message = ''
+      try {
+        message = String(((await response.clone().json()) as { message?: string }).message ?? '')
+      } catch {
+        /* no JSON body */
+      }
+      if (
+        response.headers.get('x-ratelimit-remaining') === '0' ||
+        response.headers.has('retry-after') ||
+        /secondary rate limit/i.test(message)
+      )
+        throw new Error('rate-limited: GitHub API')
+      throw new Error('forbidden: GitHub App likely lacks access or permission on this repository')
     }
     throw new Error(`github-error: ${response.status}`)
   }
@@ -63,10 +73,13 @@ export class GitHubClient {
   async write<T>(method: string, path: string, body: unknown): Promise<T> {
     const response = await this.raw(path, { method, body: JSON.stringify(body) })
     if (!response.ok) {
+      if (method === 'POST' && path.endsWith('/git/refs') && response.status === 422) {
+        throw new Error('ref-exists: GitHub ref creation rejected')
+      }
       if (method === 'PATCH' && (response.status === 409 || response.status === 422)) {
         throw new Error('branch-moved: GitHub ref update rejected')
       }
-      this.fail(response)
+      await this.fail(response)
     }
     return (await response.json()) as T
   }

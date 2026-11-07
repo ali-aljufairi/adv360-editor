@@ -27,6 +27,8 @@ export interface CommitRequest {
   branch: string
   /** The headSha the edits were made against; the commit is refused if the branch moved. */
   baseSha: string
+  /** Explicitly permit committing to the profile default branch. */
+  allowDefaultBranch?: boolean
   message: string
   /** Changed files only: repo-relative path → full new text. */
   files: FileMap
@@ -65,4 +67,14 @@ export interface BuildStatus {
 
 /** Error codes server functions throw (as `Error.message` prefix `code:`), for the UI. */
 export type GitHubErrorCode =
-  'not-signed-in' | 'not-allowed' | 'branch-moved' | 'not-found' | 'rate-limited' | 'github-error'
+  | 'not-signed-in'
+  | 'not-allowed'
+  | 'branch-moved'
+  | 'not-found'
+  | 'rate-limited'
+  | 'github-error'
+  | 'forbidden'
+  | 'protected-branch'
+  | 'remote-changed'
+  | 'timeout'
+  | 'transient-refresh'
