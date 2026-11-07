@@ -3,6 +3,11 @@ import type { GitHubErrorCode } from '../../lib/github/types'
 /** Short, human sentences for sync error codes. */
 const messages: Partial<Record<GitHubErrorCode, string>> = {
   'not-signed-in': 'Session expired — sign in again',
+  forbidden: 'The GitHub App needs access to this repository',
+  'protected-branch': 'Choose another branch or explicitly allow the default branch',
+  'remote-changed': 'The configuration changed on GitHub; review before replacing your edits',
+  timeout: 'The build is taking too long; check again',
+  'transient-refresh': 'Could not refresh your session; try again',
   'not-allowed': "This GitHub account isn't allowed",
   'branch-moved': 'The branch changed on GitHub — reload, then re-apply your edits',
   'rate-limited': 'GitHub rate limit — try again shortly',

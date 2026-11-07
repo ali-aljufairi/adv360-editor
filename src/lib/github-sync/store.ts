@@ -19,12 +19,15 @@ export interface SyncDeps {
   now: () => Date
   setTimeout: (callback: () => void, delay: number) => unknown
   onLoaded: (files: FileMap, headSha: string) => void
+  isDirty?: () => boolean
   profileId?: string
   branch?: string
 }
 /** Public sync state. */
 export interface SyncState {
-  phase: 'signed-out' | 'loading' | 'ready' | 'committing' | 'error'
+  phase: 'signed-out' | 'loading' | 'ready' | 'committing' | 'error' | 'remote-changed'
+  remoteSha: string | null
+  buildTimedOut: boolean
   user: SessionUser | null
   source: { branch: string; headSha: string; loadedAt: string; fromCache: boolean } | null
   error: { code: GitHubErrorCode | 'unknown'; message: string } | null
@@ -49,6 +52,11 @@ const codes: string[] = [
   'not-found',
   'rate-limited',
   'github-error',
+  'forbidden',
+  'protected-branch',
+  'remote-changed',
+  'timeout',
+  'transient-refresh',
 ]
 function mapError(error: unknown): SyncState['error'] {
   const message = error instanceof Error ? error.message : String(error)
@@ -68,9 +76,13 @@ export function createSyncStore(deps: SyncDeps) {
     error: null,
     build: null,
     lastCommit: null,
+    remoteSha: null,
+    buildTimedOut: false,
   }
   let config: LoadedConfig | null = null
   let generation = 0
+  let loadGeneration = 0
+  let remote: LoadedConfig | null = null
   let initPromise: Promise<void> | undefined
   const listeners = new Set<() => void>()
   const update = (patch: Partial<SyncState>) => {
@@ -79,8 +91,11 @@ export function createSyncStore(deps: SyncDeps) {
   }
   const save = (value: LoadedConfig) => {
     const cacheKey = key(value.branch)
+    const shaKey = key(`sha:${value.headSha}`)
     keys.add(cacheKey)
+    keys.add(shaKey)
     try {
+      deps.storage?.setItem(shaKey, JSON.stringify(value))
       deps.storage?.setItem(cacheKey, JSON.stringify(value))
     } catch {
       /* Storage is optional. */
@@ -88,19 +103,27 @@ export function createSyncStore(deps: SyncDeps) {
   }
   const apply = (value: LoadedConfig, fromCache: boolean) => {
     config = value
+    remote = null
     deps.onLoaded(value.files, value.headSha)
     update({
       phase: 'ready',
       source: { branch: value.branch, headSha: value.headSha, loadedAt: value.loadedAt, fromCache },
       error: null,
+      remoteSha: null,
     })
   }
   const load = async () => {
+    const current = ++loadGeneration
     const name = state.source?.branch ?? branch
     try {
       const raw = deps.storage?.getItem(key(name))
       if (raw && !config) {
-        const cached = JSON.parse(raw) as LoadedConfig
+        const index = JSON.parse(raw) as LoadedConfig
+        const shaKey = key(`sha:${index.headSha}`)
+        const stored = deps.storage?.getItem(shaKey)
+        const cached = stored ? (JSON.parse(stored) as LoadedConfig) : index
+        if (cached.headSha !== index.headSha) throw new Error('Invalid cache')
+        keys.add(shaKey)
         if (
           cached.profileId === profileId &&
           cached.branch === name &&
@@ -115,9 +138,28 @@ export function createSyncStore(deps: SyncDeps) {
     if (!config) update({ phase: 'loading', error: null })
     try {
       const fresh = await deps.loadConfig({ profileId, branch: name })
+      if (current !== loadGeneration) return
       save(fresh)
-      apply(fresh, false)
+      if (config && fresh.headSha === config.headSha && fresh.branch === config.branch) {
+        config = { ...config, loadedAt: fresh.loadedAt }
+        remote = null
+        update({
+          phase: 'ready',
+          source: {
+            branch: config.branch,
+            headSha: config.headSha,
+            loadedAt: fresh.loadedAt,
+            fromCache: false,
+          },
+          remoteSha: null,
+          error: null,
+        })
+      } else if (config && deps.isDirty?.()) {
+        remote = fresh
+        update({ phase: 'remote-changed', remoteSha: fresh.headSha, error: null })
+      } else apply(fresh, false)
     } catch (error) {
+      if (current !== loadGeneration) return
       update({ phase: config ? 'ready' : 'error', error: mapError(error) })
     }
   }
@@ -128,11 +170,20 @@ export function createSyncStore(deps: SyncDeps) {
     stopPolling()
     const current = generation
     const started = deps.now().getTime()
+    update({ buildTimedOut: false })
     const tick = async () => {
-      if (current !== generation || deps.now().getTime() - started >= 1800000) return
+      if (current !== generation) return
+      if (deps.now().getTime() - started >= 1800000) {
+        update({ buildTimedOut: true })
+        return
+      }
       try {
         const build = await deps.getBuildStatus({ profileId, commitSha: sha })
         if (current !== generation) return
+        if (deps.now().getTime() - started >= 1800000 && build.run?.status !== 'completed') {
+          update({ build, buildTimedOut: true })
+          return
+        }
         update({ build })
         if (build.run?.status === 'completed') return
       } catch (error) {
@@ -156,12 +207,15 @@ export function createSyncStore(deps: SyncDeps) {
     },
     init: () => {
       initPromise ??= (async () => {
+        const current = ++loadGeneration
         update({ phase: 'loading' })
         try {
           const user = await deps.getSession()
+          if (current !== loadGeneration) return
           update({ user, phase: user ? 'loading' : 'signed-out' })
           if (user) await load()
         } catch (error) {
+          if (current !== loadGeneration) return
           update({ phase: 'error', error: mapError(error) })
         }
       })()
@@ -173,8 +227,9 @@ export function createSyncStore(deps: SyncDeps) {
       )
     },
     signOut: async () => {
-      await fetch('/api/auth/logout', { method: 'POST' })
+      ++loadGeneration
       stopPolling()
+      await fetch('/api/auth/logout', { method: 'POST' })
       for (const cacheKey of keys) {
         try {
           deps.storage?.removeItem(cacheKey)
@@ -183,6 +238,7 @@ export function createSyncStore(deps: SyncDeps) {
         }
       }
       config = null
+      remote = null
       initPromise = undefined
       update({
         phase: 'signed-out',
@@ -191,11 +247,42 @@ export function createSyncStore(deps: SyncDeps) {
         error: null,
         build: null,
         lastCommit: null,
+        remoteSha: null,
+        buildTimedOut: false,
       })
     },
     reload: load,
-    commit: async (input: { message: string; branch: string; changedFiles: FileMap }) => {
+    applyRemote: () => {
+      if (remote) {
+        ++loadGeneration
+        apply(remote, false)
+      }
+    },
+    repollBuild: () => {
+      if (state.lastCommit) poll(state.lastCommit.commitSha)
+    },
+    commit: async (input: {
+      message: string
+      branch: string
+      changedFiles: FileMap
+      allowDefaultBranch?: boolean
+    }) => {
       if (!state.source || !config) throw new Error('No configuration loaded')
+      if (state.phase === 'remote-changed') {
+        update({ error: mapError(new Error('remote-changed: resolve remote changes first')) })
+        return
+      }
+      if (
+        profileId === ADV360_PROFILE.id &&
+        input.branch === ADV360_PROFILE.branch &&
+        !input.allowDefaultBranch
+      ) {
+        update({
+          error: mapError(new Error('protected-branch: default branch requires explicit approval')),
+        })
+        return
+      }
+      ++loadGeneration
       update({ phase: 'committing', error: null })
       try {
         const result = await deps.commitChanges({
@@ -204,6 +291,7 @@ export function createSyncStore(deps: SyncDeps) {
           baseSha: state.source.headSha,
           message: input.message,
           files: input.changedFiles,
+          ...(input.allowDefaultBranch ? { allowDefaultBranch: true } : {}),
         })
         config = {
           ...config,
