@@ -95,6 +95,14 @@ export function createSyncStore(deps: SyncDeps) {
     keys.add(cacheKey)
     keys.add(shaKey)
     try {
+      // Keep one SHA entry per branch: drop the one this branch pointed at before.
+      const previous = deps.storage?.getItem(cacheKey)
+      const previousSha = previous ? (JSON.parse(previous) as LoadedConfig).headSha : null
+      if (previousSha && previousSha !== value.headSha) {
+        const previousKey = key(`sha:${previousSha}`)
+        deps.storage?.removeItem(previousKey)
+        keys.delete(previousKey)
+      }
       deps.storage?.setItem(shaKey, JSON.stringify(value))
       deps.storage?.setItem(cacheKey, JSON.stringify(value))
     } catch {

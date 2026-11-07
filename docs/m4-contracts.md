@@ -58,7 +58,7 @@ Server fns in `src/server/repo/functions.ts` (all call `requireGitHubToken()`):
   localStorage per profile+sha for instant start, then revalidated), calls `editor.load()`;
   commits the changed files with `CommitRequest`; polls `getBuildStatus` every 10 s until
   completed; exposes `{ user, source: { branch, headSha, loadedAt } | null, status, error,
-signIn(), signOut(), reload(), commit(message, branch), build: BuildStatus | null }`.
+signIn(), signOut(), reload(), commit({ message, branch, changedFiles, allowDefaultBranch? }), build: BuildStatus | null }`.
 - Cache entries are keyed by profile and commit SHA, with a branch lookup for the latest entry.
   Revalidation of the displayed SHA updates `source.loadedAt` without resetting editor history.
   If a different SHA arrives while dirty, `phase` is `remote-changed` and `remoteSha` identifies

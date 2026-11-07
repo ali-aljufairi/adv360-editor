@@ -123,3 +123,21 @@ describe('sync revalidation', () => {
     expect(store.getSnapshot().buildTimedOut).toBe(false)
   })
 })
+
+describe('sync cache pruning', () => {
+  it('keeps one SHA entry per branch', async () => {
+    const memory = new Map<string, string>()
+    const storage = {
+      getItem: (name: string) => memory.get(name) ?? null,
+      setItem: (name: string, value: string) => void memory.set(name, value),
+      removeItem: (name: string) => void memory.delete(name),
+    }
+    const { deps } = setup()
+    const store = createSyncStore({ ...deps, storage })
+    await store.init()
+    deps.loadConfig.mockResolvedValue({ ...config, headSha: 'second' })
+    await store.reload()
+    const shaKeys = [...memory.keys()].filter((name) => name.includes(':sha:'))
+    expect(shaKeys).toEqual(['adv360-editor:config:p:sha:second'])
+  })
+})
