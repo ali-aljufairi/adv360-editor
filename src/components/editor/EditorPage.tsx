@@ -403,6 +403,8 @@ export function EditorPage() {
             source={sync.source}
             errorText={errorText}
             onRetry={syncError ? retryFromError : null}
+            remoteSha={sync.remoteSha}
+            onApplyRemote={sync.applyRemote}
             onSignIn={sync.signIn}
             onSignOut={sync.signOut}
             onReload={sync.reload}
@@ -528,7 +530,12 @@ export function EditorPage() {
           <BehaviorsDrawer open={panel === 'behaviors'} onClose={closePanel} />
           {panel === 'build' ? (
             <SidePanel title="Build" onClose={closePanel}>
-              <BuildPanel commit={sync.lastCommit} build={sync.build} />
+              <BuildPanel
+                commit={sync.lastCommit}
+                build={sync.build}
+                buildTimedOut={sync.buildTimedOut}
+                onRepoll={sync.repollBuild}
+              />
             </SidePanel>
           ) : null}
           {panel === 'settings' ? (
@@ -554,11 +561,12 @@ export function EditorPage() {
               committing: sync.phase === 'committing',
               defaultBranch: defaultBranchName(new Date()),
               onSignIn: sync.signIn,
-              onCommit: ({ message, branch }) => {
+              onCommit: ({ message, branch, allowDefaultBranch }) => {
                 const changed = Object.keys(editor.diff()).filter((path) => path in editor.files)
                 void sync.commit({
                   message,
                   branch,
+                  allowDefaultBranch,
                   changedFiles: Object.fromEntries(
                     changed.map((path) => [path, editor.files[path]]),
                   ),

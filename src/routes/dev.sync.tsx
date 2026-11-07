@@ -71,6 +71,8 @@ function SyncPreview() {
   const [signedIn, setSignedIn] = useState(true)
   const [sheet, setSheet] = useState(false)
   const [build, setBuild] = useState<keyof typeof BUILDS>('success')
+  const [remote, setRemote] = useState(false)
+  const [timedOut, setTimedOut] = useState(false)
   const errorCode = signedIn ? 'branch-moved' : 'not-allowed'
   return (
     <div className="flex min-h-dvh flex-col gap-6 bg-canvas p-6 text-primary">
@@ -80,6 +82,12 @@ function SyncPreview() {
         </button>
         <button type="button" onClick={() => setSignedIn(false)}>
           signed out
+        </button>
+        <button type="button" onClick={() => setRemote((value) => !value)}>
+          remote changed
+        </button>
+        <button type="button" onClick={() => setTimedOut((value) => !value)}>
+          build timed out
         </button>
         <button type="button" onClick={() => setSheet(true)}>
           open review
@@ -95,11 +103,13 @@ function SyncPreview() {
         className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 border-b border-subtle pb-3"
       >
         <SyncHeader
-          phase={signedIn ? 'ready' : 'signed-out'}
+          phase={remote ? 'remote-changed' : signedIn ? 'ready' : 'signed-out'}
           user={signedIn ? USER : null}
           source={signedIn ? SOURCE : null}
           errorText={syncErrorText({ code: errorCode, message: '' })}
           onRetry={() => undefined}
+          remoteSha={remote ? 'c0ffee1234567890' : null}
+          onApplyRemote={() => setRemote(false)}
           onSignIn={() => undefined}
           onSignOut={() => undefined}
           onReload={() => undefined}
@@ -109,7 +119,12 @@ function SyncPreview() {
       <div className="flex flex-wrap gap-6">
         <div className="relative h-[480px] w-[420px] border border-subtle">
           <SidePanel title="Build" onClose={() => undefined}>
-            <BuildPanel commit={COMMIT} build={BUILDS[build]} />
+            <BuildPanel
+              commit={COMMIT}
+              build={BUILDS[build]}
+              buildTimedOut={timedOut}
+              onRepoll={() => setTimedOut(false)}
+            />
           </SidePanel>
         </div>
       </div>

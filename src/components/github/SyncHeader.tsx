@@ -11,6 +11,9 @@ export interface SyncHeaderProps {
   errorText: string | null
   /** Retry handler; null hides the Retry action. */
   onRetry: (() => void) | null
+  /** SHA of the newer GitHub version, set while phase is remote-changed. */
+  remoteSha: string | null
+  onApplyRemote(): void
   onSignIn(): void
   onSignOut(): void
   onReload(): void
@@ -29,14 +32,27 @@ export function SyncHeader({
   source,
   errorText,
   onRetry,
+  remoteSha,
+  onApplyRemote,
   onSignIn,
   onSignOut,
   onReload,
   onDismiss,
 }: SyncHeaderProps) {
+  const loadRemote = () => {
+    if (window.confirm('Discard your unsaved edits and load the GitHub version?')) onApplyRemote()
+  }
   return (
     <>
       {phase === 'loading' ? <span className="text-sm text-muted">Loading…</span> : null}
+      {phase === 'remote-changed' && remoteSha ? (
+        <p role="alert" className="basis-full text-right text-sm text-[var(--status-warning)]">
+          {`Changed on GitHub (${remoteSha.slice(0, 7)})`}
+          <button type="button" onClick={loadRemote} className="ml-3 underline underline-offset-4">
+            Load remote
+          </button>
+        </p>
+      ) : null}
       {!user && phase !== 'loading' ? (
         <button
           type="button"

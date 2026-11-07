@@ -4,6 +4,10 @@ import type { BuildStatus, CommitResult } from '../../lib/github/types'
 export interface BuildPanelProps {
   commit: CommitResult | null
   build: BuildStatus | null
+  /** True after polling gave up on the last commit's build. */
+  buildTimedOut: boolean
+  /** Starts a new polling window for the last commit. */
+  onRepoll(): void
 }
 
 const FLASH_REMINDER =
@@ -32,7 +36,7 @@ function runStatus(build: BuildStatus): { label: string; color: string } {
  * @param props - The last commit and the build status.
  * @returns The panel body.
  */
-export function BuildPanel({ commit, build }: BuildPanelProps) {
+export function BuildPanel({ commit, build, buildTimedOut, onRepoll }: BuildPanelProps) {
   const status = build ? runStatus(build) : null
   const artifacts =
     build?.run?.status === 'completed' && build.run.conclusion === 'success' ? build.artifacts : []
@@ -100,6 +104,15 @@ export function BuildPanel({ commit, build }: BuildPanelProps) {
               ))}
             </ul>
           ) : null}
+        </section>
+      ) : null}
+
+      {buildTimedOut ? (
+        <section className="flex items-center gap-3">
+          <span className="text-[var(--status-warning)]">Stopped checking after 30 minutes</span>
+          <button type="button" onClick={onRepoll} className="underline underline-offset-4">
+            Check again
+          </button>
         </section>
       ) : null}
 
