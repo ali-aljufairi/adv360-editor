@@ -9,12 +9,18 @@ import { presets, resolveTheme } from '../../src/lib/theme/catalog'
 
 it('renders a standalone board per layer and printable pages', () => {
   const { model, layout } = createEditorStore(loadFixtureFiles(), ADV360_PROFILE).getSnapshot()
-  const output = exportKeymap(model, layout, [0, 1], resolveTheme(presets[0], 'dark'))
-  expect(output.layers).toHaveLength(2)
+  const output = exportKeymap(
+    model,
+    layout,
+    model.layers.map((_, index) => index),
+    resolveTheme(presets[0], 'dark'),
+  )
+  expect(output.layers).toHaveLength(model.layers.length)
   for (const { svg, layer } of output.layers) {
     expect(svg).toContain('xmlns="http://www.w3.org/2000/svg"')
     expect(svg.match(/data-key=/g)).toHaveLength(layout.keys.length)
     expect(svg).toContain('<text')
+    expect(svg).not.toContain('…')
     for (const key of layout.keys) {
       const binding = model.layers[layer].bindings[key.index]
       if (!binding) continue
@@ -29,7 +35,7 @@ it('renders a standalone board per layer and printable pages', () => {
       }
     }
   }
-  expect(output.printableDocument.match(/<section>/g)).toHaveLength(2)
+  expect(output.printableDocument.match(/<section>/g)).toHaveLength(model.layers.length)
   expect(output.printableDocument).toContain('<h2>Legend</h2>')
   expect(output.printableDocument).toContain('<h2>Behaviors</h2>')
   expect(() => exportKeymap(model, layout, [999], resolveTheme(presets[0], 'dark'))).toThrow(

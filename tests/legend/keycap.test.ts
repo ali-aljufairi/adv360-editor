@@ -20,6 +20,20 @@ describe('Keycap rendering', () => {
     expect(html).toContain('title="Keypad"')
   })
 
+  it('keeps the full accessible name even with a custom title', () => {
+    const html = renderToStaticMarkup(
+      createElement(Keycap, {
+        legend: {
+          primary: 'my_really_long_macro_name_v2',
+          secondary: 'Navigation and Symbols',
+          kind: 'macro',
+        },
+        title: 'Custom tooltip',
+      }),
+    )
+    expect(html).toContain('aria-label="my_really_long_macro_name_v2, Navigation and Symbols"')
+  })
+
   it('renders the abbreviated legend as visible text', () => {
     expect(render('Keypad')).toContain('>Kpd<')
     expect(render('^Space')).toContain('>^Spc<')

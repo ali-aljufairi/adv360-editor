@@ -19,6 +19,8 @@ export type LegendSize = 'lg' | 'md' | 'sm' | 'xs'
 export interface FittedLegend {
   /** Text to render; a `\n` separates the two lines when `lines` is 2. */
   text: string
+  /** Original, untruncated legend. */
+  full: string
   /** Font size step to render at. */
   size: LegendSize
   /** Number of rendered lines. */
@@ -59,6 +61,17 @@ export const ABBREVIATIONS: Record<string, string> = {
   Previous: 'Prev',
   Volume: 'Vol',
   Clear: 'Clr',
+  Navigation: 'Nav',
+  Symbols: 'Sym',
+  Macro: 'Mac',
+  Brightness: 'Bri',
+  Keyboard: 'Kbd',
+  Toggle: 'Tog',
+  Profile: 'Prof',
+  Shift: '⇧',
+  Ctrl: '⌃',
+  Alt: '⌥',
+  Cmd: '⌘',
 }
 
 const NARROW = new Set(['i', 'l', 'j', 'I', 'f', 't', 'r', '.', ',', ';', ':', '!', '|', "'", '`'])
@@ -140,13 +153,33 @@ function splitTwo(
   return best ? `${best.lines[0]}\n${best.lines[1]}` : null
 }
 
-/** Last resort: keep the longest prefix that fits with a visible ellipsis. */
-function ellipsize(text: string, widthUnits: number): string {
-  for (let end = text.length - 1; end > 0; end -= 1) {
-    const candidate = `${text.slice(0, end)}…`
-    if (lineFits(candidate, 'xs', widthUnits)) return candidate
+/** Remove internal vowels from words while retaining separators and digits. */
+function compact(text: string): string {
+  return text.replace(/[A-Za-z]+/g, (word) => word[0] + word.slice(1).replace(/[aeiou]/gi, ''))
+}
+
+/** UTF-16 offsets between complete Unicode code points. */
+function characterBreaks(text: string): number[] {
+  const breaks: number[] = []
+  let offset = 0
+  for (const character of text) {
+    offset += character.length
+    if (offset < text.length) breaks.push(offset)
   }
-  return '…'
+  return breaks
+}
+
+/** Keep as much of the compact form as fits, including a second line when useful. */
+function shortForm(text: string, widthUnits: number): string {
+  const characters = Array.from(compact(text))
+  for (let end = characters.length; end > 0; end -= 1) {
+    const candidate = characters.slice(0, end).join('')
+    if (lineFits(candidate, 'xs', widthUnits)) return candidate
+    const breaks = characterBreaks(candidate)
+    const split = splitTwo(candidate, 'xs', widthUnits, breaks)
+    if (split !== null) return split
+  }
+  return ''
 }
 
 /**
@@ -154,32 +187,34 @@ function ellipsize(text: string, widthUnits: number): string {
  *
  * Order: full text at `lg` → abbreviated text stepping down through the sizes →
  * two lines (natural breaks first, then any character) stepping down the sizes →
- * as a last resort, an ellipsized abbreviation. Characters are never dropped
- * silently; the ellipsis is the only visible truncation.
+ * as a last resort, a vowel-reduced short form. The original is returned in `full`.
  *
  * @param text Legend text to fit.
  * @param widthUnits Keycap width in units (1, 1.25, 1.5, 2, ...).
  * @returns Text, font size step and line count. Every line satisfies `lineFits`.
  */
 export function fitLegend(text: string, widthUnits: number): FittedLegend {
-  if (lineFits(text, 'lg', widthUnits)) return { text, size: 'lg', lines: 1 }
+  const full = text
+  const display = text.replace(/…/g, '').replace(/[\r\n]+/g, ' ')
+  if (lineFits(display, 'lg', widthUnits)) return { text: display, full, size: 'lg', lines: 1 }
 
-  const short = abbreviate(text)
+  const short = abbreviate(display)
   for (const size of SIZE_ORDER) {
-    if (lineFits(short, size, widthUnits)) return { text: short, size, lines: 1 }
+    if (lineFits(short, size, widthUnits)) return { text: short, full, size, lines: 1 }
   }
 
   const breaks = naturalBreaks(short)
   for (const size of SIZE_ORDER) {
     const split = splitTwo(short, size, widthUnits, breaks)
-    if (split !== null) return { text: split, size, lines: 2 }
+    if (split !== null) return { text: split, full, size, lines: 2 }
   }
 
-  const anyBreaks = Array.from({ length: Math.max(0, short.length - 1) }, (_, offset) => offset + 1)
+  const anyBreaks = characterBreaks(short)
   for (const size of SIZE_ORDER) {
     const split = splitTwo(short, size, widthUnits, anyBreaks)
-    if (split !== null) return { text: split, size, lines: 2 }
+    if (split !== null) return { text: split, full, size, lines: 2 }
   }
 
-  return { text: ellipsize(short, widthUnits), size: 'xs', lines: 1 }
+  const fitted = shortForm(short, widthUnits)
+  return { text: fitted, full, size: 'xs', lines: fitted.includes('\n') ? 2 : 1 }
 }
