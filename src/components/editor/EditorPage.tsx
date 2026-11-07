@@ -727,11 +727,10 @@ export function EditorPage() {
                 />
               </section>
 
-              {notice ? (
-                <p role="status" className="text-sm text-secondary">
-                  {notice}
-                </p>
-              ) : null}
+              {/* Always mounted: screen readers announce changes to a live region that exists. */}
+              <p role="status" className="text-sm text-secondary">
+                {notice}
+              </p>
             </main>
           </div>
           <ChangesPill count={changeCount} onOpen={() => setSheetOpen(true)} />

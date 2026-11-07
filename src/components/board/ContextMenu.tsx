@@ -115,7 +115,7 @@ export function ContextMenu({ label, x, y, items, onClose }: ContextMenuProps) {
             item.run()
             onClose()
           }}
-          className="flex items-center justify-between gap-6 px-3 py-1.5 text-left hover:bg-hover focus-visible:bg-hover focus-visible:outline-none disabled:opacity-40 disabled:hover:bg-transparent"
+          className="flex items-center justify-between gap-6 px-3 py-1.5 text-left hover:bg-hover focus-visible:bg-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--focus-ring)] disabled:opacity-40 disabled:hover:bg-transparent"
         >
           <span>{item.label}</span>
           {item.shortcut ? (

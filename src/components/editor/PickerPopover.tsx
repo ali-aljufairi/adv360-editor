@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 /** Props for the container that hosts the binding picker. */
 export interface PickerPopoverProps {
@@ -24,6 +24,19 @@ const MIN_POPOVER_HEIGHT = 280
  * @returns The host element.
  */
 export function PickerPopover({ anchor, sheet, onClose, children }: PickerPopoverProps) {
+  // Read during the first render, before the picker moves focus into its search field.
+  const [opener] = useState<HTMLElement | null>(() =>
+    typeof document === 'undefined' ? null : (document.activeElement as HTMLElement | null),
+  )
+  // Closing removes the picker, which drops focus to the body. Return it to the key that opened
+  // the picker, unless focus has already moved somewhere deliberate.
+  useEffect(
+    () => () => {
+      const active = document.activeElement
+      if (opener?.isConnected && (!active || active === document.body)) opener.focus()
+    },
+    [opener],
+  )
   if (sheet) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40">
