@@ -35,7 +35,7 @@ export async function getBuildStatus(
       name: item.name,
       sizeBytes: item.size_in_bytes,
       expired: item.expired,
-      downloadPath: `/api/artifacts/${item.id}`,
+      downloadPath: `/api/artifacts/${item.id}?profileId=${encodeURIComponent(profile.id)}`,
     }))
   }
   return {

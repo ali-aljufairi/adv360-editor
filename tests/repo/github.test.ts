@@ -163,7 +163,7 @@ describe('repository GitHub operations', () => {
               name: 'firmware',
               sizeBytes: 12,
               expired: false,
-              downloadPath: '/api/artifacts/7',
+              downloadPath: '/api/artifacts/7?profileId=adv360',
             },
           ]
         : [],

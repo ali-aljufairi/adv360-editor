@@ -3,6 +3,7 @@ import { EditorPage } from '../components/editor/EditorPage'
 import { SyncBridge } from '../components/github/SyncBridge'
 import { EditorProvider, loadFixtureFiles } from '../lib/editor-state'
 import { SettingsProvider } from '../lib/settings/context'
+import { ActiveProfileProvider } from '../lib/profile/active'
 import { ADV360_PROFILE } from '../lib/profile/registry'
 
 export const Route = createFileRoute('/')({ component: Home })
@@ -18,9 +19,11 @@ function Home() {
   return (
     <SettingsProvider>
       <EditorProvider initialFiles={FIXTURE_FILES} profile={ADV360_PROFILE}>
+        <ActiveProfileProvider>
         <SyncBridge>
           <EditorPage />
         </SyncBridge>
+        </ActiveProfileProvider>
       </EditorProvider>
     </SettingsProvider>
   )

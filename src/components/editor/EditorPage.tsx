@@ -1,3 +1,4 @@
+import { useActiveProfile } from '../../lib/profile/active'
 import { useEffect, useMemo, useState } from 'react'
 import { Board, type BatchCommand, type SelectModifier } from '../board/Board'
 import { ContextMenu, type ContextMenuItem } from '../board/ContextMenu'
@@ -115,6 +116,7 @@ function messageOf(error: unknown): string {
  */
 export function EditorPage() {
   const editor = useEditor()
+  const { activeProfile } = useActiveProfile()
   const { settings, setPlatform, updateNavigation } = useSettings()
   const theme = useTheme()
   const narrow = useNarrow()
@@ -762,6 +764,7 @@ export function EditorPage() {
               signedIn: sync.user !== null,
               committing: sync.phase === 'committing',
               defaultBranch: defaultBranchName(new Date()),
+              protectedBranch: activeProfile.branch,
               onSignIn: sync.signIn,
               onCommit: ({ message, branch, allowDefaultBranch }) => {
                 const changed = Object.keys(editor.diff()).filter((path) => path in editor.files)

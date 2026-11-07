@@ -137,6 +137,7 @@ function SyncPreview() {
           commit={{
             signedIn,
             committing: false,
+            protectedBranch: 'V3.0',
             defaultBranch: 'editor/20261107-1412',
             onSignIn: () => undefined,
             onCommit: () => undefined,

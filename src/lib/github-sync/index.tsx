@@ -1,9 +1,10 @@
-import { createContext, useContext, useRef, useSyncExternalStore } from 'react'
+import { createContext, useContext, useEffect, useRef, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
 import { getSession } from '../../server/auth/functions'
 import { commitChangesFn, getBuildStatusFn, loadConfigFn } from '../../server/repo/functions'
 import { createSyncStore } from './store'
 import type { SyncDeps, SyncStore } from './store'
+import type { KeyboardProfile } from '../profile'
 export * from './store'
 
 const Context = createContext<SyncStore | null>(null)
@@ -12,8 +13,10 @@ export function SyncProvider({
   children,
   onLoaded,
   isDirty,
+  profile,
 }: {
   children: ReactNode
+  profile: KeyboardProfile
   onLoaded: SyncDeps['onLoaded']
   isDirty?: SyncDeps['isDirty']
 }) {
@@ -27,10 +30,13 @@ export function SyncProvider({
       storage: typeof window === 'undefined' ? undefined : window.localStorage,
       now: () => new Date(),
       setTimeout: (callback, delay) => setTimeout(callback, delay),
+      profileId: profile.id,
+      branch: profile.branch,
       onLoaded,
       isDirty,
     })
   const store = ref.current
+  useEffect(() => () => store.dispose(), [store])
   return <Context.Provider value={store}>{children}</Context.Provider>
 }
 /** Read sync state and actions. */

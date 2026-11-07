@@ -120,10 +120,16 @@ describe('sync store', () => {
   it('commits the baseline and polls until completed', async () => {
     const { store, deps, data, queue } = setup()
     await store.init()
-    await store.commit({ message: 'save', branch: 'main', changedFiles: { a: 'new' } })
+    await store.commit({
+      message: 'save',
+      branch: 'main',
+      allowDefaultBranch: true,
+      changedFiles: { a: 'new' },
+    })
     expect(deps.commitChanges).toHaveBeenCalledWith({
       profileId: 'test',
       branch: 'main',
+      allowDefaultBranch: true,
       baseSha: 'old',
       message: 'save',
       files: { a: 'new' },
@@ -154,7 +160,12 @@ describe('sync store', () => {
   it.each(['cap', 'stop'])('stops polling on %s', async (reason) => {
     const { store, deps, queue, setTime } = setup()
     await store.init()
-    await store.commit({ message: 'save', branch: 'main', changedFiles: {} })
+    await store.commit({
+      message: 'save',
+      branch: 'main',
+      allowDefaultBranch: true,
+      changedFiles: {},
+    })
     await flush()
     if (reason === 'cap') setTime(new Date('2026-01-01T00:30:00Z'))
     else store.stopPolling()
@@ -168,7 +179,12 @@ describe('sync store', () => {
     const { store, deps, data } = setup()
     await store.init()
     deps.commitChanges.mockRejectedValue(new Error('branch-moved: changed'))
-    await store.commit({ message: 'save', branch: 'main', changedFiles: { a: 'new' } })
+    await store.commit({
+      message: 'save',
+      branch: 'main',
+      allowDefaultBranch: true,
+      changedFiles: { a: 'new' },
+    })
     expect(store.getSnapshot()).toMatchObject({
       phase: 'ready',
       source: { headSha: 'old' },
