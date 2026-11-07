@@ -105,3 +105,38 @@ describe('commands', () => {
     expect(filterCommands(commands, ' ')).toEqual(commands)
   })
 })
+
+it('registers batch commands and recognizes board-only shortcuts', async () => {
+  const { batchShortcut } = await import('../../src/lib/commands')
+  const ctx = context()
+  const run = vi.fn()
+  ctx.batch = {
+    selectedCount: 2,
+    canPaste: true,
+    copy: run,
+    paste: run,
+    cut: run,
+    clear: run,
+    swap: run,
+    swapAcrossLayers: run,
+    assign: run,
+    copyLayer: run,
+  }
+  const commands = buildCommands(ctx)
+  for (const id of [
+    'edit.copy',
+    'edit.paste',
+    'edit.cut',
+    'edit.clear',
+    'edit.swap',
+    'edit.swap-layers',
+    'edit.assign-many',
+    'layer.copy',
+  ])
+    expect(commands.find((c) => c.id === id)).toBeDefined()
+  commands.find((c) => c.id === 'edit.copy')!.run()
+  expect(run).toHaveBeenCalledOnce()
+  const key = { key: 'c', metaKey: true, ctrlKey: false, altKey: false, shiftKey: false }
+  expect(batchShortcut(key, true)).toBe('edit.copy')
+  expect(batchShortcut(key, false)).toBeNull()
+})

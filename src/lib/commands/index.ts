@@ -58,6 +58,43 @@ export function buildCommands(ctx: CommandContext): Command[] {
       disabled: active === 0,
       run: () => ctx.deleteLayer(active),
     },
+    ...(
+      [
+        ['edit.copy', 'Copy bindings', 'copy', mac ? '⌘C' : 'Ctrl+C', !ctx.batch?.selectedCount],
+        [
+          'edit.paste',
+          'Paste bindings',
+          'paste',
+          mac ? '⌘V' : 'Ctrl+V',
+          !ctx.batch?.canPaste || !ctx.batch?.selectedCount,
+        ],
+        ['edit.cut', 'Cut bindings', 'cut', mac ? '⌘X' : 'Ctrl+X', !ctx.batch?.selectedCount],
+        ['edit.clear', 'Clear selected keys', 'clear', undefined, !ctx.batch?.selectedCount],
+        ['edit.swap', 'Swap selected keys', 'swap', undefined, ctx.batch?.selectedCount !== 2],
+        [
+          'edit.swap-layers',
+          'Swap key across layers…',
+          'swapAcrossLayers',
+          undefined,
+          ctx.batch?.selectedCount !== 1,
+        ],
+        [
+          'edit.assign-many',
+          'Assign binding to selected keys…',
+          'assign',
+          undefined,
+          !ctx.batch?.selectedCount,
+        ],
+        ['layer.copy', 'Copy layer to another layer…', 'copyLayer', undefined, !ctx.batch],
+      ] as const
+    ).map(([id, title, action, shortcut, disabled]): Command => ({
+      id,
+      title,
+      group: id.startsWith('layer.') ? 'Layers' : 'Edit',
+      shortcut,
+      disabled,
+      run: () => ctx.batch?.[action](),
+    })),
     {
       id: 'edit.undo',
       title: 'Undo',
@@ -183,3 +220,5 @@ export function filterCommands(commands: Command[], query: string): Command[] {
     )
     .map((entry) => entry.command)
 }
+
+export { batchShortcut } from './shortcuts'

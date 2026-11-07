@@ -27,12 +27,35 @@ export interface EditorState {
   issues: Issue[]
   activeLayer: number
   selectedKey: number | null
+  selectedKeys: ReadonlySet<number>
+  clipboard: readonly ClipboardBinding[]
   dirty: boolean
   canUndo: boolean
   canRedo: boolean
   staleDraft: StaleDraft | null
 }
+export interface ClipboardBinding {
+  offset: number
+  binding: string
+}
+export interface PasteResult {
+  pasted: number[]
+  skipped: number[]
+}
+
 export interface EditorActions {
+  selectKeys(positions: number[]): void
+  toggleKey(position: number): void
+  selectRange(position: number): void
+  clearSelection(): void
+  copyBindings(positions: number[]): void
+  pasteBindings(anchorPosition: number): PasteResult
+  swapKeys(a: number, b: number): void
+  swapKeysAcrossLayers(position: number, layerA: number, layerB: number): void
+  assignToMany(positions: number[], binding: BindingInput): void
+  copyLayer(fromLayer: number, toLayer: number): void
+  /** Clear base keys to &none and overlay keys to &trans. */
+  clearKeys(positions: number[]): void
   selectKey(index: number | null): void
   setActiveLayer(index: number): void
   setBinding(layer: number, key: number, binding: string | BindingInput): void
@@ -75,7 +98,12 @@ export interface EditorStore extends EditorActions {
   subscribe(listener: () => void): () => void
 }
 
-type Snapshot = { files: FileMap; activeLayer: number; selectedKey: number | null }
+type Snapshot = {
+  files: FileMap
+  activeLayer: number
+  selectedKey: number | null
+  selectedKeys: ReadonlySet<number>
+}
 const equal = (first: FileMap, second: FileMap) => {
   const keys = Object.keys(first)
   return (
@@ -113,7 +141,13 @@ export function createEditorStore(
 ): EditorStore {
   let baseline = { ...initialFiles },
     profile = initialProfile
-  let current: Snapshot = { files: { ...baseline }, activeLayer: 0, selectedKey: null }
+  let current: Snapshot = {
+    files: { ...baseline },
+    activeLayer: 0,
+    selectedKey: null,
+    selectedKeys: new Set(),
+  }
+  let clipboard: ClipboardBinding[] = []
   let baselineHash = hashFiles(baseline)
   let baselineModel = createEditorForProfile(profile, baseline).model
   let past: Snapshot[] = [],
@@ -137,6 +171,7 @@ export function createEditorStore(
       profile,
       ...current,
       ...derived,
+      clipboard,
       dirty: !equal(current.files, baseline),
       canUndo: past.length > 0,
       canRedo: future.length > 0,
@@ -229,6 +264,24 @@ export function createEditorStore(
     current = { ...current, files }
     emit(true)
   }
+  const checkLayer = (layer: number) => {
+    if (!Number.isInteger(layer) || !derived.model.layers[layer])
+      throw new RangeError('Layer not found')
+    return derived.model.layers[layer]
+  }
+  const checkPosition = (position: number, layer = current.activeLayer) => {
+    if (
+      !Number.isInteger(position) ||
+      position < 0 ||
+      position >= derived.layout.keys.length ||
+      !checkLayer(layer).bindings[position]
+    )
+      throw new RangeError('Key position not found')
+  }
+  const checked = (positions: number[], layer = current.activeLayer) => {
+    positions.forEach((position) => checkPosition(position, layer))
+    return [...new Set(positions)].sort((a, b) => a - b)
+  }
   const actions: EditorStore = {
     getSnapshot: () => state,
     subscribe: (listener) => {
@@ -251,13 +304,132 @@ export function createEditorStore(
         }
       }
     },
+    selectKeys: (positions) => {
+      const keys = checked(positions)
+      current = { ...current, selectedKeys: new Set(keys), selectedKey: keys.at(-1) ?? null }
+      lastEdit = null
+      emit()
+    },
+    toggleKey: (position) => {
+      checkPosition(position)
+      const keys = new Set(current.selectedKeys)
+      if (keys.has(position)) keys.delete(position)
+      else keys.add(position)
+      current = {
+        ...current,
+        selectedKeys: keys,
+        selectedKey: keys.has(position) ? position : (Array.from(keys).at(-1) ?? null),
+      }
+      lastEdit = null
+      emit()
+    },
+    selectRange: (position) => {
+      checkPosition(position)
+      const anchor = current.selectedKey ?? position
+      const start = Math.min(anchor, position),
+        end = Math.max(anchor, position)
+      current = {
+        ...current,
+        selectedKeys: new Set(
+          checked(Array.from({ length: end - start + 1 }, (_, i) => start + i)),
+        ),
+      }
+      lastEdit = null
+      emit()
+    },
+    clearSelection: () => {
+      current = { ...current, selectedKey: null, selectedKeys: new Set() }
+      lastEdit = null
+      emit()
+    },
+    copyBindings: (positions) => {
+      const keys = checked(positions)
+      const layer = checkLayer(current.activeLayer)
+      const entries = keys.map((position) => {
+        const binding = layer.bindings[position]
+        if (!binding.editable) throw new Error(binding.reason ?? 'Cannot copy opaque binding')
+        return { offset: position - keys[0], binding: binding.text }
+      })
+      clipboard = entries
+      emit()
+    },
+    pasteBindings: (anchorPosition) => {
+      checkPosition(anchorPosition)
+      const pasted: number[] = [],
+        skipped: number[] = []
+      for (const entry of clipboard) {
+        const position = anchorPosition + entry.offset
+        if (
+          position >= derived.layout.keys.length ||
+          !checkLayer(current.activeLayer).bindings[position]
+        )
+          skipped.push(position)
+        else pasted.push(position)
+      }
+      edit((editor) => {
+        for (const entry of clipboard) {
+          const position = anchorPosition + entry.offset
+          if (pasted.includes(position))
+            editor.setBinding(current.activeLayer, position, entry.binding)
+        }
+      })
+      return { pasted, skipped }
+    },
+    swapKeys: (a, b) => {
+      checkPosition(a)
+      checkPosition(b)
+      const bindings = checkLayer(current.activeLayer).bindings
+      const first = bindings[a].text,
+        second = bindings[b].text
+      edit((editor) => {
+        editor.setBinding(current.activeLayer, a, second)
+        editor.setBinding(current.activeLayer, b, first)
+      })
+    },
+    swapKeysAcrossLayers: (position, layerA, layerB) => {
+      checkPosition(position, layerA)
+      checkPosition(position, layerB)
+      const first = checkLayer(layerA).bindings[position].text,
+        second = checkLayer(layerB).bindings[position].text
+      edit((editor) => {
+        editor.setBinding(layerA, position, second)
+        editor.setBinding(layerB, position, first)
+      })
+    },
+    assignToMany: (positions, binding) => {
+      const keys = checked(positions)
+      edit((editor) => {
+        for (const key of keys) editor.setBinding(current.activeLayer, key, binding)
+      })
+    },
+    copyLayer: (fromLayer, toLayer) => {
+      const source = checkLayer(fromLayer),
+        target = checkLayer(toLayer)
+      if (
+        source.bindings.length !== target.bindings.length ||
+        source.bindings.length !== derived.layout.keys.length
+      )
+        throw new Error('Layer binding counts do not match layout')
+      const bindings = source.bindings.map((binding) => binding.text)
+      edit((editor) => {
+        bindings.forEach((binding, key) => editor.setBinding(toLayer, key, binding))
+      })
+    },
+    clearKeys: (positions) =>
+      actions.assignToMany(positions, current.activeLayer === 0 ? '&none' : '&trans'),
     selectKey: (selectedKey) => {
-      current = { ...current, selectedKey }
+      if (selectedKey !== null) checkPosition(selectedKey)
+      current = {
+        ...current,
+        selectedKey,
+        selectedKeys: new Set(selectedKey === null ? [] : [selectedKey]),
+      }
       lastEdit = null
       emit()
     },
     setActiveLayer: (activeLayer) => {
-      current = { ...current, activeLayer }
+      checkLayer(activeLayer)
+      current = { ...current, activeLayer, selectedKeys: new Set() }
       lastEdit = null
       emit()
     },
@@ -273,7 +445,7 @@ export function createEditorStore(
       const name = layerNodeName(label, existing)
       edit((editor) => editor.appendLayer({ name, label, copyFrom }))
       const index = derived.model.layers.length - 1
-      current = { ...current, activeLayer: index, selectedKey: null }
+      current = { ...current, activeLayer: index, selectedKey: null, selectedKeys: new Set() }
       emit()
       return index
     },
@@ -282,7 +454,7 @@ export function createEditorStore(
       edit((editor) => {
         editor.moveLayer(from, to)
       })
-      current = { ...current, activeLayer: to }
+      current = { ...current, activeLayer: to, selectedKeys: new Set() }
       emit()
     },
     removeLayer: (index) => {
@@ -291,7 +463,12 @@ export function createEditorStore(
       })
       const last = derived.model.layers.length - 1
       const active = current.activeLayer > index ? current.activeLayer - 1 : current.activeLayer
-      current = { ...current, activeLayer: Math.max(0, Math.min(active, last)), selectedKey: null }
+      current = {
+        ...current,
+        activeLayer: Math.max(0, Math.min(active, last)),
+        selectedKey: null,
+        selectedKeys: new Set(),
+      }
       emit()
     },
     layerReferences: (index) => {
@@ -365,11 +542,17 @@ export function createEditorStore(
       profile = nextProfile
       baselineHash = hashFiles(baseline)
       baselineModel = createEditorForProfile(profile, baseline).model
-      current = { files: { ...baseline }, activeLayer: 0, selectedKey: null }
+      current = {
+        files: { ...baseline },
+        activeLayer: 0,
+        selectedKey: null,
+        selectedKeys: new Set(),
+      }
       past = []
       future = []
       lastEdit = null
       staleDraft = null
+      clipboard = []
       if (started) restore()
       emit(true)
     },
