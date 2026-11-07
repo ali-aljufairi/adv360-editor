@@ -22,6 +22,7 @@ function context(): CommandContext {
     toggleCombos: vi.fn(),
     openBehaviors: vi.fn(),
     openThemePicker: vi.fn(),
+    openExport: vi.fn(),
     themeMode: 'system',
     setThemeMode: vi.fn(),
     openSettings: vi.fn(),

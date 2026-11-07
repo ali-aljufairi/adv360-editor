@@ -58,6 +58,13 @@ export function buildCommands(ctx: CommandContext): Command[] {
       disabled: active === 0,
       run: () => ctx.deleteLayer(active),
     },
+    {
+      id: 'file.export',
+      title: 'Export keymap…',
+      group: 'File',
+      keywords: ['svg', 'png', 'print', 'pdf', 'save'],
+      run: () => ctx.openExport(),
+    },
     ...(
       [
         ['edit.copy', 'Copy bindings', 'copy', mac ? '⌘C' : 'Ctrl+C', !ctx.batch?.selectedCount],

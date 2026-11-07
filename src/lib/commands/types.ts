@@ -4,6 +4,7 @@ import type { PlatformSetting } from '../keycodes/platform'
 /** Section a command is listed under in the ⌘K palette, in display order. */
 export const COMMAND_GROUPS = [
   'Layers',
+  'File',
   'Edit',
   'View',
   'Behaviors',
@@ -88,4 +89,6 @@ export interface CommandContext {
   setPlatform(platform: PlatformSetting): void
   /** Platform used to format shortcuts. */
   displayPlatform: 'mac' | 'windows' | 'linux'
+  /** Opens the export dialog. */
+  openExport(): void
 }

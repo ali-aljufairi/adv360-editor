@@ -24,6 +24,7 @@ import { useTheme } from '../../lib/theme/ThemeProvider'
 import { useEditor } from '../../lib/editor-state'
 import { defaultBranchName, useSync } from '../../lib/github-sync'
 import { BuildPanel } from '../github/BuildPanel'
+import { ExportDialog } from '../export/ExportDialog'
 import { SyncHeader } from '../github/SyncHeader'
 import { syncErrorText } from '../github/errorText'
 import { useSettings } from '../../lib/settings/context'
@@ -136,6 +137,7 @@ export function EditorPage() {
   const [combosOn, setCombosOn] = useState(true)
   const [notice, setNotice] = useState<string | null>(null)
   const [layerDialog, setLayerDialog] = useState<LayerDialogState | null>(null)
+  const [exportOpen, setExportOpen] = useState(false)
   /** The key context menu's anchor point in viewport pixels, or null when closed. */
   const [keyMenu, setKeyMenu] = useState<{ x: number; y: number } | null>(null)
   /** Key chosen by "Swap with…"; the next key clicked on the board is the other half. */
@@ -479,6 +481,7 @@ export function EditorPage() {
     toggleCombos,
     openBehaviors: () => setPanel('behaviors'),
     openThemePicker: () => setThemeOpen(true),
+    openExport: () => setExportOpen(true),
     themeMode: theme.preference.mode,
     setThemeMode: (mode) => theme.setPreference({ ...theme.preference, mode }),
     openSettings: () => setPanel('settings'),
@@ -854,6 +857,15 @@ export function EditorPage() {
           />
         ) : null}
 
+        {exportOpen ? (
+          <ExportDialog
+            model={model}
+            layout={layout}
+            tokens={theme.tokens}
+            layers={tabs.map(({ index, name }) => ({ index, name }))}
+            onClose={() => setExportOpen(false)}
+          />
+        ) : null}
         {helpOpen ? (
           <CheatSheet
             scheme={scheme}
