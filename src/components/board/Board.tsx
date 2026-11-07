@@ -1,10 +1,25 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type MouseEvent,
+} from 'react'
 import { Keycap } from '../keycap/Keycap'
+import { batchShortcut } from '../../lib/commands/shortcuts'
 import { describeBinding, type DescribeContext } from '../../lib/legend/describe'
 import type { PhysicalLayout } from '../../lib/layout'
 import type { Binding, Combo, PhysicalKey } from '../../lib/zmk/types'
 import { comboTag, layerAccentOf, layerTargetOf, legendText } from './bindings'
 import { arcPath, boardBounds, comboSegments, keyBox, keyCenter, type Point } from './geometry'
+
+/** Batch commands the board forwards from the keyboard. */
+export type BatchCommand = 'edit.copy' | 'edit.paste' | 'edit.cut' | 'edit.clear'
+
+/** Modifier that turns a key click into a range or toggle selection. */
+export type SelectModifier = 'range' | 'toggle'
 
 /** Props for the physical keyboard board. */
 export interface BoardProps {
@@ -14,6 +29,8 @@ export interface BoardProps {
   /** Layer names and macro labels used to describe bindings. */
   legendContext: DescribeContext
   selectedKey: number | null
+  /** Every selected key, including the anchor. Keys in it show the selection ring. */
+  selectedKeys?: ReadonlySet<number>
   /** Keys whose binding differs from the saved keymap on this layer. */
   changedKeys: Set<number>
   /** Combos drawn as arcs. Combos not active on the shown layer are dimmed. */
@@ -24,9 +41,33 @@ export interface BoardProps {
   layerIndex?: number
   /** Draw combo arcs and their labels. Defaults to true. */
   showCombos?: boolean
-  onSelectKey(index: number): void
+  /** Click on a key. Shift extends a range, Cmd/Ctrl toggles it, and a plain click replaces. */
+  onSelectKey(index: number, modifier?: SelectModifier): void
   /** Double-click or Enter on a key: open the binding picker. */
   onActivateKey(index: number): void
+  /** Right-click, the context-menu key or Shift+F10 on a key. Coordinates are viewport pixels. */
+  onKeyContextMenu?(index: number, x: number, y: number): void
+  /** Copy, paste, cut or clear from the keyboard, while the board owns focus. */
+  onBatchCommand?(command: BatchCommand): void
+}
+
+/** Shift wins over Cmd/Ctrl, so Shift+Cmd+click extends a range. */
+function modifierOf(event?: MouseEvent<HTMLElement>): SelectModifier | undefined {
+  if (!event) return undefined
+  if (event.shiftKey) return 'range'
+  if (event.metaKey || event.ctrlKey) return 'toggle'
+  return undefined
+}
+
+/** True for controls that own their own keyboard editing. */
+function isEditable(target: EventTarget): boolean {
+  const element = target as HTMLElement
+  return (
+    element.isContentEditable ||
+    element.tagName === 'INPUT' ||
+    element.tagName === 'TEXTAREA' ||
+    element.tagName === 'SELECT'
+  )
 }
 
 /** Gap between neighbouring keycaps, in key units. */
@@ -37,6 +78,7 @@ const DEFAULT_UNIT = 44
 const MAX_UNIT = 72
 const ARC_STROKE = 0.075
 const ARC_DASH = '0.24 0.16'
+const EMPTY_SELECTION: ReadonlySet<number> = new Set()
 
 interface ComboDrawing {
   key: string
@@ -118,6 +160,7 @@ export function Board({
   bindings,
   legendContext,
   selectedKey,
+  selectedKeys = EMPTY_SELECTION,
   changedKeys,
   combos,
   layerAccent,
@@ -125,6 +168,8 @@ export function Board({
   showCombos = true,
   onSelectKey,
   onActivateKey,
+  onKeyContextMenu,
+  onBatchCommand,
 }: BoardProps) {
   const frame = useRef<HTMLDivElement>(null)
   const [frameWidth, setFrameWidth] = useState(0)
@@ -167,6 +212,22 @@ export function Board({
     '--keycap-unit': `${unit}px`,
   } as CSSProperties
 
+  /** Copy, paste, cut and clear, plus Delete/Backspace to clear, while the board has focus. */
+  const onBoardKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!onBatchCommand || isEditable(event.target)) return
+    const boardFocused = event.currentTarget.contains(document.activeElement)
+    const plainDelete =
+      (event.key === 'Delete' || event.key === 'Backspace') &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      !event.shiftKey
+    const command = batchShortcut(event, boardFocused) ?? (plainDelete ? 'edit.clear' : null)
+    if (!command) return
+    event.preventDefault()
+    onBatchCommand(command)
+  }
+
   return (
     <div ref={frame} className="w-full min-w-0">
       <div
@@ -174,6 +235,7 @@ export function Board({
         aria-label={`Keyboard, ${layerName}`}
         className="relative mx-auto"
         style={boardStyle}
+        onKeyDown={onBoardKeyDown}
       >
         {layout.keys.map((key) => {
           const binding = bindings[key.index]
@@ -183,7 +245,8 @@ export function Board({
           const target = layerTargetOf(binding, legendContext.layerNames)
           const glow = target === undefined ? undefined : `var(--layer-${layerAccentOf(target)})`
           const changed = changedKeys.has(key.index)
-          const select = () => onSelectKey(key.index)
+          const select = (event?: MouseEvent<HTMLButtonElement>) =>
+            onSelectKey(key.index, modifierOf(event))
           return (
             <div
               key={key.index}
@@ -200,7 +263,19 @@ export function Board({
                 transformOrigin: `${box.originX * unit}px ${box.originY * unit}px`,
               }}
               onDoubleClick={() => onActivateKey(key.index)}
+              onContextMenu={(event: MouseEvent<HTMLDivElement>) => {
+                if (!onKeyContextMenu) return
+                event.preventDefault()
+                onKeyContextMenu(key.index, event.clientX, event.clientY)
+              }}
               onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
+                if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+                  if (!onKeyContextMenu) return
+                  event.preventDefault()
+                  const box = event.currentTarget.getBoundingClientRect()
+                  onKeyContextMenu(key.index, box.left, box.bottom)
+                  return
+                }
                 if (event.key !== 'Enter') return
                 // Stop the button's native click so Enter selects and activates exactly once.
                 event.preventDefault()
@@ -220,7 +295,7 @@ export function Board({
               <Keycap
                 legend={legend}
                 w={box.width}
-                selected={selectedKey === key.index}
+                selected={selectedKey === key.index || selectedKeys.has(key.index)}
                 onSelect={select}
               />
               {changed ? (

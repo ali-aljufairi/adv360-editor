@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react'
+import type { CSSProperties, MouseEvent, ReactNode } from 'react'
 import type { Legend } from '../../lib/legend/describe'
 import { LEGEND_SCALE, UNIT_EM, fitLegend, type LegendSize } from '../../lib/legend/fit'
 
@@ -12,8 +12,8 @@ export interface KeycapProps {
   selected?: boolean
   /** Whether this key differs from the saved keymap. */
   changed?: boolean
-  /** Called when the key is activated. Without it the keycap is still a button but inert. */
-  onSelect?: () => void
+  /** Called on activation, with the click for modifier keys. Without it the keycap is inert. */
+  onSelect?: (event: MouseEvent<HTMLButtonElement>) => void
   /** Optional tooltip. Defaults to the full, un-abbreviated legend. */
   title?: string
 }
