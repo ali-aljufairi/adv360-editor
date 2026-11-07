@@ -39,6 +39,11 @@ async function tokenRequest(
   })
   const data = (await response.json()) as Record<string, unknown>
   if (!response.ok || data.error || typeof data.access_token !== 'string') {
+    if (params.grant_type === 'refresh_token') {
+      if (data.error === 'bad_refresh_token' || data.error === 'invalid_grant')
+        throw new Error('invalid-refresh: refresh token expired')
+      throw new Error('transient-refresh: token refresh failed')
+    }
     throw new Error('github-error: token exchange failed')
   }
   const now = Date.now()

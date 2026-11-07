@@ -46,3 +46,20 @@ describe('auth helpers', () => {
     expect(sanitizeReturnTo('/safe?tab=1')).toBe('/safe?tab=1')
   })
 })
+
+it('distinguishes invalid refresh credentials from transient failures', async () => {
+  vi.stubEnv('GITHUB_CLIENT_ID', 'id')
+  vi.stubEnv('GITHUB_CLIENT_SECRET', 'secret')
+  await expect(
+    refreshTokens(
+      'r',
+      vi.fn(async () => Response.json({ error: 'bad_refresh_token' })),
+    ),
+  ).rejects.toThrow('invalid-refresh:')
+  await expect(
+    refreshTokens(
+      'r',
+      vi.fn(async () => Response.json({}, { status: 503 })),
+    ),
+  ).rejects.toThrow('transient-refresh:')
+})
