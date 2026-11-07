@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Board } from '../board/Board'
+import { Board, type BatchCommand, type SelectModifier } from '../board/Board'
+import { ContextMenu, type ContextMenuItem } from '../board/ContextMenu'
 import { LayerTabs } from '../board/LayerTabs'
-import { AddLayerDialog, DeleteLayerDialog, RenameLayerDialog } from '../layers/LayerDialogs'
+import {
+  AddLayerDialog,
+  CopyLayerDialog,
+  DeleteLayerDialog,
+  RenameLayerDialog,
+  SwapLayerDialog,
+} from '../layers/LayerDialogs'
 import type { LayerReference } from '../layers/LayerDialogs'
 import { layerAccentOf } from '../board/bindings'
 import { ChangesPill } from '../panels/ChangesPill'
@@ -44,11 +51,15 @@ type LayerDialogState =
   | { kind: 'add' }
   | { kind: 'rename'; index: number }
   | { kind: 'delete'; index: number; references: LayerReference[] }
+  | { kind: 'copy'; index: number }
+  | { kind: 'swap-layers'; key: number }
 
 /** The binding picker's target: which layer and key it edits, and where to draw it. */
 interface PickerTarget {
   layer: number
   key: number
+  /** Batch assign: every key the chosen binding is written to. Absent for a single key. */
+  keys?: number[]
   anchor: { top: number; bottom: number; left: number } | null
 }
 
@@ -125,6 +136,10 @@ export function EditorPage() {
   const [combosOn, setCombosOn] = useState(true)
   const [notice, setNotice] = useState<string | null>(null)
   const [layerDialog, setLayerDialog] = useState<LayerDialogState | null>(null)
+  /** The key context menu's anchor point in viewport pixels, or null when closed. */
+  const [keyMenu, setKeyMenu] = useState<{ x: number; y: number } | null>(null)
+  /** Key chosen by "Swap with…"; the next key clicked on the board is the other half. */
+  const [swapFrom, setSwapFrom] = useState<number | null>(null)
   /** Run a layer edit; on failure (e.g. a layer number written as an expression) show why. */
   const runLayerAction = (action: () => void, close = true) => {
     try {
@@ -139,7 +154,13 @@ export function EditorPage() {
 
   const layerCount = model.layers.length
   const modalOpen =
-    picker !== null || paletteOpen || themeOpen || sheetOpen || helpOpen || layerDialog !== null
+    picker !== null ||
+    paletteOpen ||
+    themeOpen ||
+    sheetOpen ||
+    helpOpen ||
+    layerDialog !== null ||
+    keyMenu !== null
   const boardKeysOff = modalOpen || dockFocused
 
   /** Opens a panel, or closes the dock when that panel is already showing. */
@@ -203,7 +224,9 @@ export function EditorPage() {
   const commitPicker = (value: BindingValue) => {
     if (!picker) return
     try {
-      editor.setBinding(picker.layer, picker.key, formatPickerBinding(value))
+      const text = formatPickerBinding(value)
+      if (picker.keys) editor.assignToMany(picker.keys, text)
+      else editor.setBinding(picker.layer, picker.key, text)
       setNotice(null)
     } catch (error) {
       setNotice(messageOf(error))
@@ -232,7 +255,12 @@ export function EditorPage() {
       if (action === 'edit') {
         if (selectedKey !== null) openPicker(selectedKey)
       } else if (action === 'cancel') {
-        if (selectedKey !== null) editor.selectKey(null)
+        if (swapFrom !== null) {
+          setSwapFrom(null)
+          setNotice(null)
+        } else if (selectedKey !== null || editor.selectedKeys.size > 0) {
+          editor.selectKey(null)
+        }
       } else if (action === 'nextLayer' || action === 'prevLayer') {
         if (layerCount === 0) return
         const step = action === 'nextLayer' ? 1 : -1
@@ -320,6 +348,107 @@ export function EditorPage() {
     void sync.reload()
   }
 
+  // Batch edits. Copy, paste, cut and clear act on the selection; the dialogs ask for the rest.
+  const selection = () => [...editor.selectedKeys].sort((first, second) => first - second)
+  const singleKey = () => {
+    const keys = selection()
+    return keys.length === 1 ? keys[0] : null
+  }
+  const runBatch = (action: () => void) => {
+    setNotice(null)
+    try {
+      action()
+    } catch (error) {
+      setNotice(messageOf(error))
+    }
+  }
+  const copySelection = () => {
+    const keys = selection()
+    if (keys.length > 0) runBatch(() => editor.copyBindings(keys))
+  }
+  const pasteAtSelection = () => {
+    const anchor = editor.selectedKey
+    if (anchor === null || editor.clipboard.length === 0) return
+    runBatch(() => {
+      const { skipped } = editor.pasteBindings(anchor)
+      if (skipped.length > 0)
+        setNotice(
+          `Skipped ${skipped.length} ${skipped.length === 1 ? 'key' : 'keys'} not on the board.`,
+        )
+    })
+  }
+  const cutSelection = () => {
+    const keys = selection()
+    if (keys.length > 0)
+      runBatch(() => {
+        editor.copyBindings(keys)
+        editor.clearKeys(keys)
+      })
+  }
+  const clearSelectedKeys = () => {
+    const keys = selection()
+    if (keys.length > 0) runBatch(() => editor.clearKeys(keys))
+  }
+  const swapSelected = () => {
+    const keys = selection()
+    if (keys.length === 2) runBatch(() => editor.swapKeys(keys[0], keys[1]))
+  }
+  const openSwapLayers = () => {
+    const key = singleKey()
+    if (key !== null) setLayerDialog({ kind: 'swap-layers', key })
+  }
+  const openCopyLayer = () => setLayerDialog({ kind: 'copy', index: activeLayer })
+  const openAssign = () => {
+    const keys = selection()
+    const anchor = editor.selectedKey ?? keys[0]
+    if (anchor === undefined) return
+    const element = document.querySelector<HTMLElement>(`[data-key-index="${anchor}"]`)
+    const box = element?.getBoundingClientRect()
+    setNotice(null)
+    setPicker({
+      layer: activeLayer,
+      key: anchor,
+      keys,
+      anchor: box ? { top: box.top, bottom: box.bottom, left: box.left } : null,
+    })
+  }
+  const beginSwap = (key: number) => {
+    setSwapFrom(key)
+    setNotice(`Click a key to swap with key ${key}.`)
+  }
+
+  /** A key click on the board: the second half of a pending swap, or a selection change. */
+  const selectFromBoard = (index: number, modifier?: SelectModifier) => {
+    if (swapFrom !== null) {
+      setSwapFrom(null)
+      if (index === swapFrom) {
+        setNotice(null)
+        return
+      }
+      runBatch(() => {
+        editor.swapKeys(swapFrom, index)
+        editor.selectKey(index)
+      })
+      return
+    }
+    if (modifier === 'range') editor.selectRange(index)
+    else if (modifier === 'toggle') editor.toggleKey(index)
+    else editor.selectKey(index)
+  }
+
+  /** Right-click on a key: a key outside the selection becomes the selection first. */
+  const openKeyMenu = (index: number, pointerX: number, pointerY: number) => {
+    if (!editor.selectedKeys.has(index)) editor.selectKey(index)
+    setKeyMenu({ x: pointerX, y: pointerY })
+  }
+
+  const runBoardCommand = (command: BatchCommand) => {
+    if (command === 'edit.copy') copySelection()
+    else if (command === 'edit.paste') pasteAtSelection()
+    else if (command === 'edit.cut') cutSelection()
+    else clearSelectedKeys()
+  }
+
   // TODO(m4, ⌘K): add commands once src/lib/commands accepts them: Sign in with GitHub,
   // Sign out, Reload from GitHub, Commit & build (opens the review), Show build.
   const commands = buildCommands({
@@ -363,7 +492,73 @@ export function EditorPage() {
     platform: settings.platform,
     setPlatform,
     displayPlatform,
+    batch: {
+      selectedCount: editor.selectedKeys.size,
+      canPaste: editor.clipboard.length > 0,
+      copy: copySelection,
+      paste: pasteAtSelection,
+      cut: cutSelection,
+      clear: clearSelectedKeys,
+      swap: swapSelected,
+      swapAcrossLayers: openSwapLayers,
+      assign: openAssign,
+      copyLayer: openCopyLayer,
+    },
   })
+
+  const shortcutOf = (letter: string) =>
+    displayPlatform === 'mac' ? `⌘${letter}` : `Ctrl+${letter}`
+  const single = singleKey()
+  const keyMenuItems: ContextMenuItem[] = [
+    {
+      key: 'copy',
+      label: 'Copy',
+      shortcut: shortcutOf('C'),
+      disabled: editor.selectedKeys.size === 0,
+      run: copySelection,
+    },
+    {
+      key: 'paste',
+      label: 'Paste',
+      shortcut: shortcutOf('V'),
+      disabled: editor.clipboard.length === 0 || editor.selectedKey === null,
+      run: pasteAtSelection,
+    },
+    {
+      key: 'cut',
+      label: 'Cut',
+      shortcut: shortcutOf('X'),
+      disabled: editor.selectedKeys.size === 0,
+      run: cutSelection,
+    },
+    {
+      key: 'clear',
+      label: 'Clear',
+      shortcut: displayPlatform === 'mac' ? '⌫' : 'Del',
+      disabled: editor.selectedKeys.size === 0,
+      run: clearSelectedKeys,
+    },
+    {
+      key: 'swap',
+      label: 'Swap with…',
+      disabled: single === null,
+      run: () => {
+        if (single !== null) beginSwap(single)
+      },
+    },
+    {
+      key: 'swap-layers',
+      label: 'Swap with layer…',
+      disabled: single === null,
+      run: openSwapLayers,
+    },
+    {
+      key: 'assign',
+      label: 'Assign to selected…',
+      disabled: editor.selectedKeys.size === 0,
+      run: openAssign,
+    },
+  ]
 
   return (
     <div className="grid h-dvh grid-rows-[auto_1fr] overflow-hidden bg-canvas text-primary">
@@ -491,6 +686,7 @@ export function EditorPage() {
                       false,
                     )
                   }
+                  onCopy={(index) => setLayerDialog({ kind: 'copy', index })}
                 />
               </div>
 
@@ -500,13 +696,16 @@ export function EditorPage() {
                   bindings={bindings}
                   legendContext={legend}
                   selectedKey={selectedKey}
+                  selectedKeys={editor.selectedKeys}
                   changedKeys={changed}
                   combos={model.combos}
                   layerAccent={layerAccentOf(activeLayer)}
                   layerIndex={activeLayer}
                   showCombos={combosOn}
-                  onSelectKey={editor.selectKey}
+                  onSelectKey={selectFromBoard}
                   onActivateKey={openPicker}
+                  onKeyContextMenu={openKeyMenu}
+                  onBatchCommand={runBoardCommand}
                 />
               </section>
 
@@ -618,6 +817,39 @@ export function EditorPage() {
             references={layerDialog.references}
             layerNames={tabs.map((tab) => tab.name)}
             onDelete={() => runLayerAction(() => editor.removeLayer(layerDialog.index))}
+            onClose={() => setLayerDialog(null)}
+          />
+        ) : null}
+
+        {keyMenu ? (
+          <ContextMenu
+            label="Key actions"
+            x={keyMenu.x}
+            y={keyMenu.y}
+            items={keyMenuItems}
+            onClose={() => setKeyMenu(null)}
+          />
+        ) : null}
+        {layerDialog?.kind === 'copy' ? (
+          <CopyLayerDialog
+            source={{ index: layerDialog.index, name: tabs[layerDialog.index]?.name ?? '' }}
+            layers={tabs.map(({ index, name }) => ({ index, name }))}
+            onCopy={(target) => runLayerAction(() => editor.copyLayer(layerDialog.index, target))}
+            onClose={() => setLayerDialog(null)}
+          />
+        ) : null}
+        {layerDialog?.kind === 'swap-layers' ? (
+          <SwapLayerDialog
+            keyIndex={layerDialog.key}
+            source={{ index: activeLayer, name: tabs[activeLayer]?.name ?? '' }}
+            targets={tabs
+              .filter(({ index }) => index !== activeLayer)
+              .map(({ index, name }) => ({ index, name }))}
+            onSwap={(target) =>
+              runLayerAction(() =>
+                editor.swapKeysAcrossLayers(layerDialog.key, activeLayer, target),
+              )
+            }
             onClose={() => setLayerDialog(null)}
           />
         ) : null}
