@@ -27,6 +27,7 @@ import { defaultBranchName, useSync } from '../../lib/github-sync'
 import { BuildPanel } from '../github/BuildPanel'
 import { ExportDialog } from '../export/ExportDialog'
 import { SyncHeader } from '../github/SyncHeader'
+import { ProfileSelect } from '../github/ProfileSelect'
 import { syncErrorText } from '../github/errorText'
 import { useSettings } from '../../lib/settings/context'
 import { useBoardNavigation } from '../../lib/settings/useBoardNavigation'
@@ -116,7 +117,8 @@ function messageOf(error: unknown): string {
  */
 export function EditorPage() {
   const editor = useEditor()
-  const { activeProfile } = useActiveProfile()
+  const profileContext = useActiveProfile()
+  const { activeProfile } = profileContext
   const { settings, setPlatform, updateNavigation } = useSettings()
   const theme = useTheme()
   const narrow = useNarrow()
@@ -570,7 +572,16 @@ export function EditorPage() {
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-subtle px-4 py-3 sm:px-6">
         <div className="flex items-baseline gap-2">
           <span className="text-base font-semibold">adv360</span>
-          <span className="text-sm text-secondary">{profile.name}</span>
+          {profileContext.profiles.length > 1 ? (
+            <ProfileSelect
+              profiles={profileContext.profiles}
+              activeProfile={activeProfile}
+              setActiveProfile={profileContext.setActiveProfile}
+              status={sync.phase === 'loading' ? `Loading ${activeProfile.name}…` : null}
+            />
+          ) : (
+            <span className="text-sm text-secondary">{profile.name}</span>
+          )}
           <span
             aria-label="Branch V3.0"
             className="rounded-full border border-subtle px-2 text-xs text-muted"
