@@ -134,8 +134,8 @@ it('registers batch commands and recognizes board-only shortcuts', async () => {
     'edit.assign-many',
     'layer.copy',
   ])
-    expect(commands.find((c) => c.id === id)).toBeDefined()
-  commands.find((c) => c.id === 'edit.copy')!.run()
+    expect(commands.find((command) => command.id === id)).toBeDefined()
+  commands.find((command) => command.id === 'edit.copy')!.run()
   expect(run).toHaveBeenCalledOnce()
   const key = { key: 'c', metaKey: true, ctrlKey: false, altKey: false, shiftKey: false }
   expect(batchShortcut(key, true)).toBe('edit.copy')

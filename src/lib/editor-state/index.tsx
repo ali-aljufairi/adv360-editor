@@ -280,7 +280,7 @@ export function createEditorStore(
   }
   const checked = (positions: number[], layer = current.activeLayer) => {
     positions.forEach((position) => checkPosition(position, layer))
-    return [...new Set(positions)].sort((a, b) => a - b)
+    return [...new Set(positions)].sort((left, right) => left - right)
   }
   const actions: EditorStore = {
     getSnapshot: () => state,
@@ -375,15 +375,15 @@ export function createEditorStore(
       })
       return { pasted, skipped }
     },
-    swapKeys: (a, b) => {
-      checkPosition(a)
-      checkPosition(b)
+    swapKeys: (posA, posB) => {
+      checkPosition(posA)
+      checkPosition(posB)
       const bindings = checkLayer(current.activeLayer).bindings
-      const first = bindings[a].text,
-        second = bindings[b].text
+      const first = bindings[posA].text,
+        second = bindings[posB].text
       edit((editor) => {
-        editor.setBinding(current.activeLayer, a, second)
-        editor.setBinding(current.activeLayer, b, first)
+        editor.setBinding(current.activeLayer, posA, second)
+        editor.setBinding(current.activeLayer, posB, first)
       })
     },
     swapKeysAcrossLayers: (position, layerA, layerB) => {

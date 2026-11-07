@@ -19,7 +19,7 @@ it('renders a standalone board per layer and printable pages', () => {
       const binding = model.layers[layer].bindings[key.index]
       if (!binding) continue
       const legend = describeBinding(binding, {
-        layerNames: model.layers.map((l) => l.displayName ?? l.name),
+        layerNames: model.layers.map((layer) => layer.displayName ?? layer.name),
       })
       for (const label of [legend.primary, legend.secondary ?? '']) {
         const fitted = fitLegend(label, key.w - 0.08)

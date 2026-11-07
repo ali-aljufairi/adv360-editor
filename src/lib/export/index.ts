@@ -5,11 +5,13 @@ import { fitLegend, LEGEND_SCALE, UNIT_EM } from '../legend/fit'
 import type { Tokens } from '../theme/tokens'
 import type { Model } from '../zmk'
 
+/** One exported layer: its index, display title and standalone SVG. */
 export interface LayerExport {
   layer: number
   title: string
   svg: string
 }
+/** Every exported layer plus a printable HTML document (one layer per page). */
 export interface KeymapExport {
   layers: LayerExport[]
   printableDocument: string
@@ -47,18 +49,18 @@ export function exportKeymap(
           : { primary: '', kind: 'none' as const }
         const primary = fitLegend(legend.primary, box.width)
         const secondary = fitLegend(legend.secondary ?? '', box.width)
-        const x = (box.left - bounds.minX) * unit + margin,
-          y = (box.top - bounds.minY) * unit + margin
-        const w = box.width * unit,
-          h = box.height * unit
+        const left = (box.left - bounds.minX) * unit + margin,
+          top = (box.top - bounds.minY) * unit + margin
+        const width = box.width * unit,
+          height = box.height * unit
         const px = (box.left + box.originX - bounds.minX) * unit + margin,
           py = (box.top + box.originY - bounds.minY) * unit + margin
         const text = (fitted: typeof primary, center: number, color: string, multiplier = 1) => {
           const size = (unit / UNIT_EM) * LEGEND_SCALE[fitted.size] * multiplier
           const lines = fitted.text.split('\n')
-          return `<text x="${x + w / 2}" y="${center - (lines.length - 1) * size * 0.55}" text-anchor="middle" dominant-baseline="middle" font-size="${size}" fill="${escape(color)}">${lines.map((line, i) => `<tspan x="${x + w / 2}" dy="${i ? size * 1.1 : 0}">${escape(line)}</tspan>`).join('')}</text>`
+          return `<text x="${left + width / 2}" y="${center - (lines.length - 1) * size * 0.55}" text-anchor="middle" dominant-baseline="middle" font-size="${size}" fill="${escape(color)}">${lines.map((line, i) => `<tspan x="${left + width / 2}" dy="${i ? size * 1.1 : 0}">${escape(line)}</tspan>`).join('')}</text>`
         }
-        return `<g data-key="${key.index}" transform="rotate(${box.rotate} ${px} ${py})"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="${escape(tokens['keycap-top'])}" stroke="${escape(tokens['border-base'])}"/>${text(primary, y + h * (legend.secondary ? 0.42 : 0.5), tokens['keycap-legend'])}${legend.secondary ? text(secondary, y + h * 0.76, tokens['keycap-sublegend'], 0.75) : ''}</g>`
+        return `<g data-key="${key.index}" transform="rotate(${box.rotate} ${px} ${py})"><rect x="${left}" y="${top}" width="${width}" height="${height}" rx="4" fill="${escape(tokens['keycap-top'])}" stroke="${escape(tokens['border-base'])}"/>${text(primary, top + height * (legend.secondary ? 0.42 : 0.5), tokens['keycap-legend'])}${legend.secondary ? text(secondary, top + height * 0.76, tokens['keycap-sublegend'], 0.75) : ''}</g>`
       })
       .join('')
     return {
