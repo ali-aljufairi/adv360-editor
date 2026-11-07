@@ -38,6 +38,7 @@ export const commitChangesFn = createServerFn({ method: 'POST' })
       profileId: string(input.profileId),
       branch: string(input.branch),
       baseSha: string(input.baseSha),
+      allowDefaultBranch: input.allowDefaultBranch === true,
       message: string(input.message),
       files: files as Record<string, string>,
     }

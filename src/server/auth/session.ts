@@ -7,6 +7,18 @@ import type { Tokens } from './github-oauth'
 
 export type Session = Tokens & { user: SessionUser }
 const cookieName = 'adv360_session'
+const refreshes = new Map<string, Promise<Tokens>>()
+
+function sharedRefresh(token: string): Promise<Tokens> {
+  let pending = refreshes.get(token)
+  if (!pending) {
+    pending = refreshTokens(token).finally(() => {
+      refreshes.delete(token)
+    })
+    refreshes.set(token, pending)
+  }
+  return pending
+}
 
 function secret(): string {
   if (!process.env.SESSION_SECRET) throw new Error('github-error: SESSION_SECRET is not configured')
@@ -72,18 +84,22 @@ export async function requireGitHubToken(): Promise<{ token: string; user: Sessi
   let session = await readSession()
   if (!session) throw new Error('not-signed-in: no valid session')
   if (session.accessExpiresAt !== null && session.accessExpiresAt <= Date.now() + 300_000) {
-    try {
-      if (
-        !session.refreshToken ||
-        (session.refreshExpiresAt !== null && session.refreshExpiresAt <= Date.now())
-      ) {
-        throw new Error('expired')
-      }
-      session = { user: session.user, ...(await refreshTokens(session.refreshToken)) }
-      await setSession(session)
-    } catch {
+    if (
+      !session.refreshToken ||
+      (session.refreshExpiresAt !== null && session.refreshExpiresAt <= Date.now())
+    ) {
       clearSession()
       throw new Error('not-signed-in: session expired')
+    }
+    try {
+      session = { user: session.user, ...(await sharedRefresh(session.refreshToken)) }
+      await setSession(session)
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('invalid-refresh:')) {
+        clearSession()
+        throw new Error('not-signed-in: session expired', { cause: error })
+      }
+      throw new Error('transient-refresh: could not refresh session; try again', { cause: error })
     }
   }
   return { token: session.accessToken, user: session.user }

@@ -10,6 +10,13 @@ import { ADV360_PROFILE } from '../../lib/profile/registry'
  * @returns The sync provider around the children.
  */
 export function SyncBridge({ children }: { children: ReactNode }) {
-  const { load } = useEditor()
-  return <SyncProvider onLoaded={(files) => load(files, ADV360_PROFILE)}>{children}</SyncProvider>
+  const { load, getSnapshot } = useEditor()
+  return (
+    <SyncProvider
+      isDirty={() => getSnapshot().dirty}
+      onLoaded={(files) => load(files, ADV360_PROFILE)}
+    >
+      {children}
+    </SyncProvider>
+  )
 }

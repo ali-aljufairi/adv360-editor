@@ -29,7 +29,8 @@ refreshToken, refreshExpiresAt }`, Max-Age 180 days. Sign-in survives reloads an
 - Exports (server-only) from `src/server/auth/session.ts`:
   - `getSessionUser(): Promise<SessionUser | null>` (for a `getSession` server fn)
   - `requireGitHubToken(): Promise<{ token: string; user: SessionUser }>` — refreshes if
-    needed; throws `Error('not-signed-in: …')` when there is no valid session.
+    needed, sharing concurrent refreshes. Transient failures throw `transient-refresh: …` and
+    preserve the session; invalid or expired refresh tokens clear it. Throws `Error('not-signed-in: …')` when there is no valid session.
 - Server fn `getSession` in `src/server/auth/functions.ts` → `SessionUser | null`.
 
 ## Piece B — repository service (`src/server/repo/**`, `src/routes/api/artifacts/**`, Terra)
@@ -41,7 +42,9 @@ Server fns in `src/server/repo/functions.ts` (all call `requireGitHubToken()`):
 - `commitChanges(CommitRequest)` → `CommitResult`: git data API (blobs → tree with base_tree →
   commit → update ref, non-force). If the branch head ≠ `baseSha`, throw `branch-moved: …`.
   Before moving an existing branch, create `refs/heads/editor-backup/<yyyymmdd-HHMM>-<sha7>`
-  at the old head. Author/committer = the signed-in user (GitHub does this for user tokens).
+  at the old head, reusing an identical ref or adding a unique suffix on collision. Direct commits
+  to the profile default branch require `CommitRequest.allowDefaultBranch: true`; otherwise the
+  server returns `protected-branch: …`. Author/committer = the signed-in user (GitHub does this for user tokens).
 - `getBuildStatus({ profileId, commitSha })` → `BuildStatus`: workflow runs filtered by
   `head_sha` for the profile's workflow; artifacts once completed.
 - `GET /api/artifacts/:id` → streams the artifact zip (GitHub redirect followed server-side,
@@ -55,7 +58,16 @@ Server fns in `src/server/repo/functions.ts` (all call `requireGitHubToken()`):
   localStorage per profile+sha for instant start, then revalidated), calls `editor.load()`;
   commits the changed files with `CommitRequest`; polls `getBuildStatus` every 10 s until
   completed; exposes `{ user, source: { branch, headSha, loadedAt } | null, status, error,
-signIn(), signOut(), reload(), commit(message, branch), build: BuildStatus | null }`.
+signIn(), signOut(), reload(), commit({ message, branch, changedFiles, allowDefaultBranch? }), build: BuildStatus | null }`.
+- Cache entries are keyed by profile and commit SHA, with a branch lookup for the latest entry.
+  Revalidation of the displayed SHA updates `source.loadedAt` without resetting editor history.
+  If a different SHA arrives while dirty, `phase` is `remote-changed` and `remoteSha` identifies
+  the pending remote commit. `applyRemote()` explicitly discards edits and loads that version.
+  A clean editor loads the new version automatically. `reload()` revalidates and supersedes older
+  in-flight loads; logout invalidates them too.
+- `buildTimedOut` becomes true when polling reaches 30 minutes without completion;
+  `repollBuild()` starts a new polling window for the last commit. `commit()` accepts optional
+  `allowDefaultBranch: true` for the explicit default-branch override.
 - After a successful commit the new commit becomes the baseline (editor.load with the
   committed files and `commitSha`).
 - Signed out: the bundled fixture stays usable (read-only demo of the editor).

@@ -613,7 +613,7 @@ export function createEditorStore(
   return actions
 }
 
-const EditorContext = createContext<(EditorState & EditorActions) | null>(null)
+const EditorContext = createContext<(EditorState & EditorStore) | null>(null)
 /** Provide the store to React consumers. */
 export function EditorProvider({
   initialFiles,
@@ -631,7 +631,7 @@ export function EditorProvider({
   return <EditorContext.Provider value={{ ...state, ...store }}>{children}</EditorContext.Provider>
 }
 /** Read editor state and actions from the nearest provider. */
-export function useEditor(): EditorState & EditorActions {
+export function useEditor(): EditorState & EditorStore {
   const context = useContext(EditorContext)
   if (!context) throw new Error('useEditor must be used inside EditorProvider')
   return context

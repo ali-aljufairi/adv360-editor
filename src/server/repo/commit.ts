@@ -8,6 +8,8 @@ export async function commitChanges(
   profile: KeyboardProfile,
   request: CommitRequest,
 ): Promise<CommitResult> {
+  if (request.branch === profile.branch && !request.allowDefaultBranch)
+    throw new Error('protected-branch: default branch requires explicit approval')
   const entries = Object.entries(request.files)
   if (
     !entries.length ||
@@ -40,7 +42,23 @@ export async function commitChanges(
   if (existing) {
     const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 13).replace('T', '-')
     backupRef = `editor-backup/${stamp}-${head.slice(0, 7)}`
-    await client.write('POST', `${root}/git/refs`, { ref: `refs/heads/${backupRef}`, sha: head })
+    const base = backupRef
+    for (;;) {
+      try {
+        await client.write('POST', `${root}/git/refs`, {
+          ref: `refs/heads/${backupRef}`,
+          sha: head,
+        })
+        break
+      } catch (error) {
+        if (!(error instanceof Error) || !error.message.startsWith('ref-exists:')) throw error
+        const existingRef = await client.get<{ object: { sha: string } }>(
+          `${root}/git/ref/heads/${backupRef}`,
+        )
+        if (existingRef.object.sha === head) break
+        backupRef = `${base}-${crypto.randomUUID().slice(0, 8)}`
+      }
+    }
   }
   const commit = await client.get<{ tree: { sha: string } }>(`${root}/git/commits/${head}`)
   const tree = []

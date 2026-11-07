@@ -171,3 +171,69 @@ describe('repository GitHub operations', () => {
     expect(calls).toHaveLength(conclusion === 'success' ? 2 : 1)
   })
 })
+
+describe('hardening', () => {
+  it.each([
+    [{ 'x-ratelimit-remaining': '42' }, {}, 'forbidden'],
+    [{ 'retry-after': '10' }, {}, 'rate-limited'],
+    [{}, { message: 'You have exceeded a secondary rate limit' }, 'rate-limited'],
+  ])('classifies 403 using evidence', async (headers, body, code) => {
+    const { client } = fake([{ status: 403, headers, body }])
+    await expect(client.get('/forbidden')).rejects.toThrow(code)
+  })
+  it('refuses the default branch before any requests', async () => {
+    const { client, calls } = fake([])
+    await expect(
+      commitChanges(client, profile, { ...request, branch: profile.branch }),
+    ).rejects.toThrow('protected-branch')
+    expect(calls).toHaveLength(0)
+  })
+  it('accepts an explicitly allowed default branch', async () => {
+    const { client } = fake([
+      { body: { object: { sha: request.baseSha } } },
+      {},
+      { body: { tree: { sha: 'base' } } },
+      { body: { sha: 'blob' } },
+      { body: { sha: 'tree' } },
+      { body: { sha: 'commit', html_url: 'url' } },
+      {},
+    ])
+    const result = await commitChanges(client, profile, {
+      ...request,
+      branch: profile.branch,
+      allowDefaultBranch: true,
+    })
+    expect(result.commitSha).toBe('commit')
+  })
+  it.each([true, false])('handles a backup collision (same SHA: %s)', async (same) => {
+    const { client, calls } = fake([
+      { body: { object: { sha: request.baseSha } } },
+      { status: 422 },
+      { body: { object: { sha: same ? request.baseSha : 'another' } } },
+      ...(!same ? [{}] : []),
+      { body: { tree: { sha: 'base' } } },
+      { body: { sha: 'blob' } },
+      { body: { sha: 'tree' } },
+      { body: { sha: 'commit', html_url: 'url' } },
+      {},
+    ])
+    const result = await commitChanges(client, profile, request)
+    const backupPosts = calls.filter(
+      (call) => call.method === 'POST' && call.url.endsWith('/git/refs'),
+    )
+    expect(backupPosts).toHaveLength(same ? 1 : 2)
+    if (!same) expect(result.backupRef).toMatch(/-[a-f0-9]{8}$/)
+  })
+  it('maps a ref update race during a commit to branch-moved', async () => {
+    const { client } = fake([
+      { body: { object: { sha: request.baseSha } } },
+      {},
+      { body: { tree: { sha: 'base' } } },
+      { body: { sha: 'blob' } },
+      { body: { sha: 'tree' } },
+      { body: { sha: 'commit', html_url: 'url' } },
+      { status: 422 },
+    ])
+    await expect(commitChanges(client, profile, request)).rejects.toThrow('branch-moved')
+  })
+})

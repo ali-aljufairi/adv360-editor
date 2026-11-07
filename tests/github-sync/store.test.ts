@@ -84,6 +84,7 @@ describe('sync store', () => {
     expect(store.getSnapshot()).toMatchObject({ phase: 'ready', source: { fromCache: false } })
     expect(deps.onLoaded).toHaveBeenCalledExactlyOnceWith(fresh.files, 'old')
     expect(JSON.parse(data.get(key)!)).toEqual(fresh)
+    expect(JSON.parse(data.get('adv360-editor:config:test:sha:old')!)).toEqual(fresh)
   })
 
   it('applies cache before revalidation', async () => {
@@ -192,6 +193,8 @@ describe('sync store', () => {
       error: null,
       build: null,
       lastCommit: null,
+      remoteSha: null,
+      buildTimedOut: false,
     })
   })
 })

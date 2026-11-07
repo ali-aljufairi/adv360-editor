@@ -11,9 +11,11 @@ const Context = createContext<SyncStore | null>(null)
 export function SyncProvider({
   children,
   onLoaded,
+  isDirty,
 }: {
   children: ReactNode
   onLoaded: SyncDeps['onLoaded']
+  isDirty?: SyncDeps['isDirty']
 }) {
   const ref = useRef<SyncStore | null>(null)
   if (!ref.current)
@@ -26,6 +28,7 @@ export function SyncProvider({
       now: () => new Date(),
       setTimeout: (callback, delay) => setTimeout(callback, delay),
       onLoaded,
+      isDirty,
     })
   const store = ref.current
   return <Context.Provider value={store}>{children}</Context.Provider>
