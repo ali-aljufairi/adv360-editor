@@ -26,7 +26,7 @@ import { useEditor } from '../../lib/editor-state'
 import { defaultBranchName, useSync } from '../../lib/github-sync'
 import { BuildPanel } from '../github/BuildPanel'
 import { ExportDialog } from '../export/ExportDialog'
-import { SyncHeader } from '../github/SyncHeader'
+import { SignInButton, SyncHeader } from '../github/SyncHeader'
 import { ProfileSelect } from '../github/ProfileSelect'
 import { syncErrorText } from '../github/errorText'
 import { useSettings } from '../../lib/settings/context'
@@ -589,6 +589,7 @@ export function EditorPage() {
             V3.0
           </span>
         </div>
+        {!sync.user && sync.phase !== 'loading' ? <SignInButton onSignIn={sync.signIn} /> : null}
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -616,7 +617,6 @@ export function EditorPage() {
             onRetry={syncError ? retryFromError : null}
             remoteSha={sync.remoteSha}
             onApplyRemote={sync.applyRemote}
-            onSignIn={sync.signIn}
             onSignOut={sync.signOut}
             onReload={sync.reload}
             onDismiss={dismissError}
@@ -656,7 +656,7 @@ export function EditorPage() {
       </header>
 
       <div className="shell-layer relative flex min-h-0 max-md:[&:has([data-problems-collapsed])_main]:pt-12">
-        <ProblemsPanel issues={issues} onJump={jump} />
+        {sync.source ? <ProblemsPanel issues={issues} onJump={jump} /> : null}
         <div className="shell-layer relative min-w-0 flex-1">
           <div className="absolute inset-0 overflow-auto">
             <main className="mx-auto flex max-w-6xl flex-col gap-5 px-4 pt-5 pb-28 sm:px-6">
@@ -685,47 +685,71 @@ export function EditorPage() {
                 </div>
               ) : null}
 
-              <div className="flex justify-center">
-                <LayerTabs
-                  layers={tabs}
-                  active={activeLayer}
-                  onChange={editor.setActiveLayer}
-                  onAdd={() => setLayerDialog({ kind: 'add' })}
-                  onRename={(index) => setLayerDialog({ kind: 'rename', index })}
-                  onMove={(index, to) => runLayerAction(() => editor.moveLayer(index, to))}
-                  onDelete={(index) =>
-                    runLayerAction(
-                      () =>
-                        setLayerDialog({
-                          kind: 'delete',
-                          index,
-                          references: editor.layerReferences(index),
-                        }),
-                      false,
-                    )
-                  }
-                  onCopy={(index) => setLayerDialog({ kind: 'copy', index })}
-                />
-              </div>
+              {sync.source ? (
+                <>
+                  <div className="flex justify-center">
+                    <LayerTabs
+                      layers={tabs}
+                      active={activeLayer}
+                      onChange={editor.setActiveLayer}
+                      onAdd={() => setLayerDialog({ kind: 'add' })}
+                      onRename={(index) => setLayerDialog({ kind: 'rename', index })}
+                      onMove={(index, to) => runLayerAction(() => editor.moveLayer(index, to))}
+                      onDelete={(index) =>
+                        runLayerAction(
+                          () =>
+                            setLayerDialog({
+                              kind: 'delete',
+                              index,
+                              references: editor.layerReferences(index),
+                            }),
+                          false,
+                        )
+                      }
+                      onCopy={(index) => setLayerDialog({ kind: 'copy', index })}
+                    />
+                  </div>
 
-              <section aria-label="Keyboard" className="w-full">
-                <Board
-                  layout={layout}
-                  bindings={bindings}
-                  legendContext={legend}
-                  selectedKey={selectedKey}
-                  selectedKeys={editor.selectedKeys}
-                  changedKeys={changed}
-                  combos={model.combos}
-                  layerAccent={layerAccentOf(activeLayer)}
-                  layerIndex={activeLayer}
-                  showCombos={combosOn}
-                  onSelectKey={selectFromBoard}
-                  onActivateKey={openPicker}
-                  onKeyContextMenu={openKeyMenu}
-                  onBatchCommand={runBoardCommand}
-                />
-              </section>
+                  <section aria-label="Keyboard" className="w-full">
+                    <Board
+                      layout={layout}
+                      bindings={bindings}
+                      legendContext={legend}
+                      selectedKey={selectedKey}
+                      selectedKeys={editor.selectedKeys}
+                      changedKeys={changed}
+                      combos={model.combos}
+                      layerAccent={layerAccentOf(activeLayer)}
+                      layerIndex={activeLayer}
+                      showCombos={combosOn}
+                      onSelectKey={selectFromBoard}
+                      onActivateKey={openPicker}
+                      onKeyContextMenu={openKeyMenu}
+                      onBatchCommand={runBoardCommand}
+                    />
+                  </section>
+                </>
+              ) : (
+                <section
+                  aria-label="Keyboard"
+                  className="flex min-h-[40vh] flex-col items-center justify-center gap-2 text-center"
+                >
+                  <p className="text-base text-primary">
+                    {sync.phase === 'loading'
+                      ? 'Loading your keymap…'
+                      : sync.phase === 'error'
+                        ? 'Could not load your keymap'
+                        : 'Waiting for sign in'}
+                  </p>
+                  <p className="text-sm text-secondary">
+                    {sync.phase === 'loading'
+                      ? 'Fetching it from GitHub.'
+                      : sync.phase === 'error'
+                        ? 'Reload to try again.'
+                        : 'Sign in with GitHub to load and edit your keymap.'}
+                  </p>
+                </section>
+              )}
 
               {/* Always mounted: screen readers announce changes to a live region that exists. */}
               <p role="status" className="text-sm text-secondary">

@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { BuildPanel } from '../components/github/BuildPanel'
-import { SyncHeader } from '../components/github/SyncHeader'
+import { SignInButton, SyncHeader } from '../components/github/SyncHeader'
 import { syncErrorText } from '../components/github/errorText'
 import { ChangesSheet } from '../components/panels/ChangesSheet'
 import { SidePanel } from '../components/editor/SidePanel'
@@ -102,6 +102,11 @@ function SyncPreview() {
         id="mock-header"
         className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 border-b border-subtle pb-3"
       >
+        {!signedIn ? (
+          <div className="mr-auto">
+            <SignInButton onSignIn={() => undefined} />
+          </div>
+        ) : null}
         <SyncHeader
           phase={remote ? 'remote-changed' : signedIn ? 'ready' : 'signed-out'}
           user={signedIn ? USER : null}
@@ -110,7 +115,6 @@ function SyncPreview() {
           onRetry={() => undefined}
           remoteSha={remote ? 'c0ffee1234567890' : null}
           onApplyRemote={() => setRemote(false)}
-          onSignIn={() => undefined}
           onSignOut={() => undefined}
           onReload={() => undefined}
           onDismiss={() => undefined}
