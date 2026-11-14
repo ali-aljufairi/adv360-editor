@@ -1,11 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { BuildPanel } from '../components/github/BuildPanel'
-import { SignInButton, SyncHeader } from '../components/github/SyncHeader'
+import { AccountMenu, SignInButton, SyncHeader } from '../components/github/SyncHeader'
 import { syncErrorText } from '../components/github/errorText'
-import { ChangesSheet } from '../components/panels/ChangesSheet'
+import { ChangesBar, SyncFeedback } from '../components/github/ChangesBar'
+import { ChangesDetails } from '../components/github/ChangesDetails'
 import { SidePanel } from '../components/editor/SidePanel'
-import type { BuildStatus, CommitResult, SessionUser } from '../lib/github/types'
+import type { BranchCommit, BuildStatus, CommitResult, SessionUser } from '../lib/github/types'
 import type { SyncState } from '../lib/github-sync'
 
 export const Route = createFileRoute('/dev/sync')({ component: SyncPreview })
@@ -63,91 +64,208 @@ const DIFF = {
 }
 const SUMMARY = ['Base · key 12: Caps → Esc']
 
-/**
- * Preview of the GitHub header, review sheet and build dock from plain mock props.
- * @returns The preview page.
- */
+const HISTORY: BranchCommit[] = [
+  {
+    sha: COMMIT.commitSha,
+    message: SUMMARY[0],
+    url: COMMIT.commitUrl,
+    author: 'Ali',
+    date: SOURCE!.loadedAt,
+    parentSha: 'a1b2c3d4e5f6a7b8c9d0',
+  },
+  {
+    sha: 'a1b2c3d4e5f6a7b8c9d0',
+    message: 'Previous keymap',
+    url: '#',
+    author: 'Ali',
+    date: SOURCE!.loadedAt,
+    parentSha: null,
+  },
+]
+
+/** Local-only controls exercise success, loading, permission, and reversible states. */
 function SyncPreview() {
   const [signedIn, setSignedIn] = useState(true)
-  const [sheet, setSheet] = useState(false)
+  const [details, setDetails] = useState(false)
+  const [message, setMessage] = useState(SUMMARY[0])
+  const [dirty, setDirty] = useState(true)
+  const [busy, setBusy] = useState(false)
+  const [feedback, setFeedback] = useState<string | null>(null)
   const [build, setBuild] = useState<keyof typeof BUILDS>('success')
   const [remote, setRemote] = useState(false)
   const [timedOut, setTimedOut] = useState(false)
-  const errorCode = signedIn ? 'branch-moved' : 'not-allowed'
+  const [error, setError] = useState<'forbidden' | 'branch-moved' | null>(null)
+  const [permission, setPermission] = useState<'ready' | 'contents' | 'actions' | 'installation'>(
+    'ready',
+  )
+  const [history, setHistory] = useState(HISTORY)
+  const push = () => {
+    setBusy(true)
+    setTimeout(() => {
+      setBusy(false)
+      setDirty(false)
+      setDetails(false)
+      setFeedback(`Pushed ${COMMIT.commitSha.slice(0, 7)}`)
+    }, 600)
+  }
+  const restore = () => {
+    setBusy(true)
+    setTimeout(() => {
+      setBusy(false)
+      setFeedback('Pushed abc1234')
+      setHistory([
+        { ...HISTORY[0], sha: 'abc1234', message: 'Restore keymap to a1b2c3d' },
+        ...history,
+      ])
+    }, 600)
+  }
+  const permissionMessage =
+    permission === 'contents'
+      ? 'Pushing requires Contents: read and write. Update the GitHub App permissions and accept the installation update.'
+      : permission === 'actions'
+        ? 'Pushing is available. Grant Actions: read to see firmware builds.'
+        : permission === 'installation'
+          ? 'Give the GitHub App access to ali-aljufairi/Adv360-Pro-ZMK in its repository selection.'
+          : null
+  const accessUrl = 'https://github.com/ali-aljufairi/Adv360-Pro-ZMK/settings/installations'
   return (
-    <div className="flex min-h-dvh flex-col gap-6 bg-canvas p-6 text-primary">
+    <div className="flex min-h-dvh flex-col gap-6 bg-canvas p-4 text-primary sm:p-6">
       <div className="flex flex-wrap gap-3 text-sm">
-        <button type="button" onClick={() => setSignedIn(true)}>
-          signed in
-        </button>
-        <button type="button" onClick={() => setSignedIn(false)}>
-          signed out
+        <button type="button" onClick={() => setSignedIn((value) => !value)}>
+          Toggle sign in
         </button>
         <button type="button" onClick={() => setRemote((value) => !value)}>
-          remote changed
+          Remote changed
         </button>
         <button type="button" onClick={() => setTimedOut((value) => !value)}>
-          build timed out
+          Build timed out
         </button>
-        <button type="button" onClick={() => setSheet(true)}>
-          open review
+        <button
+          type="button"
+          onClick={() => {
+            setDirty(true)
+            setFeedback(null)
+          }}
+        >
+          Edit a key
         </button>
+        <button type="button" onClick={() => setError('branch-moved')}>
+          Branch conflict
+        </button>
+        <button type="button" onClick={() => setError('forbidden')}>
+          Push forbidden
+        </button>
+        {(['ready', 'installation', 'contents', 'actions'] as const).map((name) => (
+          <button
+            key={name}
+            type="button"
+            onClick={() => {
+              setPermission(name)
+              setError(null)
+            }}
+          >
+            {name} access
+          </button>
+        ))}
         {Object.keys(BUILDS).map((name) => (
           <button key={name} type="button" onClick={() => setBuild(name)}>
-            build {name}
+            Build {name}
           </button>
         ))}
       </div>
-      <header
-        id="mock-header"
-        className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 border-b border-subtle pb-3"
-      >
-        {!signedIn ? (
-          <div className="mr-auto">
-            <SignInButton onSignIn={() => undefined} />
-          </div>
-        ) : null}
+      <header className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 border-b border-subtle pb-3">
+        <div className="mr-auto">
+          {signedIn ? (
+            <AccountMenu
+              user={USER}
+              onReload={() => undefined}
+              onSignOut={() => setSignedIn(false)}
+            />
+          ) : (
+            <SignInButton onSignIn={() => setSignedIn(true)} />
+          )}
+        </div>
         <SyncHeader
           phase={remote ? 'remote-changed' : signedIn ? 'ready' : 'signed-out'}
           user={signedIn ? USER : null}
           source={signedIn ? SOURCE : null}
-          errorText={syncErrorText({ code: errorCode, message: '' })}
-          onRetry={() => undefined}
+          errorText={error ? syncErrorText({ code: error, message: '' }) : permissionMessage}
+          accessUrl={permissionMessage || error === 'forbidden' ? accessUrl : null}
+          onRetry={() => {
+            setPermission('ready')
+            setError(null)
+          }}
           remoteSha={remote ? 'c0ffee1234567890' : null}
           onApplyRemote={() => setRemote(false)}
-          onSignOut={() => undefined}
-          onReload={() => undefined}
-          onDismiss={() => undefined}
-        />
-      </header>
-      <div className="flex flex-wrap gap-6">
-        <div className="relative h-[480px] w-[420px] border border-subtle">
-          <SidePanel title="Build" onClose={() => undefined}>
-            <BuildPanel
-              commit={COMMIT}
-              build={BUILDS[build]}
-              buildTimedOut={timedOut}
-              onRepoll={() => setTimedOut(false)}
-            />
-          </SidePanel>
-        </div>
-      </div>
-      {sheet ? (
-        <ChangesSheet
-          diff={DIFF}
-          summary={SUMMARY}
-          onClose={() => setSheet(false)}
-          onDiscard={() => setSheet(false)}
-          commit={{
-            signedIn,
-            committing: false,
-            protectedBranch: 'V3.0',
-            defaultBranch: 'editor/20261107-1412',
-            onSignIn: () => undefined,
-            onCommit: () => undefined,
+          onDismiss={() => {
+            setError(null)
+            setPermission('ready')
           }}
         />
-      ) : null}
+      </header>
+      <div className="flex min-h-0 flex-col gap-6 md:flex-row">
+        <div className="min-w-0 flex-1">
+          <div className="flex min-h-48 items-center justify-center text-muted">
+            Keyboard preview
+          </div>
+          {details ? (
+            <ChangesDetails
+              diff={DIFF}
+              summary={SUMMARY}
+              message={message}
+              onMessage={setMessage}
+              branch="New editor branch · V3.0 stays untouched"
+            />
+          ) : null}
+          <ChangesBar
+            count={dirty ? 1 : 0}
+            busy={busy}
+            signedIn={signedIn}
+            canPush={!remote && permission !== 'contents' && permission !== 'installation'}
+            detailsOpen={details}
+            onCommit={push}
+            onDiscard={() => {
+              setDirty(false)
+              setDetails(false)
+              setFeedback('Discarded')
+            }}
+            onDetails={() => setDetails((value) => !value)}
+            onSignIn={() => setSignedIn(true)}
+          />
+          <SyncFeedback
+            message={feedback}
+            actionLabel={feedback === 'Discarded' ? 'Restore' : 'Undo'}
+            disabled={busy || dirty}
+            onAction={
+              feedback === 'Discarded'
+                ? () => {
+                    setDirty(true)
+                    setFeedback(null)
+                  }
+                : restore
+            }
+          />
+        </div>
+        <SidePanel title="Build & history" stacked onClose={() => undefined}>
+          <BuildPanel
+            commit={COMMIT}
+            build={BUILDS[build]}
+            buildTimedOut={timedOut}
+            onRepoll={() => setTimedOut(false)}
+            history={history}
+            currentSha={history[0]?.sha}
+            restoreDisabled={
+              dirty || busy || permission === 'contents' || permission === 'installation'
+            }
+            onRestore={restore}
+            onRefreshHistory={() => undefined}
+            buildError={
+              permission === 'actions' ? 'GitHub denied build access. Grant Actions: read.' : null
+            }
+            accessUrl={accessUrl}
+          />
+        </SidePanel>
+      </div>
     </div>
   )
 }

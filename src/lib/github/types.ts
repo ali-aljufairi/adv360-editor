@@ -32,6 +32,8 @@ export interface CommitRequest {
   message: string
   /** Changed files only: repo-relative path → full new text. */
   files: FileMap
+  /** Files removed by a history restore. */
+  deletePaths?: string[]
 }
 
 /** The result of a successful commit. */
@@ -76,5 +78,42 @@ export type GitHubErrorCode =
   | 'forbidden'
   | 'protected-branch'
   | 'remote-changed'
+  | 'local-changes'
   | 'timeout'
   | 'transient-refresh'
+
+/** Installation capabilities for the configured repo; never contains credentials. */
+export interface RepositoryAccess {
+  reason:
+    | 'ready'
+    | 'not-installed'
+    | 'repo-not-selected'
+    | 'suspended'
+    | 'contents-readonly'
+    | 'actions-readonly'
+  canPush: boolean
+  canReadBuilds: boolean
+  settingsUrl: string
+  message: string | null
+}
+/** One entry in the editor branch history. */
+export interface BranchCommit {
+  sha: string
+  message: string
+  url: string
+  author: string
+  date: string
+  parentSha: string | null
+}
+/** Restore config from an ancestor onto the unchanged editor branch head. */
+export interface RestoreRequest {
+  profileId: string
+  branch: string
+  baseSha: string
+  targetSha: string
+}
+/** A new restore commit and its complete config baseline. */
+export interface RestoreResult {
+  commit: CommitResult
+  config: LoadedConfig
+}

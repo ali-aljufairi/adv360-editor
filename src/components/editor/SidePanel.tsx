@@ -2,6 +2,7 @@ import type { FocusEvent, KeyboardEvent, ReactNode } from 'react'
 
 /** Props for a docked side panel. */
 export interface SidePanelProps {
+  stacked?: boolean
   title: string
   onClose(): void
   children: ReactNode
@@ -14,7 +15,7 @@ export interface SidePanelProps {
  * @param props - Title, close handler and content.
  * @returns The panel column.
  */
-export function SidePanel({ title, onClose, children }: SidePanelProps) {
+export function SidePanel({ title, onClose, children, stacked = false }: SidePanelProps) {
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key !== 'Escape') return
     event.stopPropagation()
@@ -24,7 +25,7 @@ export function SidePanel({ title, onClose, children }: SidePanelProps) {
     <aside
       aria-label={title}
       onKeyDown={onKeyDown}
-      className="z-20 flex min-h-0 flex-col border-l border-subtle bg-raised text-primary max-md:absolute max-md:inset-0 md:static md:w-[420px] md:shrink-0"
+      className={`z-20 flex min-h-0 flex-col border-subtle bg-raised text-primary md:border-l md:static md:w-[420px] md:shrink-0 ${stacked ? 'max-md:w-full max-md:max-h-[45dvh] max-md:shrink-0 max-md:border-t' : 'border-l max-md:absolute max-md:inset-0'}`}
     >
       <header className="flex h-12 shrink-0 items-center gap-3 border-b border-subtle px-4">
         <h2 className="text-base font-semibold">{title}</h2>

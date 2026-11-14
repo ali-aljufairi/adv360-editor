@@ -1,7 +1,16 @@
-import type { BuildStatus, CommitResult } from '../../lib/github/types'
+import type { BranchCommit, BuildStatus, CommitResult } from '../../lib/github/types'
 
 /** Props for the build dock. Plain data only. */
 export interface BuildPanelProps {
+  history?: BranchCommit[]
+  historyLoading?: boolean
+  historyError?: string | null
+  onRefreshHistory?(): void
+  onRestore?(sha: string): void
+  restoreDisabled?: boolean
+  currentSha?: string
+  buildError?: string | null
+  accessUrl?: string
   commit: CommitResult | null
   build: BuildStatus | null
   /** True after polling gave up on the last commit's build. */
@@ -36,7 +45,21 @@ function runStatus(build: BuildStatus): { label: string; color: string } {
  * @param props - The last commit and the build status.
  * @returns The panel body.
  */
-export function BuildPanel({ commit, build, buildTimedOut, onRepoll }: BuildPanelProps) {
+export function BuildPanel({
+  commit,
+  build,
+  buildTimedOut,
+  onRepoll,
+  history = [],
+  historyLoading,
+  historyError,
+  onRefreshHistory,
+  onRestore,
+  restoreDisabled,
+  currentSha,
+  buildError,
+  accessUrl,
+}: BuildPanelProps) {
   const status = build ? runStatus(build) : null
   const artifacts =
     build?.run?.status === 'completed' && build.run.conclusion === 'success' ? build.artifacts : []
@@ -62,6 +85,28 @@ export function BuildPanel({ commit, build, buildTimedOut, onRepoll }: BuildPane
         </section>
       ) : null}
 
+      {buildError ? (
+        <section role="alert" className="flex flex-col gap-2 text-[var(--status-warning)]">
+          <p>{buildError}</p>
+          {accessUrl ? (
+            <a
+              href={accessUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-4"
+            >
+              Manage GitHub App access
+            </a>
+          ) : null}
+          <button
+            type="button"
+            className="self-start underline underline-offset-4"
+            onClick={onRepoll}
+          >
+            Check build again
+          </button>
+        </section>
+      ) : null}
       {build && status ? (
         <section className="flex flex-col gap-2">
           <p className="flex items-center gap-2">
@@ -116,6 +161,73 @@ export function BuildPanel({ commit, build, buildTimedOut, onRepoll }: BuildPane
         </section>
       ) : null}
 
+      <section aria-label="Branch history" className="border-t border-subtle pt-4">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="font-medium">History</h3>
+          {onRefreshHistory ? (
+            <button
+              type="button"
+              disabled={historyLoading}
+              onClick={onRefreshHistory}
+              className="text-muted hover:text-primary disabled:opacity-50"
+            >
+              Refresh
+            </button>
+          ) : null}
+        </div>
+        <p className="mt-1 text-xs text-muted">
+          Revert creates a new commit. Push or discard local edits first.
+        </p>
+        {historyLoading ? (
+          <p role="status" className="mt-3 text-muted">
+            Loading history…
+          </p>
+        ) : null}
+        {historyError ? (
+          <p role="alert" className="mt-3 text-[var(--status-error)]">
+            {historyError}
+          </p>
+        ) : null}
+        {!history.length && !historyLoading && !historyError ? (
+          <p className="mt-3 text-muted">
+            Your editor branch history appears after the first push.
+          </p>
+        ) : null}
+        <ol className="mt-3 divide-y divide-subtle">
+          {history.map((entry) => (
+            <li key={entry.sha} className="py-3">
+              <a
+                href={entry.url}
+                target="_blank"
+                rel="noreferrer"
+                className="block break-words text-secondary hover:text-primary"
+              >
+                {entry.message}
+              </a>
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <span className="font-mono text-muted">{entry.sha.slice(0, 7)}</span>
+                <span className="text-muted">
+                  {entry.author}
+                  {entry.date ? ` · ${new Date(entry.date).toLocaleString()}` : ''}
+                </span>
+                {entry.sha === currentSha ? (
+                  <span className="text-muted">Current</span>
+                ) : onRestore ? (
+                  <button
+                    type="button"
+                    disabled={restoreDisabled}
+                    onClick={() => onRestore(entry.sha)}
+                    aria-label={`Revert to ${entry.sha.slice(0, 7)}: ${entry.message}`}
+                    className="text-secondary underline underline-offset-4 hover:text-primary disabled:text-muted disabled:no-underline"
+                  >
+                    Revert to this
+                  </button>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
       <p className="border-t border-subtle pt-4 text-muted">{FLASH_REMINDER}</p>
     </div>
   )

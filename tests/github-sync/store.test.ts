@@ -164,7 +164,7 @@ describe('sync store', () => {
       message: 'save',
       branch: 'main',
       allowDefaultBranch: true,
-      changedFiles: {},
+      changedFiles: { a: 'new' },
     })
     await flush()
     if (reason === 'cap') setTime(new Date('2026-01-01T00:30:00Z'))
@@ -209,6 +209,12 @@ describe('sync store', () => {
       error: null,
       build: null,
       lastCommit: null,
+      undoSha: null,
+      access: null,
+      buildError: null,
+      history: [],
+      historyLoading: false,
+      historyError: null,
       remoteSha: null,
       buildTimedOut: false,
     })

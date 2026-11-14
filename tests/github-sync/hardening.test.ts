@@ -111,7 +111,12 @@ describe('sync revalidation', () => {
   it('exposes timeout and permits repolling', async () => {
     const { store, deps, queue, advance } = setup()
     await store.init()
-    await store.commit({ branch: 'b', message: 'x', allowDefaultBranch: true, changedFiles: {} })
+    await store.commit({
+      branch: 'b',
+      message: 'x',
+      allowDefaultBranch: true,
+      changedFiles: { a: 'new' },
+    })
     await flush()
     advance()
     queue.shift()!()

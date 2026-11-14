@@ -19,7 +19,7 @@ Ideas may be borrowed from <https://github.com/nickcoutsos/keymap-editor> (MIT) 
    to firmware artifacts. Flashing is always a separate, human, explicitly approved step.
 3. **Preserve unknowns.** Anything the parser does not understand is kept verbatim and shown as
    read-only "raw" content — never dropped or rewritten.
-4. **Show the diff before every save/commit.** Undo history and a backup branch per commit.
+4. **Fast, reversible saves.** One-click Commit & push with an automatic message and editor branch; optional inline diff, Undo through a new restore commit, and branch history. Existing editor branches are backed up before writes. (Updated 2026-11-14.)
 5. **Single user.** Only GitHub user `ali-aljufairi` may sign in.
 
 ## Stack

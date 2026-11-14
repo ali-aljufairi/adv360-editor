@@ -120,14 +120,14 @@ export function buildCommands(ctx: CommandContext): Command[] {
     },
     {
       id: 'edit.review',
-      title: 'Review changes',
+      title: 'Show change details',
       group: 'Edit',
       disabled: !ctx.dirty,
       run: () => ctx.reviewChanges(),
     },
     {
       id: 'edit.discard',
-      title: 'Discard all changes…',
+      title: 'Discard changes',
       group: 'Edit',
       disabled: !ctx.dirty,
       run: () => ctx.discardChanges(),
