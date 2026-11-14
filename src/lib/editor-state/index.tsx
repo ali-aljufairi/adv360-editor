@@ -504,8 +504,10 @@ export function createEditorStore(
     },
     diff: () => fileDiff(baseline, current.files),
     reset: () => {
+      if (!state.dirty) return
+      past.push(current)
+      if (past.length > 200) past.shift()
       current = { ...current, files: { ...baseline } }
-      past = []
       future = []
       lastEdit = null
       emit(true)

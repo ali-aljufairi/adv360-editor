@@ -132,3 +132,18 @@ describe('editor store', () => {
     ).not.toThrow()
   })
 })
+
+it('keeps discard reversible with Undo and Redo', () => {
+  const store = create()
+  const baseline = store.getSnapshot().files
+  store.setBinding(0, 0, '&kp CAPS')
+  const edited = store.getSnapshot().files
+  store.reset()
+  expect(store.getSnapshot().files).toEqual(baseline)
+  expect(store.getSnapshot().dirty).toBe(false)
+  store.undo()
+  expect(store.getSnapshot().files).toEqual(edited)
+  expect(store.getSnapshot().dirty).toBe(true)
+  store.redo()
+  expect(store.getSnapshot().files).toEqual(baseline)
+})

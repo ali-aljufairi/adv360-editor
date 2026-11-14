@@ -237,3 +237,18 @@ describe('hardening', () => {
     await expect(commitChanges(client, profile, request)).rejects.toThrow('branch-moved')
   })
 })
+
+it('preserves permission failure evidence and treats expired tokens as signed out', async () => {
+  const { client } = fake([
+    {
+      status: 403,
+      body: { message: 'Resource not accessible by integration' },
+      headers: { 'x-accepted-github-permissions': 'contents=write' },
+    },
+  ])
+  await expect(client.write('POST', '/repos/owner/repo/git/refs', {})).rejects.toThrow(
+    'forbidden: POST /repos/owner/repo/git/refs (403): Resource not accessible by integration. Required permissions: contents=write',
+  )
+  const expired = fake([{ status: 401 }])
+  await expect(expired.client.get('/user')).rejects.toThrow('not-signed-in')
+})

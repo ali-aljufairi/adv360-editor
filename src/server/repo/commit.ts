@@ -11,10 +11,11 @@ export async function commitChanges(
   if (request.branch === profile.branch && !request.allowDefaultBranch)
     throw new Error('protected-branch: default branch requires explicit approval')
   const entries = Object.entries(request.files)
+  const deleted = request.deletePaths ?? []
   if (
-    !entries.length ||
-    entries.some(
-      ([path]) =>
+    (!entries.length && !deleted.length) ||
+    [...entries.map(([path]) => path), ...deleted].some(
+      (path) =>
         !path.startsWith(`${profile.configRoot}/`) ||
         path.split('/').some((part) => part === '..' || part === '') ||
         path.includes('\\'),
@@ -61,7 +62,7 @@ export async function commitChanges(
     }
   }
   const commit = await client.get<{ tree: { sha: string } }>(`${root}/git/commits/${head}`)
-  const tree = []
+  const tree: { path: string; mode: string; type: string; sha: string | null }[] = []
   for (const [path, content] of entries) {
     const blob = await client.write<{ sha: string }>('POST', `${root}/git/blobs`, {
       content,
@@ -69,6 +70,7 @@ export async function commitChanges(
     })
     tree.push({ path, mode: '100644', type: 'blob', sha: blob.sha })
   }
+  for (const path of deleted) tree.push({ path, mode: '100644', type: 'blob', sha: null })
   const createdTree = await client.write<{ sha: string }>('POST', `${root}/git/trees`, {
     base_tree: commit.tree.sha,
     tree,

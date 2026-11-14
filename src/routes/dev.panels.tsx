@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { ChangesPill } from '../components/panels/ChangesPill'
-import { ChangesSheet } from '../components/panels/ChangesSheet'
+import { ChangesBar } from '../components/github/ChangesBar'
+import { ChangesDetails } from '../components/github/ChangesDetails'
 import { ProblemsPanel } from '../components/panels/ProblemsPanel'
 import { ThemePicker } from '../components/theme-picker/ThemePicker'
 import type { Issue } from '../lib/zmk/types'
@@ -80,7 +80,7 @@ const SAMPLE_SUMMARY = [
 ]
 
 /**
- * Dev-only page that shows the problems list, the changes pill and sheet, and the theme picker
+ * Dev-only page that shows the problems list, the changes bar and details, and the theme picker
  * with sample data. Cmd-K (or Ctrl-K) opens the theme picker, as the page owns that shortcut.
  * @returns The panels demo page.
  */
@@ -152,21 +152,32 @@ function PanelsPage() {
             </button>
           </div>
           <p className="text-xs text-muted">
-            The pill appears at the bottom of the screen while there are changes.
+            Commit controls appear while there are changes. Details are optional.
           </p>
         </section>
 
         <ThemePicker open={pickerOpen} onClose={() => setPickerOpen(false)} />
 
         {sheetOpen && (
-          <ChangesSheet
+          <ChangesDetails
             diff={diff}
             summary={summary}
-            onClose={() => setSheetOpen(false)}
-            onDiscard={discard}
+            message="Update keymap"
+            onMessage={() => undefined}
+            branch="Preview"
           />
         )}
-        <ChangesPill count={summary.length} onOpen={() => setSheetOpen(true)} />
+        <ChangesBar
+          count={summary.length}
+          busy={false}
+          signedIn={false}
+          canPush={false}
+          detailsOpen={sheetOpen}
+          onCommit={() => undefined}
+          onDiscard={discard}
+          onDetails={() => setSheetOpen((value) => !value)}
+          onSignIn={() => undefined}
+        />
       </div>
     </main>
   )

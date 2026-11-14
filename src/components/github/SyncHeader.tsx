@@ -9,13 +9,14 @@ export interface SyncHeaderProps {
   source: SyncState['source']
   /** Sentence to show, or null when there is nothing to report. */
   errorText: string | null
+  /** Exact installation settings page, or the repo integrations page. */
+  accessUrl?: string | null
+  diagnostic?: string
   /** Retry handler; null hides the Retry action. */
   onRetry: (() => void) | null
   /** SHA of the newer GitHub version, set while phase is remote-changed. */
   remoteSha: string | null
   onApplyRemote(): void
-  onSignOut(): void
-  onReload(): void
   onDismiss(): void
 }
 
@@ -51,15 +52,19 @@ export function SyncHeader({
   user,
   source,
   errorText,
+  accessUrl,
+  diagnostic,
   onRetry,
   remoteSha,
   onApplyRemote,
-  onSignOut,
-  onReload,
   onDismiss,
 }: SyncHeaderProps) {
+  const [confirmRemote, setConfirmRemote] = useState(false)
   const loadRemote = () => {
-    if (window.confirm('Discard your unsaved edits and load the GitHub version?')) onApplyRemote()
+    if (confirmRemote) {
+      onApplyRemote()
+      setConfirmRemote(false)
+    } else setConfirmRemote(true)
   }
   return (
     <>
@@ -68,11 +73,19 @@ export function SyncHeader({
         <p role="alert" className="basis-full text-right text-sm text-[var(--status-warning)]">
           {`Changed on GitHub (${remoteSha.slice(0, 7)})`}
           <button type="button" onClick={loadRemote} className="ml-3 underline underline-offset-4">
-            Load remote
+            {confirmRemote ? 'Discard edits & load remote' : 'Load remote'}
           </button>
+          {confirmRemote ? (
+            <button
+              type="button"
+              className="ml-3 text-muted"
+              onClick={() => setConfirmRemote(false)}
+            >
+              Cancel
+            </button>
+          ) : null}
         </p>
       ) : null}
-      {user ? <AccountMenu user={user} onReload={onReload} onSignOut={onSignOut} /> : null}
       {user && source && phase !== 'loading' ? (
         <span className="hidden text-sm text-muted sm:inline">
           {`${source.branch} @ ${source.headSha.slice(0, 7)}${source.fromCache ? ' · cached' : ''}`}
@@ -80,7 +93,17 @@ export function SyncHeader({
       ) : null}
       {errorText ? (
         <p role="alert" className="basis-full text-right text-sm text-[var(--status-error)]">
-          {errorText}
+          <span title={diagnostic}>{errorText}</span>
+          {accessUrl ? (
+            <a
+              href={accessUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="ml-3 underline underline-offset-4"
+            >
+              Manage GitHub App access
+            </a>
+          ) : null}
           {onRetry ? (
             <button type="button" onClick={onRetry} className="ml-3 underline underline-offset-4">
               Retry
@@ -100,7 +123,7 @@ export function SyncHeader({
  * @param props - The user and the menu actions.
  * @returns The account button and its menu.
  */
-function AccountMenu({
+export function AccountMenu({
   user,
   onReload,
   onSignOut,
@@ -145,7 +168,7 @@ function AccountMenu({
       {open ? (
         <div
           role="menu"
-          className="absolute right-0 top-full z-30 mt-1 flex min-w-44 flex-col border border-subtle bg-raised py-1 text-sm"
+          className="absolute left-0 top-full z-30 mt-1 flex min-w-44 flex-col border border-subtle bg-raised py-1 text-sm"
         >
           <button
             type="button"

@@ -56,3 +56,35 @@ export const getBuildStatusFn = createServerFn({ method: 'GET' })
     const { getBuildStatus } = await import('./build')
     return getBuildStatus(await client(), getKeyboardProfile(data.profileId), data.commitSha)
   })
+
+export const getRepositoryAccessFn = createServerFn({ method: 'GET' })
+  .validator((value: { profileId: string }) => ({ profileId: string(object(value).profileId) }))
+  .handler(async ({ data }) => {
+    const { getRepositoryAccess } = await import('./access')
+    return getRepositoryAccess(await client(), getKeyboardProfile(data.profileId))
+  })
+
+export const getBranchHistoryFn = createServerFn({ method: 'GET' })
+  .validator((value: { profileId: string; branch: string }) => {
+    const input = object(value)
+    return { profileId: string(input.profileId), branch: string(input.branch) }
+  })
+  .handler(async ({ data }) => {
+    const { getBranchHistory } = await import('./history')
+    return getBranchHistory(await client(), getKeyboardProfile(data.profileId), data.branch)
+  })
+
+export const restoreConfigFn = createServerFn({ method: 'POST' })
+  .validator((value: import('../../lib/github/types').RestoreRequest) => {
+    const input = object(value)
+    return {
+      profileId: string(input.profileId),
+      branch: string(input.branch),
+      baseSha: string(input.baseSha),
+      targetSha: string(input.targetSha),
+    }
+  })
+  .handler(async ({ data }) => {
+    const { restoreConfig } = await import('./history')
+    return restoreConfig(await client(), getKeyboardProfile(data.profileId), data)
+  })

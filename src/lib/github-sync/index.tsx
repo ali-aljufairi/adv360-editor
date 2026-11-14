@@ -1,7 +1,14 @@
 import { createContext, useContext, useEffect, useRef, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
 import { getSession } from '../../server/auth/functions'
-import { commitChangesFn, getBuildStatusFn, loadConfigFn } from '../../server/repo/functions'
+import {
+  commitChangesFn,
+  getBuildStatusFn,
+  loadConfigFn,
+  getRepositoryAccessFn,
+  getBranchHistoryFn,
+  restoreConfigFn,
+} from '../../server/repo/functions'
 import { createSyncStore } from './store'
 import type { SyncDeps, SyncStore } from './store'
 import type { KeyboardProfile } from '../profile'
@@ -27,6 +34,9 @@ export function SyncProvider({
       loadConfig: (data) => loadConfigFn({ data }),
       commitChanges: (data) => commitChangesFn({ data }),
       getBuildStatus: (data) => getBuildStatusFn({ data }),
+      getRepositoryAccess: (data) => getRepositoryAccessFn({ data }),
+      getBranchHistory: (data) => getBranchHistoryFn({ data }),
+      restoreConfig: (data) => restoreConfigFn({ data }),
       storage: typeof window === 'undefined' ? undefined : window.localStorage,
       now: () => new Date(),
       setTimeout: (callback, delay) => setTimeout(callback, delay),

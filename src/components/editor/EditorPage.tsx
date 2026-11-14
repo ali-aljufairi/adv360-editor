@@ -1,5 +1,5 @@
 import { useActiveProfile } from '../../lib/profile/active'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Board, type BatchCommand, type SelectModifier } from '../board/Board'
 import { ContextMenu, type ContextMenuItem } from '../board/ContextMenu'
 import { LayerTabs } from '../board/LayerTabs'
@@ -12,8 +12,8 @@ import {
 } from '../layers/LayerDialogs'
 import type { LayerReference } from '../layers/LayerDialogs'
 import { layerAccentOf } from '../board/bindings'
-import { ChangesPill } from '../panels/ChangesPill'
-import { ChangesSheet } from '../panels/ChangesSheet'
+import { ChangesBar, SyncFeedback } from '../github/ChangesBar'
+import { ChangesDetails } from '../github/ChangesDetails'
 import { ProblemsPanel } from '../panels/ProblemsPanel'
 import { BindingPicker } from '../picker/BindingPicker'
 import { ThemePicker } from '../theme-picker/ThemePicker'
@@ -23,10 +23,10 @@ import { resolvePlatform } from '../../lib/keycodes/platform'
 import { BehaviorsDrawer } from '../behaviors/BehaviorsDrawer'
 import { useTheme } from '../../lib/theme/ThemeProvider'
 import { useEditor } from '../../lib/editor-state'
-import { defaultBranchName, useSync } from '../../lib/github-sync'
+import { defaultCommitMessage, useSync } from '../../lib/github-sync'
 import { BuildPanel } from '../github/BuildPanel'
 import { ExportDialog } from '../export/ExportDialog'
-import { SignInButton, SyncHeader } from '../github/SyncHeader'
+import { AccountMenu, SignInButton, SyncHeader } from '../github/SyncHeader'
 import { ProfileSelect } from '../github/ProfileSelect'
 import { syncErrorText } from '../github/errorText'
 import { useSettings } from '../../lib/settings/context'
@@ -128,7 +128,10 @@ export function EditorPage() {
   const [picker, setPicker] = useState<PickerTarget | null>(null)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [themeOpen, setThemeOpen] = useState(false)
-  const [sheetOpen, setSheetOpen] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [commitMessage, setCommitMessage] = useState('')
+  const [discarded, setDiscarded] = useState(false)
+  const editorFocusRef = useRef<HTMLElement>(null)
   /** The one docked side panel, if any. */
   const [panel, setPanel] = useState<PanelName | null>(null)
   /** True while keyboard focus is inside the docked panel; board keys then pause. */
@@ -163,11 +166,10 @@ export function EditorPage() {
     picker !== null ||
     paletteOpen ||
     themeOpen ||
-    sheetOpen ||
     helpOpen ||
     layerDialog !== null ||
     keyMenu !== null
-  const boardKeysOff = modalOpen || dockFocused
+  const boardKeysOff = modalOpen || dockFocused || sync.phase === 'committing'
 
   /** Opens a panel, or closes the dock when that panel is already showing. */
   const togglePanel = (name: PanelName) => {
@@ -191,11 +193,13 @@ export function EditorPage() {
     window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`)
   }, [])
 
-  // A successful commit closes the review and shows the build dock.
+  // Keep push feedback unobtrusive; leave the current panel in place.
   useEffect(() => {
     if (!sync.lastCommit) return
-    setSheetOpen(false)
-    setPanel('build')
+    setDetailsOpen(false)
+    setCommitMessage('')
+    setDiscarded(false)
+    editorFocusRef.current?.focus()
   }, [sync.lastCommit])
 
   const tabs = useMemo(() => layerTabsOf(model, issues), [model, issues])
@@ -208,7 +212,7 @@ export function EditorPage() {
   const bindings = model.layers[activeLayer]?.bindings ?? []
   const changed = useMemo(() => editor.changedKeys(activeLayer), [editor, activeLayer])
   const summary = useMemo(() => editor.summary(), [editor, files])
-  const diff = useMemo(() => (sheetOpen ? editor.diff() : {}), [editor, sheetOpen, files])
+  const diff = useMemo(() => (detailsOpen ? editor.diff() : {}), [editor, detailsOpen, files])
 
   const openPicker = (key: number) => {
     const binding = model.layers[activeLayer]?.bindings[key]
@@ -285,6 +289,7 @@ export function EditorPage() {
   // Digits 1–9 pick a layer in the arrows and emacs schemes, but only when not typing.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (sync.phase === 'committing') return
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
         setPaletteOpen(true)
@@ -301,7 +306,7 @@ export function EditorPage() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [editor, layerCount, boardKeysOff, scheme])
+  }, [editor, layerCount, boardKeysOff, scheme, sync.phase])
 
   const toggleCombos = () => {
     const next = !combosOn
@@ -340,18 +345,50 @@ export function EditorPage() {
         ? ('layer' as const)
         : ('key' as const),
     }))
-  const changeCount = summary.length
+  const changeCount = editor.dirty ? Math.max(1, summary.length) : 0
+  const busy = sync.phase === 'committing'
+  const canPush = !!sync.source && sync.phase === 'ready' && sync.access?.canPush !== false
+  const pushChanges = () => {
+    if (!canPush || !editor.dirty || busy) return
+    const paths = Object.keys(editor.diff()).filter((path) => path in editor.files)
+    setPicker(null)
+    setKeyMenu(null)
+    setLayerDialog(null)
+    setPaletteOpen(false)
+    void sync.commit({
+      message: commitMessage.trim() || defaultCommitMessage(summary),
+      changedFiles: Object.fromEntries(paths.map((path) => [path, editor.files[path]])),
+    })
+  }
+  const discardChanges = () => {
+    if (busy) return
+    editor.reset()
+    setDiscarded(true)
+    setDetailsOpen(false)
+    setCommitMessage('')
+    editorFocusRef.current?.focus()
+  }
+  const restoreHistory = (sha: string) => {
+    if (editor.dirty || busy) return
+    setDiscarded(false)
+    void sync.restore(sha)
+  }
 
   const displayPlatform = resolvePlatform(settings.platform)
   const syncError = sync.error && sync.error !== dismissedError ? sync.error : null
-  const errorText = syncError ? syncErrorText(syncError) : authNotice
+  const accessMessage = sync.access !== dismissedError ? sync.access?.message : null
+  const errorText = syncError
+    ? ((syncError.code === 'forbidden' || syncError.code === 'not-found') && accessMessage) ||
+      syncErrorText(syncError)
+    : (authNotice ?? accessMessage ?? null)
   const dismissError = () => {
-    setDismissedError(sync.error)
+    setDismissedError(sync.error ?? sync.access)
     setAuthNotice(null)
   }
   const retryFromError = () => {
     dismissError()
-    void sync.reload()
+    if (sync.error?.code === 'not-signed-in') sync.signIn()
+    else void sync.reload()
   }
 
   // Batch edits. Copy, paste, cut and clear act on the selection; the dialogs ask for the rest.
@@ -456,7 +493,7 @@ export function EditorPage() {
   }
 
   // TODO(m4, ⌘K): add commands once src/lib/commands accepts them: Sign in with GitHub,
-  // Sign out, Reload from GitHub, Commit & build (opens the review), Show build.
+  // Sign out, Reload from GitHub, Commit & push, Show build.
   const commands = buildCommands({
     layers: tabs.map(({ index, name }) => ({ index, name })),
     activeLayer,
@@ -479,8 +516,8 @@ export function EditorPage() {
     undo: editor.undo,
     redo: editor.redo,
     dirty: editor.dirty,
-    reviewChanges: () => setSheetOpen(true),
-    discardChanges: () => editor.reset(),
+    reviewChanges: () => setDetailsOpen((current) => !current),
+    discardChanges,
     combosShown: combosOn,
     toggleCombos,
     openBehaviors: () => setPanel('behaviors'),
@@ -569,7 +606,10 @@ export function EditorPage() {
 
   return (
     <div className="grid h-dvh grid-rows-[auto_1fr] overflow-hidden bg-canvas text-primary">
-      <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-subtle px-4 py-3 sm:px-6">
+      <header
+        inert={busy}
+        className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-subtle px-4 py-3 sm:px-6"
+      >
         <div className="flex items-baseline gap-2">
           <span className="text-base font-semibold">adv360</span>
           {profileContext.profiles.length > 1 ? (
@@ -583,13 +623,16 @@ export function EditorPage() {
             <span className="text-sm text-secondary">{profile.name}</span>
           )}
           <span
-            aria-label="Branch V3.0"
-            className="rounded-full border border-subtle px-2 text-xs text-muted"
+            aria-label={`Protected branch ${activeProfile.branch}`}
+            className="text-xs text-muted"
           >
-            V3.0
+            {activeProfile.branch}
           </span>
         </div>
         {!sync.user && sync.phase !== 'loading' ? <SignInButton onSignIn={sync.signIn} /> : null}
+        {sync.user ? (
+          <AccountMenu user={sync.user} onReload={sync.reload} onSignOut={sync.signOut} />
+        ) : null}
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -599,14 +642,14 @@ export function EditorPage() {
           >
             {displayPlatform === 'mac' ? '⌘K' : 'Ctrl K'}
           </button>
-          {sync.lastCommit || sync.build ? (
+          {sync.user && sync.source ? (
             <button
               type="button"
               aria-pressed={panel === 'build'}
               onClick={() => togglePanel('build')}
               className={navButton(panel === 'build')}
             >
-              Build
+              Build & history
             </button>
           ) : null}
           <SyncHeader
@@ -614,11 +657,22 @@ export function EditorPage() {
             user={sync.user}
             source={sync.source}
             errorText={errorText}
-            onRetry={syncError ? retryFromError : null}
+            accessUrl={
+              syncError?.code === 'forbidden' ||
+              syncError?.code === 'not-found' ||
+              sync.access?.message
+                ? (sync.access?.settingsUrl ??
+                  `https://github.com/${activeProfile.repo.owner}/${activeProfile.repo.name}/settings/installations`)
+                : null
+            }
+            diagnostic={syncError?.message}
+
+            onRetry={syncError || sync.access?.message ? retryFromError : null}
             remoteSha={sync.remoteSha}
-            onApplyRemote={sync.applyRemote}
-            onSignOut={sync.signOut}
-            onReload={sync.reload}
+            onApplyRemote={() => {
+              if (editor.dirty) editor.reset()
+              sync.applyRemote()
+            }}
             onDismiss={dismissError}
           />
           <button
@@ -655,11 +709,18 @@ export function EditorPage() {
         </div>
       </header>
 
-      <div className="shell-layer relative flex min-h-0 max-md:[&:has([data-problems-collapsed])_main]:pt-12">
+      <div
+        className={`shell-layer relative flex min-h-0 max-md:[&:has([data-problems-collapsed])_main]:pt-12 ${panel === 'build' ? 'max-md:flex-col' : ''}`}
+      >
         {sync.source ? <ProblemsPanel issues={issues} onJump={jump} /> : null}
-        <div className="shell-layer relative min-w-0 flex-1">
-          <div className="absolute inset-0 overflow-auto">
-            <main className="mx-auto flex max-w-6xl flex-col gap-5 px-4 pt-5 pb-28 sm:px-6">
+        <div className="shell-layer relative flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 overflow-auto">
+            <main
+              ref={editorFocusRef}
+              tabIndex={-1}
+              inert={busy}
+              className="mx-auto flex max-w-6xl flex-col gap-5 px-4 pt-5 pb-6 sm:px-6"
+            >
               {editor.staleDraft ? (
                 <div
                   role="alert"
@@ -757,18 +818,90 @@ export function EditorPage() {
               </p>
             </main>
           </div>
-          <ChangesPill count={changeCount} onOpen={() => setSheetOpen(true)} />
+          {detailsOpen ? (
+            <ChangesDetails
+              diff={diff}
+              summary={summary}
+              message={commitMessage || defaultCommitMessage(summary)}
+              onMessage={setCommitMessage}
+              branch={
+                sync.source?.branch.startsWith('editor/')
+                  ? sync.source.branch
+                  : `New editor branch · ${activeProfile.branch} stays untouched`
+              }
+            />
+          ) : null}
+          <ChangesBar
+            count={changeCount}
+            busy={busy}
+            signedIn={!!sync.user}
+            canPush={canPush}
+            detailsOpen={detailsOpen}
+            onCommit={pushChanges}
+            onDiscard={discardChanges}
+            onDetails={() => setDetailsOpen((value) => !value)}
+            onSignIn={sync.signIn}
+          />
+          <SyncFeedback
+            message={
+              discarded
+                ? !editor.dirty
+                  ? 'Discarded'
+                  : null
+                : sync.lastCommit
+                  ? `Pushed ${sync.lastCommit.commitSha.slice(0, 7)}`
+                  : null
+            }
+            actionLabel={discarded ? 'Restore' : 'Undo'}
+            onAction={
+              discarded && editor.canUndo
+                ? () => {
+                    editor.undo()
+                    setDiscarded(false)
+                  }
+                : !discarded && sync.undoSha
+                  ? () => restoreHistory(sync.undoSha!)
+                  : undefined
+            }
+            disabled={busy || editor.dirty}
+          />
         </div>
 
         <div
+          inert={busy}
           className="contents"
           onFocus={() => setDockFocused(true)}
           onBlur={(event) => setDockFocused(focusStaysInside(event))}
         >
           <BehaviorsDrawer open={panel === 'behaviors'} onClose={closePanel} />
           {panel === 'build' ? (
-            <SidePanel title="Build" onClose={closePanel}>
+            <SidePanel title="Build & history" stacked onClose={closePanel}>
               <BuildPanel
+                history={sync.history}
+                historyLoading={sync.historyLoading}
+                historyError={sync.historyError ? syncErrorText(sync.historyError) : null}
+                onRefreshHistory={sync.refreshHistory}
+                onRestore={restoreHistory}
+                restoreDisabled={
+                  busy ||
+                  editor.dirty ||
+                  sync.phase === 'remote-changed' ||
+                  sync.access?.canPush === false
+                }
+                currentSha={sync.source?.headSha}
+                buildError={
+                  sync.buildError
+                    ? sync.buildError.code === 'forbidden'
+                      ? 'GitHub denied build access. Grant the App Actions: read and accept the installation update.'
+                      : syncErrorText(sync.buildError)
+                    : sync.access?.canReadBuilds === false
+                      ? sync.access.message
+                      : null
+                }
+                accessUrl={
+                  sync.access?.settingsUrl ??
+                  `https://github.com/${activeProfile.repo.owner}/${activeProfile.repo.name}/settings/installations`
+                }
                 commit={sync.lastCommit}
                 build={sync.build}
                 buildTimedOut={sync.buildTimedOut}
@@ -784,36 +917,6 @@ export function EditorPage() {
             />
           ) : null}
         </div>
-
-        {sheetOpen ? (
-          <ChangesSheet
-            diff={diff}
-            summary={summary}
-            onClose={() => setSheetOpen(false)}
-            onDiscard={() => {
-              editor.reset()
-              setSheetOpen(false)
-            }}
-            commit={{
-              signedIn: sync.user !== null,
-              committing: sync.phase === 'committing',
-              defaultBranch: defaultBranchName(new Date()),
-              protectedBranch: activeProfile.branch,
-              onSignIn: sync.signIn,
-              onCommit: ({ message, branch, allowDefaultBranch }) => {
-                const changed = Object.keys(editor.diff()).filter((path) => path in editor.files)
-                void sync.commit({
-                  message,
-                  branch,
-                  allowDefaultBranch,
-                  changedFiles: Object.fromEntries(
-                    changed.map((path) => [path, editor.files[path]]),
-                  ),
-                })
-              },
-            }}
-          />
-        ) : null}
 
         {picker ? (
           <PickerPopover

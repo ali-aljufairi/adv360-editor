@@ -10,7 +10,17 @@ export async function loadConfig(
 ): Promise<LoadedConfig> {
   const root = `/repos/${profile.repo.owner}/${profile.repo.name}`
   const ref = await client.get<{ object: { sha: string } }>(`${root}/git/ref/heads/${branch}`)
-  const headSha = ref.object.sha
+  return loadConfigAtSha(client, profile, ref.object.sha, branch)
+}
+
+/** Load immutable config content for history restoration. */
+export async function loadConfigAtSha(
+  client: GitHubClient,
+  profile: KeyboardProfile,
+  headSha: string,
+  branch: string,
+): Promise<LoadedConfig> {
+  const root = `/repos/${profile.repo.owner}/${profile.repo.name}`
   const tree = await client.get<{
     tree: { path: string; type: string; sha: string }[]
     truncated: boolean

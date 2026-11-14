@@ -64,7 +64,7 @@ export interface CommandContext {
   undo(): void
   redo(): void
   dirty: boolean
-  /** Open the review-changes sheet. */
+  /** Show optional inline change details. */
   reviewChanges(): void
   /** Discard every unsaved change (the palette confirms first). */
   discardChanges(): void
