@@ -8,6 +8,7 @@ import {
   macroOpaqueReason,
   macroPreview,
   macroProblems,
+  macroStepNotice,
   moveItem,
   stepFrom,
   stepProblem,
@@ -46,7 +47,7 @@ export function MacroEditor({ macro }: MacroEditorProps) {
 function OpaqueMacro({ macro, reason }: { macro: Behavior; reason: string }) {
   return (
     <div className="flex flex-col gap-3">
-      <p role="note" className="rounded-md border border-subtle p-3 text-sm text-secondary">
+      <p role="note" className="rounded-xs border border-subtle p-3 text-sm text-secondary">
         <strong className="text-primary">Read-only.</strong> {reason}
       </p>
       <ol className="flex flex-col gap-1 font-mono text-xs text-secondary">
@@ -68,6 +69,7 @@ function EditableMacro({ macro }: { macro: Behavior }) {
   const [kind, setKind] = useState<MacroStep['kind']>('tap')
   const [draftText, setDraftText] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [focusId, setFocusId] = useState<number | null>(null)
   const listRef = useRef<HTMLOListElement>(null)
   const dragFrom = useRef<number | null>(null)
 
@@ -77,6 +79,8 @@ function EditableMacro({ macro }: { macro: Behavior }) {
   const dirty = JSON.stringify(form) !== JSON.stringify(original)
   const draftStep = stepFrom(kind, draftText)
   const draftProblem = draftText.trim() === '' ? 'Enter a value to add.' : stepProblem(draftStep)
+  const focusedIndex = rows.findIndex((row) => row.id === focusId)
+  const notice = macroStepNotice(problems, focusedIndex)
 
   const focusRow = (id: number) =>
     window.requestAnimationFrame(() =>
@@ -127,7 +131,7 @@ function EditableMacro({ macro }: { macro: Behavior }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="flex flex-col gap-2 rounded-md border border-subtle bg-canvas p-3">
+      <section className="flex flex-col gap-2 rounded-xs border border-subtle bg-canvas p-3">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">What it types</h3>
         <p className="text-sm">{macroPreview(steps, { tapMs, waitMs })}</p>
       </section>
@@ -137,16 +141,17 @@ function EditableMacro({ macro }: { macro: Behavior }) {
         <p className="text-xs text-muted">
           Drag a step to move it, or select it and press Alt+↑ or Alt+↓.
         </p>
-        {rows.length ? (
-          <ol ref={listRef} className="flex flex-col gap-2" aria-label="Macro steps">
-            {rows.map((row, index) => (
+        <ol ref={listRef} className="flex flex-col gap-2" aria-label="Macro steps">
+          {rows.map((row, index) => {
+            const message = problems[`step${index}`]
+            return (
               <li
                 key={row.id}
                 data-step-id={row.id}
                 tabIndex={0}
                 draggable
                 aria-label={`Step ${index + 1}, ${kindLabel(row.step.kind)}`}
-                aria-invalid={problems[`step${index}`] ? true : undefined}
+                onFocus={() => setFocusId(row.id)}
                 onDragStart={() => {
                   dragFrom.current = index
                 }}
@@ -163,7 +168,7 @@ function EditableMacro({ macro }: { macro: Behavior }) {
                     move(index, index + (event.key === 'ArrowUp' ? -1 : 1))
                   }
                 }}
-                className="flex flex-wrap items-center gap-2 rounded-md border border-subtle bg-raised p-2 focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+                className={`flex flex-wrap items-center gap-2 rounded-xs border border-subtle bg-raised p-2 focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] ${message ? 'shadow-[inset_2px_0_0_var(--status-error)]' : ''}`}
               >
                 <span aria-hidden className="cursor-grab select-none text-muted">
                   ⠿
@@ -172,27 +177,36 @@ function EditableMacro({ macro }: { macro: Behavior }) {
                 <span className="w-32 text-xs text-secondary">{kindLabel(row.step.kind)}</span>
                 <input
                   aria-label={`Value for step ${index + 1}`}
+                  aria-invalid={message ? true : undefined}
+                  aria-describedby={message ? `macro-step-${row.id}-problem` : undefined}
+                  title={message}
                   value={stepText(row.step)}
                   onChange={(event) => edit(row.id, event.target.value)}
-                  className="min-w-0 flex-1 rounded border border-subtle bg-canvas px-2 py-1 font-mono text-sm"
+                  className="min-w-0 flex-1 rounded-xs border border-subtle bg-canvas px-2 py-1 font-mono text-sm"
                 />
                 <button
                   type="button"
                   onClick={() => remove(row.id)}
                   aria-label={`Remove step ${index + 1}`}
-                  className="rounded px-2 text-sm text-secondary hover:bg-hover"
+                  className="rounded-xs px-2 text-sm text-secondary hover:bg-hover"
                 >
                   ✕
                 </button>
-                {problems[`step${index}`] ? (
-                  <p className="basis-full text-xs text-status-error">{problems[`step${index}`]}</p>
+                {message ? (
+                  <span id={`macro-step-${row.id}-problem`} className="sr-only">
+                    {message}
+                  </span>
                 ) : null}
               </li>
-            ))}
-          </ol>
-        ) : (
-          <p className="text-sm text-muted">No steps yet. Add one below.</p>
-        )}
+            )
+          })}
+        </ol>
+        <p
+          aria-live="polite"
+          className={`h-4 truncate text-xs ${notice ? 'text-[var(--status-error)]' : 'text-muted'}`}
+        >
+          {notice ? notice.message : steps.length === 0 ? 'Add at least one step.' : null}
+        </p>
       </section>
 
       <section aria-labelledby="macro-add" className="flex flex-col gap-2">
@@ -204,7 +218,7 @@ function EditableMacro({ macro }: { macro: Behavior }) {
             aria-label="Step type"
             value={kind}
             onChange={(event) => setKind(event.target.value as MacroStep['kind'])}
-            className="rounded-md border border-subtle bg-canvas px-2 py-1 text-sm"
+            className="rounded-xs border border-subtle bg-canvas px-2 py-1 text-sm"
           >
             {STEP_KINDS.map((entry) => (
               <option key={entry.kind} value={entry.kind}>
@@ -228,17 +242,17 @@ function EditableMacro({ macro }: { macro: Behavior }) {
               onKeyDown={(event) => {
                 if (event.key === 'Enter') add()
               }}
-              className="rounded-md border border-subtle bg-canvas px-2 py-1 font-mono text-sm"
+              className="rounded-xs border border-subtle bg-canvas px-2 py-1 font-mono text-sm"
             />
-            {draftText && draftProblem ? (
-              <p className="text-xs text-status-error">{draftProblem}</p>
-            ) : null}
+            <p className="min-h-4 text-xs text-[var(--status-error)]">
+              {draftText && draftProblem ? draftProblem : null}
+            </p>
           </div>
           <button
             type="button"
             onClick={add}
             disabled={Boolean(draftProblem)}
-            className="rounded-md border border-subtle px-3 py-1 text-sm hover:bg-hover disabled:opacity-40"
+            className="rounded-xs border border-subtle px-3 py-1 text-sm hover:bg-hover disabled:opacity-40"
           >
             Add step
           </button>
@@ -271,7 +285,14 @@ function EditableMacro({ macro }: { macro: Behavior }) {
         />
       </section>
 
-      <ApplyBar dirty={dirty} problems={problems} error={error} onApply={apply} onRevert={revert} />
+      <ApplyBar
+        dirty={dirty}
+        problems={problems}
+        error={error}
+        onApply={apply}
+        onRevert={revert}
+        blockedText={steps.length === 0 ? 'Add a step to apply.' : undefined}
+      />
     </div>
   )
 }

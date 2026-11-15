@@ -4,16 +4,33 @@ import { Dialog } from '../editor/Dialog'
 /** Longest layer name the editor accepts. */
 const MAX_LABEL = 40
 
-const FIELD = 'rounded-md border border-subtle bg-canvas px-2 py-1.5 text-primary'
+const FIELD = 'rounded-xs border border-subtle bg-canvas px-2 py-1.5 text-primary'
 const PRIMARY =
-  'rounded-md bg-accent-primary px-3 py-1.5 font-medium text-[var(--on-accent)] disabled:opacity-40'
-const SECONDARY = 'rounded-md border border-subtle px-3 py-1.5 text-secondary hover:bg-hover'
-const DANGER = 'rounded-md bg-[var(--status-error)] px-3 py-1.5 font-medium text-[var(--on-accent)]'
+  'rounded-xs bg-accent-primary px-3 py-1.5 font-medium text-[var(--on-accent)] disabled:opacity-40'
+const SECONDARY = 'rounded-xs border border-subtle px-3 py-1.5 text-secondary hover:bg-hover'
+const DANGER = 'rounded-xs bg-[var(--status-error)] px-3 py-1.5 font-medium text-[var(--on-accent)]'
 
 /** Trims a layer name and returns it when it is valid, or null. */
 function validLabel(raw: string): string | null {
   const label = raw.trim()
   return label.length > 0 && label.length <= MAX_LABEL ? label : null
+}
+
+/**
+ * The message for a layer name that cannot be used, or null when it is usable. Names are compared
+ * without case or surrounding spaces.
+ * @param raw The typed name.
+ * @param taken The names other layers already use.
+ * @returns The message, or null.
+ */
+function nameProblem(raw: string, taken: readonly string[]): string | null {
+  const label = validLabel(raw)
+  if (label === null)
+    return raw.trim() === '' ? 'Enter a name.' : `Enter a name of up to ${MAX_LABEL} characters.`
+  const key = label.toLowerCase()
+  if (taken.some((name) => name.trim().toLowerCase() === key))
+    return `A layer named “${label}” already exists.`
+  return null
 }
 
 /**
@@ -48,11 +65,22 @@ export function AddLayerDialog({ layers, onCreate, onClose }: AddLayerDialogProp
   const [copyFrom, setCopyFrom] = useState(layers[0]?.index ?? 0)
   const [attempted, setAttempted] = useState(false)
   const label = validLabel(name)
+  // An empty name only complains after Add is pressed; a taken name complains as it is typed.
+  const problem =
+    name.trim() === '' && !attempted
+      ? null
+      : nameProblem(
+          name,
+          layers.map((layer) => layer.name),
+        )
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setAttempted(true)
-    if (label === null) return
+    if (label === null || problem) {
+      input.current?.focus()
+      return
+    }
     onCreate(copy ? { label, copyFrom } : { label })
   }
 
@@ -65,17 +93,14 @@ export function AddLayerDialog({ layers, onCreate, onClose }: AddLayerDialogProp
             ref={input}
             value={name}
             maxLength={MAX_LABEL}
-            required
-            aria-invalid={attempted && label === null}
-            aria-describedby="add-layer-help add-layer-error"
+            aria-invalid={problem !== null || undefined}
+            aria-describedby="add-layer-error"
             onChange={(event) => setName(event.target.value)}
             className={`${FIELD} w-full`}
           />
-          {attempted && label === null ? (
-            <span id="add-layer-error" className="block text-xs text-[var(--status-error)]">
-              Enter a name of up to {MAX_LABEL} characters.
-            </span>
-          ) : null}
+          <span id="add-layer-error" className="block min-h-4 text-xs text-[var(--status-error)]">
+            {problem}
+          </span>
         </label>
 
         <fieldset className="space-y-2 text-sm">
@@ -109,7 +134,7 @@ export function AddLayerDialog({ layers, onCreate, onClose }: AddLayerDialogProp
           </label>
         </fieldset>
 
-        <p id="add-layer-help" className="text-xs text-muted">
+        <p className="text-xs text-muted">
           New layers are added last. Add a key that reaches it (Layer tab in the key picker) so you
           can use it.
         </p>
@@ -118,7 +143,7 @@ export function AddLayerDialog({ layers, onCreate, onClose }: AddLayerDialogProp
           <button type="button" onClick={onClose} className={SECONDARY}>
             Cancel
           </button>
-          <button type="submit" className={PRIMARY} disabled={label === null && attempted}>
+          <button type="submit" className={PRIMARY}>
             Add layer
           </button>
         </div>
@@ -143,11 +168,17 @@ export function RenameLayerDialog({ name, onRename, onClose }: RenameLayerDialog
   const input = useRef<HTMLInputElement>(null)
   useFocusOnMount(input, true)
   const [value, setValue] = useState(name)
+  const [attempted, setAttempted] = useState(false)
   const label = validLabel(value)
+  const problem = attempted ? nameProblem(value, []) : null
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (label === null) return
+    setAttempted(true)
+    if (label === null) {
+      input.current?.focus()
+      return
+    }
     onRename(label)
   }
 
@@ -160,17 +191,23 @@ export function RenameLayerDialog({ name, onRename, onClose }: RenameLayerDialog
             ref={input}
             value={value}
             maxLength={MAX_LABEL}
-            required
-            aria-invalid={label === null}
+            aria-invalid={problem !== null || undefined}
+            aria-describedby="rename-layer-error"
             onChange={(event) => setValue(event.target.value)}
             className={`${FIELD} w-full`}
           />
+          <span
+            id="rename-layer-error"
+            className="block min-h-4 text-xs text-[var(--status-error)]"
+          >
+            {problem}
+          </span>
         </label>
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} className={SECONDARY}>
             Cancel
           </button>
-          <button type="submit" className={PRIMARY} disabled={label === null}>
+          <button type="submit" className={PRIMARY}>
             Rename
           </button>
         </div>
@@ -234,7 +271,7 @@ export function DeleteLayerDialog({
                 <li
                   // References have no id; the list is fixed while the dialog is open.
                   key={at}
-                  className="rounded-md border border-subtle bg-canvas px-2.5 py-1.5"
+                  className="rounded-xs border border-subtle bg-canvas px-2.5 py-1.5"
                 >
                   <div className="font-mono text-xs break-words text-primary">
                     {reference.layer === null

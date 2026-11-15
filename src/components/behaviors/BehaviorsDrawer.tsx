@@ -156,7 +156,7 @@ function Panel({ onClose }: { onClose(): void }) {
 }
 
 const ROW =
-  'flex w-full flex-col gap-0.5 rounded-md border border-subtle px-3 py-2 text-left hover:bg-hover'
+  'flex w-full flex-col gap-0.5 rounded-xs border border-subtle px-3 py-2 text-left hover:bg-hover'
 
 function HoldTapList({
   items,
@@ -223,7 +223,7 @@ function ComboList({
       <button
         type="button"
         onClick={onAdd}
-        className="self-start rounded-md border border-subtle px-3 py-1 text-sm hover:bg-hover"
+        className="self-start rounded-xs border border-subtle px-3 py-1 text-sm hover:bg-hover"
       >
         Add combo
       </button>

@@ -217,6 +217,7 @@ describe('sync store', () => {
       historyError: null,
       remoteSha: null,
       buildTimedOut: false,
+      checkingAccess: false,
     })
   })
 })

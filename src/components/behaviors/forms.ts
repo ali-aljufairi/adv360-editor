@@ -371,7 +371,7 @@ export function macroChanges(before: MacroForm, after: MacroForm): Partial<Macro
   return changes
 }
 
-/** Validate timing fields and every step. */
+/** Validate timing fields and every step. A macro needs at least one step to apply. */
 export function macroProblems(form: MacroForm, _before?: MacroForm): Problems {
   void _before
   const problems: Problems = {}
@@ -379,11 +379,33 @@ export function macroProblems(form: MacroForm, _before?: MacroForm): Problems {
     problems.tapMs = 'Enter a whole number from 0 to 10000 ms.'
   if (form.waitMs !== undefined && !isInteger(form.waitMs, 0, 10000))
     problems.waitMs = 'Enter a whole number from 0 to 10000 ms.'
+  if (form.steps.length === 0) problems.steps = 'Add at least one step.'
   form.steps.forEach((step, index) => {
     const message = stepProblem(step)
     if (message) problems[`step${index}`] = message
   })
   return problems
+}
+
+/**
+ * The single message for a macro's step list: the focused invalid step if there is one, otherwise
+ * the first invalid step. Returns undefined when every step is valid.
+ * @param problems - Problems from `macroProblems`.
+ * @param focusedIndex - Index of the step that has focus, if any.
+ * @returns The step index and a message that names the step.
+ */
+export function macroStepNotice(
+  problems: Problems,
+  focusedIndex?: number,
+): { index: number; message: string } | undefined {
+  const invalid = Object.keys(problems)
+    .filter((key) => /^step\d+$/.test(key))
+    .map((key) => Number(key.slice(4)))
+    .sort((first, second) => first - second)
+  if (!invalid.length) return undefined
+  const index =
+    focusedIndex !== undefined && invalid.includes(focusedIndex) ? focusedIndex : invalid[0]
+  return { index, message: `Step ${index + 1}: ${problems[`step${index}`]}` }
 }
 
 // ---------------------------------------------------------------------------
@@ -459,7 +481,7 @@ export function comboProblems(
   void _before
   const problems: Problems = {}
   if (!/^[A-Za-z_]\w*$/.test(form.name))
-    problems.name = 'Use letters, digits and underscores, starting with a letter or underscore.'
+    problems.name = 'Use letters, digits and _; start with a letter or _.'
   else if (context.otherNames.includes(form.name))
     problems.name = 'Another combo already uses this name.'
   if (!isBindingText(form.binding)) problems.binding = 'Start with & and a behavior, such as &kp A.'

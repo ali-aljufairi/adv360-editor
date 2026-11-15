@@ -32,7 +32,7 @@ function Demo() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="rounded-md border border-subtle px-2.5 py-1 text-sm hover:bg-hover"
+          className="rounded-xs border border-subtle px-2.5 py-1 text-sm hover:bg-hover"
         >
           Behaviors
         </button>
@@ -43,7 +43,7 @@ function Demo() {
           type="button"
           onClick={() => editor.reset()}
           disabled={!editor.dirty}
-          className="rounded-md px-2.5 py-1 text-sm text-secondary hover:bg-hover disabled:opacity-40"
+          className="rounded-xs px-2.5 py-1 text-sm text-secondary hover:bg-hover disabled:opacity-40"
         >
           Reset to fixture
         </button>

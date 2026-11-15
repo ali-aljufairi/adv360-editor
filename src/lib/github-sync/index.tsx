@@ -47,6 +47,18 @@ export function SyncProvider({
     })
   const store = ref.current
   useEffect(() => () => store.dispose(), [store])
+  // Coming back to the tab (e.g. from the GitHub App settings) re-checks access automatically.
+  useEffect(() => {
+    const recheck = () => {
+      if (document.visibilityState === 'visible') void store.recheckAccess()
+    }
+    window.addEventListener('focus', recheck)
+    document.addEventListener('visibilitychange', recheck)
+    return () => {
+      window.removeEventListener('focus', recheck)
+      document.removeEventListener('visibilitychange', recheck)
+    }
+  }, [store])
   return <Context.Provider value={store}>{children}</Context.Provider>
 }
 /** Read sync state and actions. */

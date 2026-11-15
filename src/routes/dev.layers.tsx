@@ -92,21 +92,21 @@ function LayersPage() {
         <button
           type="button"
           onClick={() => setDialog({ kind: 'add' })}
-          className="rounded-md border border-subtle px-3 py-1.5 text-secondary hover:bg-hover"
+          className="rounded-xs border border-subtle px-3 py-1.5 text-secondary hover:bg-hover"
         >
           Open add dialog
         </button>
         <button
           type="button"
           onClick={() => setDialog({ kind: 'rename', index: active })}
-          className="rounded-md border border-subtle px-3 py-1.5 text-secondary hover:bg-hover"
+          className="rounded-xs border border-subtle px-3 py-1.5 text-secondary hover:bg-hover"
         >
           Open rename dialog
         </button>
         <button
           type="button"
           onClick={() => setDialog({ kind: 'delete', index: active })}
-          className="rounded-md border border-subtle px-3 py-1.5 text-secondary hover:bg-hover"
+          className="rounded-xs border border-subtle px-3 py-1.5 text-secondary hover:bg-hover"
         >
           Open delete dialog
         </button>

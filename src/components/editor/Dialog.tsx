@@ -34,7 +34,7 @@ export function Dialog({ title, onClose, children }: DialogProps) {
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="w-full max-w-xl rounded-xl border border-subtle bg-raised p-5 text-primary shadow-[var(--shadow-float)]"
+        className="w-full max-w-xl rounded-[2px] border border-subtle bg-raised p-5 text-primary shadow-[var(--shadow-float)]"
       >
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-base font-semibold">{title}</h2>
@@ -42,7 +42,7 @@ export function Dialog({ title, onClose, children }: DialogProps) {
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-md px-2 py-1 text-secondary hover:bg-hover"
+            className="rounded-[2px] px-2 py-1 text-secondary hover:bg-hover"
           >
             ×
           </button>
@@ -82,7 +82,7 @@ export function SettingsDialog({ platform, onPlatform, onClose }: SettingsDialog
               onChange={(event) => {
                 if (isPlatformSetting(event.target.value)) onPlatform(event.target.value)
               }}
-              className="rounded-md border border-subtle bg-canvas px-2 py-1 text-primary"
+              className="rounded-[2px] border border-subtle bg-canvas px-2 py-1 text-primary"
             >
               <option value="auto">Auto-detect</option>
               <option value="mac">macOS</option>

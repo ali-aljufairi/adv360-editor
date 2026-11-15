@@ -15,6 +15,7 @@ import { layerAccentOf } from '../board/bindings'
 import { ChangesBar, SyncFeedback } from '../github/ChangesBar'
 import { ChangesDetails } from '../github/ChangesDetails'
 import { ProblemsPanel } from '../panels/ProblemsPanel'
+import { issueKeysFor } from '../panels/issues'
 import { BindingPicker } from '../picker/BindingPicker'
 import { ThemePicker } from '../theme-picker/ThemePicker'
 import { CommandPalette } from '../command-palette/CommandPalette'
@@ -375,19 +376,26 @@ export function EditorPage() {
   }
 
   const displayPlatform = resolvePlatform(settings.platform)
+  // Background re-checks replace the access object; a dismissed access problem stays dismissed
+  // until its reason changes.
+  const accessKey = sync.access?.message ? `access:${sync.access.reason}` : null
   const syncError = sync.error && sync.error !== dismissedError ? sync.error : null
-  const accessMessage = sync.access !== dismissedError ? sync.access?.message : null
+  const accessMessage = accessKey !== dismissedError ? sync.access?.message : null
   const errorText = syncError
     ? ((syncError.code === 'forbidden' || syncError.code === 'not-found') && accessMessage) ||
       syncErrorText(syncError)
     : (authNotice ?? accessMessage ?? null)
+  // "Builds hidden" doesn't block editing or pushing, so it reads as information, not an error.
+  const errorTone =
+    !syncError && !authNotice && sync.access?.reason === 'actions-readonly' ? 'info' : 'error'
   const dismissError = () => {
-    setDismissedError(sync.error ?? sync.access)
+    setDismissedError(sync.error ?? accessKey)
     setAuthNotice(null)
   }
   const retryFromError = () => {
-    dismissError()
+    setAuthNotice(null)
     if (sync.error?.code === 'not-signed-in') sync.signIn()
+    else if (sync.user) void sync.recheckAccess(true)
     else void sync.reload()
   }
 
@@ -608,9 +616,9 @@ export function EditorPage() {
     <div className="grid h-dvh grid-rows-[auto_1fr] overflow-hidden bg-canvas text-primary">
       <header
         inert={busy}
-        className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-subtle px-4 py-3 sm:px-6"
+        className="flex min-w-0 items-center gap-x-4 gap-y-2 border-b border-subtle px-4 py-3 max-2xl:flex-wrap sm:px-6"
       >
-        <div className="flex items-baseline gap-2">
+        <div className="flex shrink-0 items-baseline gap-2">
           <span className="text-base font-semibold">adv360</span>
           {profileContext.profiles.length > 1 ? (
             <ProfileSelect
@@ -629,11 +637,41 @@ export function EditorPage() {
             {activeProfile.branch}
           </span>
         </div>
-        {!sync.user && sync.phase !== 'loading' ? <SignInButton onSignIn={sync.signIn} /> : null}
-        {sync.user ? (
-          <AccountMenu user={sync.user} onReload={sync.reload} onSignOut={sync.signOut} />
+        {!sync.user && sync.phase !== 'loading' ? (
+          <div className="shrink-0">
+            <SignInButton onSignIn={sync.signIn} />
+          </div>
         ) : null}
-        <div className="ml-auto flex flex-wrap items-center gap-2">
+        {sync.user ? (
+          <div className="shrink-0">
+            <AccountMenu user={sync.user} onReload={sync.reload} onSignOut={sync.signOut} />
+          </div>
+        ) : null}
+        <SyncHeader
+          phase={sync.phase}
+          user={sync.user}
+          source={sync.source}
+          errorText={errorText}
+          errorTone={errorTone}
+          checking={sync.checkingAccess}
+          accessUrl={
+            syncError?.code === 'forbidden' ||
+            syncError?.code === 'not-found' ||
+            sync.access?.message
+              ? (sync.access?.settingsUrl ??
+                `https://github.com/${activeProfile.repo.owner}/${activeProfile.repo.name}/settings/installations`)
+              : null
+          }
+          diagnostic={syncError?.message}
+          onRetry={syncError || sync.access?.message ? retryFromError : null}
+          remoteSha={sync.remoteSha}
+          onApplyRemote={() => {
+            if (editor.dirty) editor.reset()
+            sync.applyRemote()
+          }}
+          onDismiss={dismissError}
+        />
+        <div className="flex shrink-0 items-center gap-2 max-md:w-full max-md:flex-wrap max-md:gap-1">
           <button
             type="button"
             aria-label="Open command palette"
@@ -652,35 +690,13 @@ export function EditorPage() {
               Build & history
             </button>
           ) : null}
-          <SyncHeader
-            phase={sync.phase}
-            user={sync.user}
-            source={sync.source}
-            errorText={errorText}
-            accessUrl={
-              syncError?.code === 'forbidden' ||
-              syncError?.code === 'not-found' ||
-              sync.access?.message
-                ? (sync.access?.settingsUrl ??
-                  `https://github.com/${activeProfile.repo.owner}/${activeProfile.repo.name}/settings/installations`)
-                : null
-            }
-            diagnostic={syncError?.message}
-
-            onRetry={syncError || sync.access?.message ? retryFromError : null}
-            remoteSha={sync.remoteSha}
-            onApplyRemote={() => {
-              if (editor.dirty) editor.reset()
-              sync.applyRemote()
-            }}
-            onDismiss={dismissError}
-          />
           <button
             type="button"
             onClick={() => setThemeOpen(true)}
-            className="inline-flex items-center gap-2 px-2.5 py-1 text-sm hover:bg-hover"
+            title={theme.active.name}
+            className="inline-flex min-w-0 items-center gap-2 px-2.5 py-1 text-sm hover:bg-hover max-md:max-w-[6rem]"
           >
-            {theme.active.name}
+            <span className="truncate">{theme.active.name}</span>
           </button>
           <button
             type="button"
@@ -710,7 +726,7 @@ export function EditorPage() {
       </header>
 
       <div
-        className={`shell-layer relative flex min-h-0 max-md:[&:has([data-problems-collapsed])_main]:pt-12 ${panel === 'build' ? 'max-md:flex-col' : ''}`}
+        className={`shell-layer relative flex min-h-0 ${panel === 'build' ? 'max-md:flex-col' : ''}`}
       >
         {sync.source ? <ProblemsPanel issues={issues} onJump={jump} /> : null}
         <div className="shell-layer relative flex min-h-0 min-w-0 flex-1 flex-col">
@@ -724,7 +740,7 @@ export function EditorPage() {
               {editor.staleDraft ? (
                 <div
                   role="alert"
-                  className="flex flex-wrap items-center gap-3 rounded-lg border border-subtle bg-raised p-3 text-sm"
+                  className="flex flex-wrap items-center gap-x-4 gap-y-2 border-l-2 border-accent-primary py-1 pl-3 text-sm"
                 >
                   <p className="mr-auto text-secondary">
                     A saved draft from an earlier version of this keymap was found.
@@ -732,14 +748,14 @@ export function EditorPage() {
                   <button
                     type="button"
                     onClick={() => runDraftAction(editor.restoreDraft)}
-                    className="rounded-md border border-subtle px-2.5 py-1 hover:bg-hover"
+                    className="border border-subtle px-2.5 py-1 hover:bg-hover"
                   >
                     Restore
                   </button>
                   <button
                     type="button"
                     onClick={() => runDraftAction(editor.discardDraft)}
-                    className="rounded-md px-2.5 py-1 text-secondary hover:bg-hover"
+                    className="px-2.5 py-1 text-secondary hover:bg-hover"
                   >
                     Discard
                   </button>
@@ -783,6 +799,9 @@ export function EditorPage() {
                       layerAccent={layerAccentOf(activeLayer)}
                       layerIndex={activeLayer}
                       showCombos={combosOn}
+                      issueKeys={issueKeysFor(issues, activeLayer, (issue) =>
+                        layerOfIssue(model, issue),
+                      )}
                       onSelectKey={selectFromBoard}
                       onActivateKey={openPicker}
                       onKeyContextMenu={openKeyMenu}

@@ -81,7 +81,7 @@ export function ComboEditor({ combo, combos, model, keys, onDone, onSaved }: Com
   return (
     <div className="flex flex-col gap-5">
       {condition ? (
-        <p role="note" className="rounded-md border border-subtle p-2 text-xs text-secondary">
+        <p role="note" className="rounded-xs border border-subtle p-2 text-xs text-secondary">
           {condition}. This combo stays guarded by that condition when you edit it.
         </p>
       ) : null}
@@ -99,9 +99,7 @@ export function ComboEditor({ combo, combos, model, keys, onDone, onSaved }: Com
           label="Combo keys"
           onToggle={(index) => update({ keyPositions: toggleIndex(form.keyPositions, index) })}
         />
-        {problems.keyPositions ? (
-          <p className="text-xs text-status-error">{problems.keyPositions}</p>
-        ) : null}
+        <p className="min-h-4 text-xs text-[var(--status-error)]">{problems.keyPositions}</p>
       </section>
 
       <section className="flex flex-col gap-3">
@@ -134,25 +132,25 @@ export function ComboEditor({ combo, combos, model, keys, onDone, onSaved }: Com
             ))}
           </fieldset>
         )}
-        {problems.layers ? <p className="text-xs text-status-error">{problems.layers}</p> : null}
+        <p className="min-h-4 text-xs text-[var(--status-error)]">{problems.layers}</p>
       </section>
 
       {combo ? (
-        <section className="flex flex-col gap-2 rounded-md border border-subtle p-3">
+        <section className="flex flex-col gap-2 rounded-xs border border-subtle p-3">
           {confirming ? (
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="mr-auto">Delete “{combo.name}”? This adds one step to Undo.</span>
               <button
                 type="button"
                 onClick={() => setConfirming(false)}
-                className="rounded-md px-2.5 py-1 text-secondary hover:bg-hover"
+                className="rounded-xs px-2.5 py-1 text-secondary hover:bg-hover"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={remove}
-                className="rounded-md border border-status-error px-2.5 py-1 text-status-error hover:bg-hover"
+                className="rounded-xs border border-[var(--status-error)] px-2.5 py-1 text-[var(--status-error)] hover:bg-hover"
               >
                 Delete combo
               </button>
@@ -161,7 +159,7 @@ export function ComboEditor({ combo, combos, model, keys, onDone, onSaved }: Com
             <button
               type="button"
               onClick={() => setConfirming(true)}
-              className="self-start rounded-md px-2.5 py-1 text-sm text-status-error hover:bg-hover"
+              className="self-start rounded-xs px-2.5 py-1 text-sm text-[var(--status-error)] hover:bg-hover"
             >
               Delete combo…
             </button>
@@ -200,7 +198,7 @@ function CoreFields({ form, problems, update }: FieldsProps) {
           value={form.name}
           aria-invalid={problems.name ? true : undefined}
           onChange={(event) => update({ name: event.target.value })}
-          className="rounded-md border border-subtle bg-canvas px-2 py-1 font-mono text-sm"
+          className="rounded-xs border border-subtle bg-canvas px-2 py-1 font-mono text-sm"
         />
       </Field>
       <Field
@@ -214,7 +212,7 @@ function CoreFields({ form, problems, update }: FieldsProps) {
           value={form.binding}
           aria-invalid={problems.binding ? true : undefined}
           onChange={(event) => update({ binding: event.target.value })}
-          className="rounded-md border border-subtle bg-canvas px-2 py-1 font-mono text-sm"
+          className="rounded-xs border border-subtle bg-canvas px-2 py-1 font-mono text-sm"
         />
       </Field>
       <NumberField

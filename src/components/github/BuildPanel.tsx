@@ -86,7 +86,7 @@ export function BuildPanel({
       ) : null}
 
       {buildError ? (
-        <section role="alert" className="flex flex-col gap-2 text-[var(--status-warning)]">
+        <section role="alert" className="flex flex-col gap-2 text-[var(--status-error)]">
           <p>{buildError}</p>
           {accessUrl ? (
             <a

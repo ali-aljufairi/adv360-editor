@@ -78,3 +78,42 @@ export function describeLocation(issue: Issue): string {
   if (issue.key !== undefined) parts.push(`key ${issue.key}`)
   return parts.join(' · ')
 }
+
+/** The problems attached to one physical key on the shown layer. */
+export interface KeyIssue {
+  /** The most serious severity among the key's problems. */
+  severity: Severity
+  /** Every problem message for the key, most serious first. */
+  messages: string[]
+}
+
+/**
+ * Map the problems on one layer to the keys they are attached to. Problems without a key, and
+ * problems on other layers, are left out. A key with several problems takes the most serious
+ * severity, and keeps all of its messages.
+ * @param issues Issues to map. The input is not modified.
+ * @param layer Index of the layer on screen.
+ * @param layerOf Resolves an issue's layer index. Defaults to the issue's own `layer` field.
+ * @returns Keys mapped to their problems, keyed by physical key index.
+ */
+export function issueKeysFor(
+  issues: readonly Issue[],
+  layer: number,
+  layerOf: (issue: Issue) => number = (issue) => issue.layer ?? -1,
+): Map<number, KeyIssue> {
+  const byKey = new Map<number, Issue[]>()
+  for (const issue of issues) {
+    if (issue.key === undefined || layerOf(issue) !== layer) continue
+    const list = byKey.get(issue.key) ?? []
+    list.push(issue)
+    byKey.set(issue.key, list)
+  }
+  const mapped = new Map<number, KeyIssue>()
+  for (const [key, list] of byKey) {
+    const sorted = [...list].sort(
+      (left, right) => severityOrder.indexOf(left.severity) - severityOrder.indexOf(right.severity),
+    )
+    mapped.set(key, { severity: sorted[0].severity, messages: sorted.map((item) => item.message) })
+  }
+  return mapped
+}

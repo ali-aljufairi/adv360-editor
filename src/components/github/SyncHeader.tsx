@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type React from 'react'
 import type { SessionUser } from '../../lib/github/types'
 import type { SyncState } from '../../lib/github-sync'
 
@@ -12,6 +13,10 @@ export interface SyncHeaderProps {
   /** Exact installation settings page, or the repo integrations page. */
   accessUrl?: string | null
   diagnostic?: string
+  /** 'info' for messages that don't block work (e.g. builds hidden); defaults to 'error'. */
+  errorTone?: 'error' | 'info'
+  /** True while access is re-checked in the background; replaces Retry with a quiet note. */
+  checking?: boolean
   /** Retry handler; null hides the Retry action. */
   onRetry: (() => void) | null
   /** SHA of the newer GitHub version, set while phase is remote-changed. */
@@ -41,9 +46,9 @@ export function SignInButton({ onSignIn }: { onSignIn(): void }) {
 }
 
 /**
- * Account menu, the source line and the error line for the top bar. Renders plain inline items
- * so the caller decides where they sit. The signed-out sign-in button is rendered separately
- * with SignInButton.
+ * The header status slot: the source line, or an error / remote-changed notice with its actions.
+ * It is a single flexible row item that truncates, so it never wraps the header. The signed-out
+ * sign-in button is rendered separately with SignInButton.
  * @param props - Sync state and actions.
  * @returns The header items.
  */
@@ -52,6 +57,8 @@ export function SyncHeader({
   user,
   source,
   errorText,
+  errorTone = 'error',
+  checking = false,
   accessUrl,
   diagnostic,
   onRetry,
@@ -66,55 +73,89 @@ export function SyncHeader({
       setConfirmRemote(false)
     } else setConfirmRemote(true)
   }
-  return (
+  // One status slot that always sits in the header row: it truncates instead of wrapping, so an
+  // error never changes the header height or pushes the board down. Actions never truncate.
+  const remoteChanged = phase === 'remote-changed' && remoteSha !== null
+  const tone = errorText
+    ? errorTone === 'error'
+      ? 'text-[var(--status-error)]'
+      : 'text-secondary'
+    : remoteChanged
+      ? 'text-[var(--status-warning)]'
+      : 'text-muted'
+  const action = 'shrink-0 underline underline-offset-4 hover:text-primary'
+  const quiet = 'shrink-0 text-muted hover:text-primary'
+  // Loading the remote version must stay reachable even while an error is showing.
+  const remoteActions = remoteChanged ? (
     <>
-      {phase === 'loading' ? <span className="text-sm text-muted">Loading…</span> : null}
-      {phase === 'remote-changed' && remoteSha ? (
-        <p role="alert" className="basis-full text-right text-sm text-[var(--status-warning)]">
-          {`Changed on GitHub (${remoteSha.slice(0, 7)})`}
-          <button type="button" onClick={loadRemote} className="ml-3 underline underline-offset-4">
-            {confirmRemote ? 'Discard edits & load remote' : 'Load remote'}
-          </button>
-          {confirmRemote ? (
-            <button
-              type="button"
-              className="ml-3 text-muted"
-              onClick={() => setConfirmRemote(false)}
-            >
-              Cancel
-            </button>
-          ) : null}
-        </p>
-      ) : null}
-      {user && source && phase !== 'loading' ? (
-        <span className="hidden text-sm text-muted sm:inline">
-          {`${source.branch} @ ${source.headSha.slice(0, 7)}${source.fromCache ? ' · cached' : ''}`}
-        </span>
-      ) : null}
-      {errorText ? (
-        <p role="alert" className="basis-full text-right text-sm text-[var(--status-error)]">
-          <span title={diagnostic}>{errorText}</span>
-          {accessUrl ? (
-            <a
-              href={accessUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="ml-3 underline underline-offset-4"
-            >
-              Manage GitHub App access
-            </a>
-          ) : null}
-          {onRetry ? (
-            <button type="button" onClick={onRetry} className="ml-3 underline underline-offset-4">
-              Retry
-            </button>
-          ) : null}
-          <button type="button" onClick={onDismiss} className="ml-3 text-muted hover:text-primary">
-            Dismiss
-          </button>
-        </p>
+      <button type="button" onClick={loadRemote} className={action}>
+        {confirmRemote ? 'Discard edits & load remote' : 'Load remote'}
+      </button>
+      {confirmRemote ? (
+        <button type="button" className={quiet} onClick={() => setConfirmRemote(false)}>
+          Cancel
+        </button>
       ) : null}
     </>
+  ) : null
+  let body: React.ReactNode = null
+  if (errorText) {
+    body = (
+      <>
+        <span
+          className="min-w-0 truncate max-md:overflow-visible max-md:whitespace-normal"
+          title={diagnostic ? `${errorText}\n\n${diagnostic}` : errorText}
+        >
+          {errorText}
+        </span>
+        {remoteActions}
+        {accessUrl ? (
+          <a href={accessUrl} target="_blank" rel="noreferrer" className={action}>
+            Manage access
+          </a>
+        ) : null}
+        {checking ? (
+          <span className="shrink-0 text-muted" aria-live="polite">
+            Checking…
+          </span>
+        ) : onRetry ? (
+          <button type="button" onClick={onRetry} className={action}>
+            Retry
+          </button>
+        ) : null}
+        <button type="button" onClick={onDismiss} className={quiet}>
+          Dismiss
+        </button>
+      </>
+    )
+  } else if (remoteChanged) {
+    const label = `Changed on GitHub (${remoteSha.slice(0, 7)})`
+    body = (
+      <>
+        <span className="min-w-0 truncate" title={label}>
+          {label}
+        </span>
+        {remoteActions}
+      </>
+    )
+  } else if (phase === 'loading') {
+    body = <span className="truncate">Loading…</span>
+  } else if (user && source) {
+    const label = `${source.branch} @ ${source.headSha.slice(0, 7)}${source.fromCache ? ' · cached' : ''}`
+    body = (
+      <span className="truncate" title={label}>
+        {label}
+      </span>
+    )
+  }
+  return (
+    <div
+      role={(errorText && errorTone === 'error') || remoteChanged ? 'alert' : 'status'}
+      aria-busy={checking || undefined}
+      className={`flex min-h-5 min-w-0 flex-1 basis-0 items-center justify-end gap-3 overflow-hidden text-sm whitespace-nowrap max-2xl:order-last max-2xl:basis-full max-2xl:justify-start max-md:flex-wrap max-md:whitespace-normal max-md:gap-y-1 ${tone}`}
+    >
+      {body}
+    </div>
   )
 }
 

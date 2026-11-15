@@ -94,6 +94,7 @@ function SyncPreview() {
   const [build, setBuild] = useState<keyof typeof BUILDS>('success')
   const [remote, setRemote] = useState(false)
   const [timedOut, setTimedOut] = useState(false)
+  const [checking, setChecking] = useState(false)
   const [error, setError] = useState<'forbidden' | 'branch-moved' | null>(null)
   const [permission, setPermission] = useState<'ready' | 'contents' | 'actions' | 'installation'>(
     'ready',
@@ -139,6 +140,9 @@ function SyncPreview() {
         </button>
         <button type="button" onClick={() => setTimedOut((value) => !value)}>
           Build timed out
+        </button>
+        <button type="button" onClick={() => setChecking((value) => !value)}>
+          Checking access
         </button>
         <button
           type="button"
@@ -190,6 +194,8 @@ function SyncPreview() {
           user={signedIn ? USER : null}
           source={signedIn ? SOURCE : null}
           errorText={error ? syncErrorText({ code: error, message: '' }) : permissionMessage}
+          errorTone={!error && permission === 'actions' ? 'info' : 'error'}
+          checking={checking}
           accessUrl={permissionMessage || error === 'forbidden' ? accessUrl : null}
           onRetry={() => {
             setPermission('ready')

@@ -13,7 +13,30 @@ import { describeBinding, type DescribeContext } from '../../lib/legend/describe
 import type { PhysicalLayout } from '../../lib/layout'
 import type { Binding, Combo, PhysicalKey } from '../../lib/zmk/types'
 import { comboTag, layerAccentOf, layerTargetOf, legendText } from './bindings'
-import { arcPath, boardBounds, comboSegments, keyBox, keyCenter, type Point } from './geometry'
+import {
+  arcPath,
+  boardBounds,
+  comboSegments,
+  keyBox,
+  keyCenter,
+  keyExtent,
+  type Point,
+} from './geometry'
+import {
+  labelText,
+  labelVariants,
+  placeLabels,
+  type LabelPlacement,
+  type LabelRequest,
+} from './labels'
+import type { KeyIssue, Severity } from '../panels/issues'
+
+/** Quiet marker drawn on a keycap, one colour per severity. */
+const ISSUE_COLOR: Record<Severity, string> = {
+  error: 'var(--status-error)',
+  warning: 'var(--status-warning)',
+  info: 'var(--status-info)',
+}
 
 /** Batch commands the board forwards from the keyboard. */
 export type BatchCommand = 'edit.copy' | 'edit.paste' | 'edit.cut' | 'edit.clear'
@@ -41,6 +64,12 @@ export interface BoardProps {
   layerIndex?: number
   /** Draw combo arcs and their labels. Defaults to true. */
   showCombos?: boolean
+  /**
+   * Problems on the shown layer, keyed by physical key index. Each key gets a thin marker in its
+   * most serious colour, and its problem messages go in the key's tooltip.
+   */
+  issueKeys?: ReadonlyMap<number, KeyIssue>
+
   /** Click on a key. Shift extends a range, Cmd/Ctrl toggles it, and a plain click replaces. */
   onSelectKey(index: number, modifier?: SelectModifier): void
   /** Double-click or Enter on a key: open the binding picker. */
@@ -79,6 +108,7 @@ const MAX_UNIT = 72
 const ARC_STROKE = 0.075
 const ARC_DASH = '0.24 0.16'
 const EMPTY_SELECTION: ReadonlySet<number> = new Set()
+const EMPTY_ISSUES: ReadonlyMap<number, KeyIssue> = new Map()
 
 interface ComboDrawing {
   key: string
@@ -90,40 +120,11 @@ interface ComboDrawing {
   active: boolean
 }
 
-/** How far above the arc peak a label may move, in key units, tried from nearest to farthest. */
-const LABEL_LIFTS = [0, -0.35, -0.7, -1.05, -1.4]
-
-/**
- * Picks a label position on the arc's vertical axis that does not sit on a keycap. Labels
- * lift above the arc in steps; if every step covers a key, the arc peak is kept.
- * @param anchor - The arc peak, in key units.
- * @param keys - Every physical key on the board.
- * @returns The first clear position, or the peak when none is clear.
- */
-function clearLabelPoint(anchor: Point, keys: PhysicalKey[]): Point {
-  const covered = (point: Point) =>
-    keys.some((key) => {
-      const box = keyBox(key)
-      return (
-        point.x > box.left &&
-        point.x < box.left + box.width &&
-        point.y > box.top &&
-        point.y < box.top + box.height
-      )
-    })
-  for (const lift of LABEL_LIFTS) {
-    const point = { x: anchor.x, y: anchor.y + lift }
-    if (!covered(point)) return point
-  }
-  return anchor
-}
-
 function drawCombos(
   combos: Combo[],
   keys: Map<number, PhysicalKey>,
   ctx: DescribeContext,
   layerIndex: number,
-  boardKeys: PhysicalKey[],
 ): ComboDrawing[] {
   const drawings: ComboDrawing[] = []
   combos.forEach((combo, position) => {
@@ -137,11 +138,10 @@ function drawCombos(
     const peak = arcs.length
       ? arcs[Math.floor((arcs.length - 1) / 2)].peak
       : { x: centers[0].x, y: centers[0].y - 0.8 }
-    const anchor = clearLabelPoint(peak, boardKeys)
     drawings.push({
       key: `${combo.name}-${position}`,
       paths: arcs.map((arc) => arc.d),
-      anchor,
+      anchor: peak,
       label,
       note,
       studio,
@@ -166,6 +166,7 @@ export function Board({
   layerAccent,
   layerIndex: layerIndexProp,
   showCombos = true,
+  issueKeys = EMPTY_ISSUES,
   onSelectKey,
   onActivateKey,
   onKeyContextMenu,
@@ -201,10 +202,23 @@ export function Board({
     [layout.keys],
   )
   const drawings = useMemo(
-    () =>
-      showCombos ? drawCombos(combos, keysByIndex, legendContext, layerIndex, layout.keys) : [],
-    [showCombos, combos, keysByIndex, legendContext, layerIndex, layout.keys],
+    () => (showCombos ? drawCombos(combos, keysByIndex, legendContext, layerIndex) : []),
+    [showCombos, combos, keysByIndex, legendContext, layerIndex],
   )
+  const keyRects = useMemo(() => layout.keys.map(keyExtent), [layout.keys])
+  // Label spots depend on the pixel unit, because label boxes have pixel padding and font sizes.
+  const placements = useMemo(() => {
+    const requests: LabelRequest[] = drawings.map((drawing) => ({
+      id: drawing.key,
+      anchor: drawing.anchor,
+      variants: labelVariants(drawing, unit),
+    }))
+    const byId = new Map<string, LabelPlacement>()
+    for (const placement of placeLabels(requests, keyRects, bounds)) {
+      byId.set(placement.id, placement)
+    }
+    return byId
+  }, [drawings, keyRects, bounds, unit])
 
   const boardStyle = {
     width: bounds.width * unit,
@@ -245,6 +259,8 @@ export function Board({
           const target = layerTargetOf(binding, legendContext.layerNames)
           const glow = target === undefined ? undefined : `var(--layer-${layerAccentOf(target)})`
           const changed = changedKeys.has(key.index)
+          const issue = issueKeys.get(key.index)
+          const issueTitle = issue ? issue.messages.join('\n') : undefined
           const select = (event?: MouseEvent<HTMLButtonElement>) =>
             onSelectKey(key.index, modifierOf(event))
           return (
@@ -252,7 +268,8 @@ export function Board({
               key={key.index}
               role="group"
               aria-label={`${layerName}, key ${key.index}: ${legendText(legend)}`}
-              className="absolute z-[1] [&>button]:!size-full"
+              aria-description={issue ? issue.messages.join('. ') : undefined}
+              className="absolute z-[1] flex [&>button]:!size-full"
               data-key-index={key.index}
               style={{
                 left: (box.left - bounds.minX) * unit,
@@ -287,9 +304,7 @@ export function Board({
                 <span
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-0 rounded-md"
-                  style={{
-                    boxShadow: `0 0 0 2px ${glow}, 0 0 ${unit * 0.5}px ${unit * 0.05}px color-mix(in srgb, ${glow} 55%, transparent)`,
-                  }}
+                  style={{ boxShadow: `0 0 0 2px ${glow}` }}
                 />
               ) : null}
               <Keycap
@@ -297,7 +312,22 @@ export function Board({
                 w={box.width}
                 selected={selectedKey === key.index || selectedKeys.has(key.index)}
                 onSelect={select}
+                title={issueTitle ? `${legendText(legend)}\n${issueTitle}` : undefined}
               />
+              {issue ? (
+                <span
+                  aria-hidden="true"
+                  data-issue={issue.severity}
+                  className="pointer-events-none absolute"
+                  style={{
+                    background: ISSUE_COLOR[issue.severity],
+                    height: 2,
+                    left: '22%',
+                    right: '22%',
+                    bottom: 0,
+                  }}
+                />
+              ) : null}
               {changed ? (
                 <span
                   aria-hidden="true"
@@ -338,32 +368,47 @@ export function Board({
           )}
         </svg>
 
-        {drawings.map((drawing) => (
-          <span
-            key={drawing.key}
-            className="pointer-events-none absolute z-[3] -translate-x-1/2 -translate-y-1/2 rounded-full whitespace-nowrap"
-            style={{
-              left: (drawing.anchor.x - bounds.minX) * unit,
-              top: (drawing.anchor.y - bounds.minY) * unit,
-              fontSize: Math.max(9, unit * 0.2),
-              padding: `${unit * 0.07}px ${unit * 0.2}px`,
-              fontWeight: 600,
-              lineHeight: 1,
-              color: drawing.studio ? 'var(--text-primary)' : 'var(--arc-combo)',
-              background: 'var(--surface-panel)',
-              border: `1px ${drawing.studio ? 'dashed' : 'solid'} color-mix(in srgb, var(--arc-combo) 45%, transparent)`,
-              boxShadow: 'var(--shadow-float)',
-              opacity: drawing.active ? 1 : 0.4,
-            }}
-          >
-            {drawing.label}
-            {drawing.note ? (
-              <em className="ml-1 font-bold not-italic" style={{ color: 'var(--arc-combo)' }}>
-                · {drawing.note}
-              </em>
-            ) : null}
-          </span>
-        ))}
+        {drawings.map((drawing) => {
+          const placement = placements.get(drawing.key)
+          if (!placement) return null
+          const detail = placement.detail
+          const full = labelText('full', drawing)
+          const compact = detail !== 'full'
+          return (
+            <span
+              key={drawing.key}
+              title={compact ? full : undefined}
+              className={`absolute z-[3] -translate-x-1/2 -translate-y-1/2 rounded-[2px] whitespace-nowrap ${
+                compact ? '' : 'pointer-events-none'
+              }`}
+              data-label-detail={detail}
+              style={{
+                left: (placement.center.x - bounds.minX) * unit,
+                top: (placement.center.y - bounds.minY) * unit,
+                fontSize: Math.max(9, unit * 0.2),
+                padding: `${unit * 0.07}px ${unit * 0.2}px`,
+                fontWeight: 600,
+                lineHeight: 1,
+                color: drawing.studio ? 'var(--text-primary)' : 'var(--arc-combo)',
+                border: `1px ${drawing.studio ? 'dashed' : 'solid'} color-mix(in srgb, var(--arc-combo) 45%, transparent)`,
+                opacity: drawing.active ? 1 : 0.4,
+              }}
+            >
+              {detail === 'full' ? (
+                <>
+                  {drawing.label}
+                  {drawing.note ? (
+                    <em className="ml-1 font-bold not-italic" style={{ color: 'var(--arc-combo)' }}>
+                      · {drawing.note}
+                    </em>
+                  ) : null}
+                </>
+              ) : (
+                labelText(detail, drawing)
+              )}
+            </span>
+          )
+        })}
       </div>
     </div>
   )

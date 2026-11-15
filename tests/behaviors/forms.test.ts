@@ -23,6 +23,7 @@ import {
   macroOpaqueReason,
   macroPreview,
   macroProblems,
+  macroStepNotice,
   macroStepsOf,
   moveItem,
   newComboForm,
@@ -218,6 +219,20 @@ describe('macros', () => {
     expect(stepProblem({ kind: 'behavior', text: '&kp A' })).toBeUndefined()
     const form = macroFormOf(named(shoutModel, 'shout'))
     expect(macroProblems({ ...form, tapMs: 20000 })).toHaveProperty('tapMs')
+  })
+
+  it('blocks an empty macro and names the missing steps', () => {
+    expect(macroProblems({ ...macroFormOf(named(shoutModel, 'shout')), steps: [] })).toEqual({
+      steps: 'Add at least one step.',
+    })
+  })
+
+  it('shows one step notice: the focused invalid step, else the first invalid one', () => {
+    const problems = { step1: 'Bad one.', step4: 'Bad four.' }
+    expect(macroStepNotice(problems)).toEqual({ index: 1, message: 'Step 2: Bad one.' })
+    expect(macroStepNotice(problems, 4)).toEqual({ index: 4, message: 'Step 5: Bad four.' })
+    expect(macroStepNotice(problems, 0)).toEqual({ index: 1, message: 'Step 2: Bad one.' })
+    expect(macroStepNotice({})).toBeUndefined()
   })
 
   it('round-trips step text and creates steps from kind and text', () => {
