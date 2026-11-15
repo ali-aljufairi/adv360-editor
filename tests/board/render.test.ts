@@ -59,3 +59,28 @@ describe('Board server render', () => {
     expect(html).toContain('aria-selected="true"')
   })
 })
+
+describe('Board issue markers', () => {
+  it('marks a key with its most serious severity and puts its messages in the title', () => {
+    const html = renderToStaticMarkup(
+      createElement(Board, {
+        layout,
+        bindings: model.layers[0].bindings,
+        legendContext: { layerNames },
+        selectedKey: null,
+        changedKeys: new Set<number>(),
+        combos: [],
+        layerAccent: 1,
+        issueKeys: new Map([
+          [3, { severity: 'error' as const, messages: ['Unknown behavior &kpp'] }],
+        ]),
+        onSelectKey: () => undefined,
+        onActivateKey: () => undefined,
+      }),
+    )
+    expect(html.match(/data-issue="/g)).toHaveLength(1)
+    expect(html).toContain('data-issue="error"')
+    expect(html).toContain('background:var(--status-error)')
+    expect(html).toContain('Unknown behavior &amp;kpp')
+  })
+})

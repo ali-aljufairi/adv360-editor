@@ -11,7 +11,8 @@ export interface FieldProps {
 }
 
 /**
- * A labelled field with optional help text and a validation message.
+ * A labelled field with optional help text and a validation message. Help and the message share
+ * one reserved slot, so showing or clearing a message never moves the controls below it.
  * @param props - Label, help, problem and the control.
  * @returns The field.
  */
@@ -22,12 +23,16 @@ export function Field({ id, label, help, problem, children }: FieldProps) {
         {label}
       </label>
       {children}
-      {help ? <p className="text-xs text-muted">{help}</p> : null}
-      {problem ? (
-        <p className="text-xs text-status-error" id={`${id}-problem`}>
-          {problem}
-        </p>
-      ) : null}
+      <div className="grid min-h-4 text-xs">
+        {help ? (
+          <p className={`text-muted [grid-area:1/1] ${problem ? 'invisible' : ''}`}>{help}</p>
+        ) : null}
+        {problem ? (
+          <p className="text-[var(--status-error)] [grid-area:1/1]" id={`${id}-problem`}>
+            {problem}
+          </p>
+        ) : null}
+      </div>
     </div>
   )
 }
@@ -86,8 +91,9 @@ export function NumberField({
           max={max}
           value={value ?? ''}
           aria-invalid={problem ? true : undefined}
+          aria-describedby={problem ? `${id}-problem` : undefined}
           onChange={(event) => onChange(parse(event.target.value))}
-          className="w-24 rounded-md border border-subtle bg-canvas px-2 py-1 text-sm"
+          className="w-24 rounded-xs border border-subtle bg-canvas px-2 py-1 text-sm"
         />
         <span className="text-xs text-muted">{unit}</span>
       </div>
@@ -103,6 +109,8 @@ export interface ApplyBarProps {
   onApply(): void
   onRevert(): void
   applyLabel?: string
+  /** Status shown while blocked when no field is highlighted, such as an empty macro. */
+  blockedText?: string
 }
 
 /**
@@ -117,6 +125,7 @@ export function ApplyBar({
   onApply,
   onRevert,
   applyLabel = 'Apply',
+  blockedText = 'Fix the highlighted fields to apply.',
 }: ApplyBarProps) {
   const blocked = Object.keys(problems).length > 0
   const status = error
@@ -124,18 +133,21 @@ export function ApplyBar({
     : !dirty
       ? 'No unsaved changes.'
       : blocked
-        ? 'Fix the highlighted fields to apply.'
+        ? blockedText
         : 'Applying adds one step to Undo.'
   return (
     <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-2 border-t border-subtle bg-raised px-4 py-3">
-      <p role="status" className={`mr-auto text-xs ${error ? 'text-status-error' : 'text-muted'}`}>
+      <p
+        role="status"
+        className={`mr-auto min-h-[2lh] min-w-0 text-xs sm:min-h-0 ${error ? 'text-[var(--status-error)]' : 'text-muted'}`}
+      >
         {status}
       </p>
       <button
         type="button"
         onClick={onRevert}
         disabled={!dirty}
-        className="rounded-md px-2.5 py-1 text-sm text-secondary hover:bg-hover disabled:opacity-40"
+        className="rounded-xs px-2.5 py-1 text-sm text-secondary hover:bg-hover disabled:opacity-40"
       >
         Revert
       </button>
@@ -143,7 +155,7 @@ export function ApplyBar({
         type="button"
         onClick={onApply}
         disabled={!dirty || blocked}
-        className="rounded-md border border-subtle bg-hover px-3 py-1 text-sm font-medium disabled:opacity-40"
+        className="rounded-xs border border-subtle bg-hover px-3 py-1 text-sm font-medium disabled:opacity-40"
       >
         {applyLabel}
       </button>
@@ -205,10 +217,8 @@ export function KeyBoard({ keys, selected, label, onToggle }: KeyBoardProps) {
               width={key.w - 0.12}
               height={key.h - 0.12}
               rx={0.14}
-              strokeWidth={0.04}
-              className={
-                on ? 'fill-accent-primary stroke-accent-primary' : 'fill-raised stroke-subtle'
-              }
+              strokeWidth={on ? 0.1 : 0.04}
+              className={on ? 'fill-raised stroke-accent-primary' : 'fill-raised stroke-subtle'}
             />
             <text
               x={key.x + key.w / 2}
@@ -216,7 +226,7 @@ export function KeyBoard({ keys, selected, label, onToggle }: KeyBoardProps) {
               textAnchor="middle"
               dominantBaseline="central"
               fontSize={0.32}
-              className={on ? 'fill-on-accent' : 'fill-secondary'}
+              className={on ? 'fill-accent-primary' : 'fill-secondary'}
             >
               {key.index}
             </text>

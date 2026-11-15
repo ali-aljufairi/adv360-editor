@@ -175,7 +175,7 @@ export function ThemePicker({ open, onClose }: ThemePickerProps) {
   const fitLabel = fit === 'both' ? 'Adapts to light and dark' : fit === 'light' ? 'Light' : 'Dark'
 
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-[var(--overlay)] p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-[var(--overlay)] p-4">
       <button
         type="button"
         tabIndex={-1}
@@ -189,7 +189,7 @@ export function ThemePicker({ open, onClose }: ThemePickerProps) {
         aria-modal="true"
         aria-labelledby={titleId}
         onKeyDown={onKeyDown}
-        className="relative flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-subtle bg-canvas text-primary shadow-[var(--shadow-dialog)]"
+        className="relative flex max-h-[min(88vh,100%)] w-full max-w-4xl flex-col overflow-hidden rounded-[2px] border border-subtle bg-canvas text-primary shadow-[var(--shadow-dialog)]"
       >
         <header className="flex items-start justify-between gap-4 border-b border-subtle px-5 py-4">
           <div>
@@ -204,7 +204,7 @@ export function ThemePicker({ open, onClose }: ThemePickerProps) {
             type="button"
             onClick={onClose}
             aria-label="Close theme picker"
-            className="rounded-lg px-2 py-1 text-muted hover:bg-hover hover:text-primary"
+            className="rounded-[2px] px-2 py-1 text-muted hover:bg-hover hover:text-primary"
           >
             ×
           </button>
@@ -220,22 +220,20 @@ export function ThemePicker({ open, onClose }: ThemePickerProps) {
             autoComplete="off"
             value={filter.query}
             onChange={(event) => changeFilter({ query: event.target.value })}
-            className="min-w-0 flex-1 rounded-lg border border-subtle bg-surface px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-[var(--focus-ring)] focus:outline-none"
+            className="min-w-0 flex-1 rounded-[2px] border border-subtle bg-surface px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-[var(--focus-ring)] focus:outline-none"
           />
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <div
-              role="group"
-              aria-label="Filter by appearance"
-              className="flex rounded-lg bg-surface p-0.5"
-            >
+            <div role="group" aria-label="Filter by appearance" className="flex gap-2">
               {appearanceChoices.map(([value, label]) => (
                 <button
                   key={value}
                   type="button"
                   aria-pressed={filter.appearance === value}
                   onClick={() => changeFilter({ appearance: value })}
-                  className={`rounded-md px-2.5 py-1 ${
-                    filter.appearance === value ? 'bg-raised text-primary' : 'text-muted'
+                  className={`rounded-[2px] px-2.5 py-1 ${
+                    filter.appearance === value
+                      ? 'text-primary underline decoration-[var(--accent-primary)] decoration-2 underline-offset-4'
+                      : 'text-muted hover:text-primary'
                   }`}
                 >
                   {label}
@@ -246,7 +244,7 @@ export function ThemePicker({ open, onClose }: ThemePickerProps) {
               type="button"
               aria-pressed={filter.favoritesOnly}
               onClick={() => changeFilter({ favoritesOnly: !filter.favoritesOnly })}
-              className={`rounded-lg border border-subtle px-2.5 py-1 ${
+              className={`rounded-[2px] border border-subtle px-2.5 py-1 ${
                 filter.favoritesOnly ? 'text-[var(--status-warning)]' : 'text-muted'
               }`}
             >
@@ -257,15 +255,17 @@ export function ThemePicker({ open, onClose }: ThemePickerProps) {
 
         <div className="flex flex-wrap items-center gap-2 border-b border-subtle px-5 py-2 text-sm">
           <span className="text-muted">Mode</span>
-          <div role="group" aria-label="Mode" className="flex rounded-lg bg-surface p-0.5">
+          <div role="group" aria-label="Mode" className="flex gap-2">
             {modeChoices.map(([value, label]) => (
               <button
                 key={value}
                 type="button"
                 aria-pressed={preference.mode === value}
                 onClick={() => chooseMode(value)}
-                className={`rounded-md px-2.5 py-1 ${
-                  preference.mode === value ? 'bg-raised text-primary' : 'text-muted'
+                className={`rounded-[2px] px-2.5 py-1 ${
+                  preference.mode === value
+                    ? 'text-primary underline decoration-[var(--accent-primary)] decoration-2 underline-offset-4'
+                    : 'text-muted hover:text-primary'
                 }`}
               >
                 {label}
@@ -274,8 +274,8 @@ export function ThemePicker({ open, onClose }: ThemePickerProps) {
           </div>
         </div>
 
-        <div className="grid min-h-0 flex-1 gap-0 overflow-hidden md:grid-cols-[1fr_280px]">
-          <div className="flex min-h-0 flex-col">
+        <div className="grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_minmax(0,11rem)] gap-0 overflow-hidden md:grid-cols-[minmax(0,1fr)_280px] md:grid-rows-none">
+          <div className="flex min-h-0 min-w-0 flex-col">
             <p className="px-5 pb-1 pt-3 text-xs text-muted" aria-live="polite">
               {visible.length} palette{visible.length === 1 ? '' : 's'}
             </p>
@@ -283,7 +283,7 @@ export function ThemePicker({ open, onClose }: ThemePickerProps) {
               id={listId}
               role="listbox"
               aria-label="Palettes"
-              className="min-h-[12rem] flex-1 overflow-y-auto px-3 pb-3"
+              className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 md:min-h-[12rem]"
             >
               {visible.length === 0 && (
                 <li className="px-3 py-6 text-center text-sm text-muted">
@@ -303,13 +303,13 @@ export function ThemePicker({ open, onClose }: ThemePickerProps) {
                       if (!isSelected) highlight(theme)
                     }}
                     onClick={() => highlight(theme)}
-                    className={`mt-1 flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 ${
+                    className={`mt-1 flex cursor-pointer items-center gap-3 rounded-[2px] border px-3 py-2 ${
                       isSelected
-                        ? 'border-[var(--accent-primary)] bg-raised'
-                        : 'border-transparent bg-surface hover:bg-hover'
+                        ? 'border-[var(--accent-primary)]'
+                        : 'border-transparent hover:bg-hover'
                     }`}
                   >
-                    <span className="flex w-24 shrink-0 overflow-hidden rounded-md">
+                    <span className="flex w-24 shrink-0 overflow-hidden rounded-[2px]">
                       {(swatches.get(theme.id) ?? []).slice(0, 6).map((colour, index) => (
                         <i
                           key={index}
@@ -346,7 +346,7 @@ export function ThemePicker({ open, onClose }: ThemePickerProps) {
             </ul>
           </div>
 
-          <aside className="flex min-h-0 flex-col gap-3 overflow-y-auto border-t border-subtle px-5 py-4 md:border-l md:border-t-0">
+          <aside className="flex min-h-0 min-w-0 flex-col gap-3 overflow-y-auto border-t border-subtle px-5 py-4 md:border-l md:border-t-0">
             <p className="text-xs uppercase tracking-wide text-muted">Live preview</p>
             {selected ? (
               <>
@@ -354,7 +354,7 @@ export function ThemePicker({ open, onClose }: ThemePickerProps) {
                 <p className="text-xs text-muted">
                   {kind} · {fitLabel}
                 </p>
-                <div className="flex h-8 overflow-hidden rounded-lg">
+                <div className="flex h-8 overflow-hidden rounded-[2px]">
                   {(swatches.get(selected.id) ?? []).map((colour, index) => (
                     <i
                       key={index}
@@ -364,7 +364,7 @@ export function ThemePicker({ open, onClose }: ThemePickerProps) {
                     />
                   ))}
                 </div>
-                <div className="rounded-xl border border-subtle bg-keycap px-4 py-5 text-center font-mono text-lg text-legend">
+                <div className="rounded-[2px] border border-subtle bg-keycap px-4 py-5 text-center font-mono text-lg text-legend">
                   Caps <span className="text-accent-layer-1">→</span> Esc
                 </div>
               </>
@@ -372,7 +372,7 @@ export function ThemePicker({ open, onClose }: ThemePickerProps) {
               <p className="text-sm text-muted">Pick a palette to preview it.</p>
             )}
 
-            <details className="mt-auto rounded-xl border border-subtle bg-surface px-3 py-2 text-sm">
+            <details className="mt-auto rounded-[2px] border border-subtle bg-surface px-3 py-2 text-sm">
               <summary className="cursor-pointer text-secondary">
                 Import a Ghostty theme or OpenCode JSON
               </summary>
@@ -382,14 +382,14 @@ export function ThemePicker({ open, onClose }: ThemePickerProps) {
                 value={importText}
                 onChange={(event) => setImportText(event.target.value)}
                 placeholder="Paste a Ghostty theme file or OpenCode theme JSON…"
-                className="mt-2 h-28 w-full resize-y rounded-lg border border-subtle bg-canvas p-2 font-mono text-xs text-primary"
+                className="mt-2 h-28 w-full resize-y rounded-[2px] border border-subtle bg-canvas p-2 font-mono text-xs text-primary"
               />
               <div className="mt-2 flex items-center justify-between gap-2">
                 <button
                   type="button"
                   onClick={importPalette}
                   disabled={importText.trim() === ''}
-                  className="rounded-lg border border-subtle px-3 py-1.5 text-secondary disabled:opacity-40"
+                  className="rounded-[2px] border border-subtle px-3 py-1.5 text-secondary disabled:opacity-40"
                 >
                   Import
                 </button>
@@ -408,7 +408,7 @@ export function ThemePicker({ open, onClose }: ThemePickerProps) {
             type="button"
             onClick={apply}
             disabled={!selected}
-            className="rounded-lg bg-accent-layer-1 px-4 py-2 text-sm font-medium text-[var(--on-layer-1)] disabled:opacity-40"
+            className="rounded-[2px] bg-accent-layer-1 px-4 py-2 text-sm font-medium text-[var(--on-layer-1)] disabled:opacity-40"
           >
             Use this theme
           </button>

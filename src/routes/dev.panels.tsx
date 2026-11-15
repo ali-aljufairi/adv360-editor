@@ -1,52 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ChangesBar } from '../components/github/ChangesBar'
 import { ChangesDetails } from '../components/github/ChangesDetails'
+import { problemFixture, PROBLEM_STATES, type ProblemState } from '../components/panels/fixtures'
 import { ProblemsPanel } from '../components/panels/ProblemsPanel'
 import { ThemePicker } from '../components/theme-picker/ThemePicker'
-import type { Issue } from '../lib/zmk/types'
-
-export const Route = createFileRoute('/dev/panels')({ component: PanelsPage })
-
-const SAMPLE_ISSUES: Issue[] = [
-  {
-    file: 'base.keymap',
-    start: 1204,
-    end: 1212,
-    code: 'unknown-behavior',
-    severity: 'error',
-    message: 'Behavior &kpp is not known to this firmware. Did you mean &kp?',
-    layer: 0,
-    key: 12,
-  },
-  {
-    file: 'base.keymap',
-    start: 2310,
-    end: 2320,
-    code: 'duplicate-binding',
-    severity: 'warning',
-    message: 'Key 30 is bound twice on the Mod layer. Only the first binding will work.',
-    layer: 2,
-    key: 30,
-  },
-  {
-    file: 'combos.dtsi',
-    start: 88,
-    end: 120,
-    code: 'combo-overlap',
-    severity: 'warning',
-    message: 'Combo “Dfffsdfa” shares both keys with another combo.',
-  },
-  {
-    file: 'base.keymap',
-    start: 4100,
-    end: 4110,
-    code: 'empty-layer',
-    severity: 'info',
-    message: 'Layer “Mouse” has no bindings yet, so it falls through to the layer below.',
-    layer: 3,
-  },
-]
+export const Route = createFileRoute('/dev/panels')({
+  validateSearch: (search: Record<string, unknown>): { problems: ProblemState } => ({
+    problems: PROBLEM_STATES.find((state) => state === search.problems) ?? 'mixed',
+  }),
+  component: PanelsPage,
+})
 
 const SAMPLE_DIFF: Record<string, string> = {
   'base.keymap': [
@@ -90,6 +54,8 @@ function PanelsPage() {
   const [diff, setDiff] = useState(SAMPLE_DIFF)
   const [summary, setSummary] = useState(SAMPLE_SUMMARY)
   const [jumped, setJumped] = useState<string | null>(null)
+  const { problems } = Route.useSearch()
+  const issues = useMemo(() => problemFixture(problems), [problems])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -115,16 +81,19 @@ function PanelsPage() {
           <p className="text-xs uppercase tracking-wide text-muted">Dev · panels</p>
           <h1 className="text-2xl font-semibold">Problems, changes and themes</h1>
           <p className="text-sm text-secondary">
-            Sample data only. Press ⌘K or Ctrl-K to open the theme picker.
+            Sample data only. Press ⌘K or Ctrl-K to open the theme picker. Problem sets: add
+            ?problems=none, one, mixed, many or long.
           </p>
         </header>
 
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-semibold text-secondary">Problems</h2>
-          <ProblemsPanel
-            issues={SAMPLE_ISSUES}
-            onJump={(issue) => setJumped(`${issue.file}: ${issue.message}`)}
-          />
+          <div className="relative flex h-[min(34rem,70dvh)] min-h-64">
+            <ProblemsPanel
+              issues={issues}
+              onJump={(issue) => setJumped(`${issue.file}: ${issue.message}`)}
+            />
+          </div>
           <p className="text-xs text-muted" aria-live="polite">
             {jumped ? `Last jump: ${jumped}` : 'No jump yet.'}
           </p>

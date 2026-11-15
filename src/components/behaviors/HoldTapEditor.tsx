@@ -61,7 +61,7 @@ export function HoldTapEditor({ behavior, model, keys }: HoldTapEditorProps) {
           {FLAVORS.map((flavor) => (
             <label
               key={flavor.value}
-              className="flex cursor-pointer gap-2 rounded-md border border-subtle p-2 hover:bg-hover"
+              className="flex cursor-pointer gap-2 rounded-xs border border-subtle p-2 hover:bg-hover"
             >
               <input
                 type="radio"
@@ -148,7 +148,7 @@ export function HoldTapEditor({ behavior, model, keys }: HoldTapEditorProps) {
                   .map(Number),
               })
             }}
-            className="rounded-md border border-subtle bg-canvas px-2 py-1 font-mono text-sm"
+            className="rounded-xs border border-subtle bg-canvas px-2 py-1 font-mono text-sm"
           />
         </Field>
         <label className="flex items-center gap-2 text-sm">
@@ -188,7 +188,7 @@ export function HoldTapEditor({ behavior, model, keys }: HoldTapEditorProps) {
                   ),
                 })
               }
-              className="rounded border border-subtle bg-canvas px-2 py-1 font-mono text-sm"
+              className="rounded-xs border border-subtle bg-canvas px-2 py-1 font-mono text-sm"
             />
           </Field>
         ))}

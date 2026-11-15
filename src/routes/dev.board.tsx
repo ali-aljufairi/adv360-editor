@@ -3,6 +3,9 @@ import { useMemo, useState } from 'react'
 import { Board } from '../components/board/Board'
 import { LayerTabs } from '../components/board/LayerTabs'
 import { layerAccentOf } from '../components/board/bindings'
+import { problemFixture, PROBLEM_STATES, type ProblemState } from '../components/panels/fixtures'
+import { issueKeysFor } from '../components/panels/issues'
+import { ProblemsPanel } from '../components/panels/ProblemsPanel'
 import { getLayoutSource } from '../lib/layout'
 import { ADV360_PROFILE } from '../lib/profile/registry'
 import { resolve, validate, type Layer, type Model } from '../lib/zmk'
@@ -11,7 +14,12 @@ import macros from '../../fixtures/adv360/macros.dtsi?raw'
 import version from '../../fixtures/adv360/version.dtsi?raw'
 import layoutSource from '../../fixtures/adv360/boards/arm/adv360/adv360-layouts.dtsi?raw'
 
-export const Route = createFileRoute('/dev/board')({ component: BoardPage })
+export const Route = createFileRoute('/dev/board')({
+  validateSearch: (search: Record<string, unknown>): { problems: ProblemState } => ({
+    problems: PROBLEM_STATES.find((state) => state === search.problems) ?? 'mixed',
+  }),
+  component: BoardPage,
+})
 
 const MODEL: Model = resolve(
   { 'adv360.keymap': keymap, 'macros.dtsi': macros, 'version.dtsi': version },
@@ -55,6 +63,9 @@ function BoardPage() {
   const [layer, setLayer] = useState(0)
   const [selected, setSelected] = useState<number | null>(null)
   const [log, setLog] = useState<string[]>([])
+  const { problems } = Route.useSearch()
+  const issues = useMemo(() => problemFixture(problems), [problems])
+  const issueKeys = useMemo(() => issueKeysFor(issues, layer), [issues, layer])
 
   const layers = useMemo(
     () =>
@@ -74,24 +85,37 @@ function BoardPage() {
   return (
     <main className="min-h-dvh bg-canvas p-4 text-primary sm:p-6">
       <h1 className="mb-4 text-xl font-semibold">Board (dev)</h1>
-      <LayerTabs layers={layers} active={layer} onChange={setLayer} />
-      <div className="mt-6">
-        <Board
-          layout={LAYOUT}
-          bindings={MODEL.layers[layer]?.bindings ?? []}
-          legendContext={LEGEND_CONTEXT}
-          selectedKey={selected}
-          changedKeys={changedKeys}
-          combos={MODEL.combos}
-          layerAccent={layerAccentOf(layer)}
-          layerIndex={layer}
-          onSelectKey={setSelected}
-          onActivateKey={(index) =>
-            setLog((previous) =>
-              [`Activated key ${index} on ${layerName}`, ...previous].slice(0, 6),
-            )
+      <div className="relative flex h-[calc(100dvh-8rem)] min-h-96 min-h-0">
+        <ProblemsPanel
+          issues={issues}
+          onJump={(issue) =>
+            setLog((previous) => [`Jump: ${issue.message}`, ...previous].slice(0, 6))
           }
         />
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="flex justify-center">
+            <LayerTabs layers={layers} active={layer} onChange={setLayer} />
+          </div>
+          <div className="mt-6 min-h-0 flex-1 overflow-auto">
+            <Board
+              layout={LAYOUT}
+              bindings={MODEL.layers[layer]?.bindings ?? []}
+              legendContext={LEGEND_CONTEXT}
+              selectedKey={selected}
+              changedKeys={changedKeys}
+              issueKeys={issueKeys}
+              combos={MODEL.combos}
+              layerAccent={layerAccentOf(layer)}
+              layerIndex={layer}
+              onSelectKey={setSelected}
+              onActivateKey={(index) =>
+                setLog((previous) =>
+                  [`Activated key ${index} on ${layerName}`, ...previous].slice(0, 6),
+                )
+              }
+            />
+          </div>
+        </div>
       </div>
       <p className="mt-4 text-sm text-secondary">
         Selected: {selected === null ? 'none' : `key ${selected}`}. Keys 2 and 5 are marked as

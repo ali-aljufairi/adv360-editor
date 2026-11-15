@@ -103,6 +103,27 @@ export function boardBounds(keys: PhysicalKey[]): Bounds {
   return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY }
 }
 
+/** An axis-aligned rectangle in key units. */
+export interface Rect {
+  left: number
+  top: number
+  width: number
+  height: number
+}
+
+/**
+ * Axis-aligned rectangle that contains a key after rotation. Rotated keys are approximated by
+ * their bounding box, which is what the browser reports for them, so checks against it are safe.
+ */
+export function keyExtent(key: PhysicalKey): Rect {
+  const corners = keyCorners(key)
+  const xs = corners.map((corner) => corner.x)
+  const ys = corners.map((corner) => corner.y)
+  const left = Math.min(...xs)
+  const top = Math.min(...ys)
+  return { left, top, width: Math.max(...xs) - left, height: Math.max(...ys) - top }
+}
+
 /** Consecutive pairs of points: a combo with keys A, B, C is drawn as A-B and B-C. */
 export function comboSegments(points: Point[]): [Point, Point][] {
   const segments: [Point, Point][] = []

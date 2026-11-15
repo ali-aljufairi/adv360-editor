@@ -12,7 +12,7 @@
 .bp-mode {
   border: 1px solid var(--border-base);
   background: transparent;
-  border-radius: 999px;
+  border-radius: 2px;
   padding: 5px 10px;
   font-size: 12px;
   font-weight: 600;
@@ -22,9 +22,9 @@
 
 .bp-tab[aria-checked='true'],
 .bp-mode[aria-pressed='true'] {
-  background: var(--text-primary);
-  color: var(--surface-panel);
-  border-color: var(--text-primary);
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+  box-shadow: inset 0 -2px 0 var(--accent-primary);
 }
 
 .bp-tab:focus-visible,
@@ -71,7 +71,7 @@
   color: var(--text-primary);
   background: var(--surface-raised);
   border: 1px solid var(--border-base);
-  border-radius: 8px;
+  border-radius: 2px;
   padding: 3px 6px;
 }
 

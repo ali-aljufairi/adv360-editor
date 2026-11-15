@@ -44,7 +44,7 @@ export function PickerPopover({ anchor, sheet, onClose, children }: PickerPopove
           role="dialog"
           aria-modal="true"
           aria-label="Choose a binding"
-          className="max-h-[85dvh] overflow-y-auto rounded-t-2xl border-t border-subtle bg-raised p-3 shadow-[var(--shadow-float)]"
+          className="max-h-[85dvh] overflow-y-auto rounded-t-[2px] border-t border-subtle bg-raised p-3 shadow-[var(--shadow-float)]"
         >
           {children}
         </div>
@@ -75,7 +75,7 @@ export function PickerPopover({ anchor, sheet, onClose, children }: PickerPopove
         aria-modal="true"
         aria-label="Choose a binding"
         onMouseDown={(event) => event.stopPropagation()}
-        className="fixed overflow-y-auto rounded-xl border border-subtle bg-raised p-3 shadow-[var(--shadow-float)]"
+        className="fixed overflow-y-auto rounded-[2px] border border-subtle bg-raised p-3 shadow-[var(--shadow-float)]"
         style={{ left, width: POPOVER_WIDTH, ...vertical }}
       >
         {children}

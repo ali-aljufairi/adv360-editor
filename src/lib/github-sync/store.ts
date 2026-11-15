@@ -46,6 +46,8 @@ export interface SyncState {
   history: BranchCommit[]
   historyLoading: boolean
   historyError: SyncState['error']
+  /** True while a background re-check (e.g. after returning from GitHub settings) runs. */
+  checkingAccess: boolean
 }
 /** Return changed or added files; deletions are ignored. */
 export function changedFiles(baseline: FileMap, current: FileMap): FileMap {
@@ -105,6 +107,7 @@ export function createSyncStore(deps: SyncDeps) {
     historyError: null,
     remoteSha: null,
     buildTimedOut: false,
+    checkingAccess: false,
   }
   let config: LoadedConfig | null = null
   let generation = 0
@@ -296,6 +299,35 @@ export function createSyncStore(deps: SyncDeps) {
     }
     void tick()
   }
+  /** Whether GitHub is currently blocking this repository for the signed-in user. */
+  const blocked = () =>
+    (state.access !== null && state.access.reason !== 'ready') ||
+    state.phase === 'error' ||
+    state.error?.code === 'forbidden' ||
+    state.error?.code === 'not-found' ||
+    state.buildError?.code === 'forbidden'
+  let lastRecheck = Number.NEGATIVE_INFINITY
+  /**
+   * Quietly re-checks access and reloads when GitHub was blocking us. Called when the window
+   * regains focus, so fixing the App's access in another tab heals the editor without a Retry.
+   * @param force - Skip the throttle and the "is anything blocked" check (the Retry button).
+   */
+  const recheckAccess = async (force = false) => {
+    if (!state.user || state.checkingAccess || (!force && !blocked())) return
+    if (state.phase === 'committing' || state.phase === 'loading') return
+    const now = deps.now().getTime()
+    if (!force && now - lastRecheck < 3000) return
+    lastRecheck = now
+    const hadBuildError = state.buildError?.code === 'forbidden'
+    update({ checkingAccess: true })
+    try {
+      await load()
+    } finally {
+      update({ checkingAccess: false })
+    }
+    if (hadBuildError && state.access?.canReadBuilds && state.lastCommit)
+      poll(state.lastCommit.commitSha)
+  }
   return {
     getSnapshot: () => state,
     subscribe: (listener: () => void) => {
@@ -355,9 +387,11 @@ export function createSyncStore(deps: SyncDeps) {
         historyError: null,
         remoteSha: null,
         buildTimedOut: false,
+        checkingAccess: false,
       })
     },
     reload: load,
+    recheckAccess,
     applyRemote: () => {
       if (remote) {
         ++loadGeneration
